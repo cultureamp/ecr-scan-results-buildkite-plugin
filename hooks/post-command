@@ -1,0 +1,83 @@
+#! /bin/bash
+set -euo pipefail
+
+# check all inputs exist
+if [ -n "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME}" ]
+then
+    IMAGE_NAME="${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME}"
+else
+    echo "Error: no value for IMAGE_NAME Supplied"
+fi
+if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME_MAX_CRITICALS+x}" ]
+then
+    MAX_CRITICALS="0"
+else
+    MAX_CRITICALS="${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME_MAX_CRITICALS}"
+fi
+if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME_MAX_HIGHS+x}" ]
+then
+    MAX_HIGHS="0"
+else
+    MAX_HIGHS="${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME_MAX_HIGHS}"
+fi
+
+# print input values
+echo "IMAGE_NAME=${IMAGE_NAME}"
+echo "MAX_CRITICALS=${MAX_CRITICALS}"
+echo "MAX_HIGHS=${MAX_HIGHS}"
+
+FULL_REPO_NAME="${IMAGE_NAME%:*}"
+REPO_NAME="${FULL_REPO_NAME#*/}"
+IMAGE_TAG="${IMAGE_NAME#*:}"
+REPOSITORY_ID="${IMAGE_NAME%%.*}"
+
+# poll until scan is COMPLETE or FAILED
+scan_status="IN_PROGRESS"
+while [ "${scan_status}" = "IN_PROGRESS" ]
+do
+    scan_status=$(aws ecr describe-images \
+        --registry-id "${REPOSITORY_ID}" \
+        --repository-name "${REPO_NAME}" \
+        --image-ids imageTag="${IMAGE_TAG}" \
+        --query "imageDetails[0].imageScanStatus.status" \
+        --output text)
+    sleep 1
+done
+
+# retrieve counts of criticals and highs or fail build if scan failed
+case "${scan_status}" in
+    "COMPLETE")
+        criticals=$(aws ecr describe-images \
+            --registry-id "${REPOSITORY_ID}" \
+            --repository-name "${REPO_NAME}" \
+            --image-ids imageTag="${IMAGE_TAG}" \
+            --query "imageDetails[0].imageScanFindingsSummary.findingSeverityCounts.CRITICAL" \
+            --output text)
+        highs=$(aws ecr describe-images \
+            --registry-id "${REPOSITORY_ID}" \
+            --repository-name "${REPO_NAME}" \
+            --image-ids imageTag="${IMAGE_TAG}" \
+            --query "imageDetails[0].imageScanFindingsSummary.findingSeverityCounts.HIGH" \
+            --output text)
+        ;;
+    *)
+        echo "ECR vulnerability scan failed with status: ${scan_status}"
+        exit 1
+        ;;
+esac
+
+# report results
+echo "Number of Criticals=${criticals}"
+echo "Number of Highs=${highs}"
+
+# check if thresholds are exceeded and if so fail build
+if [ -n "${MAX_CRITICALS}" ] && [ "${criticals}" -gt "${MAX_CRITICALS}" ]
+then
+    echo "Criticals=${criticals} exceeds MAX_CRITICALS=${MAX_CRITICALS}"
+    exit 1
+fi
+if  [ -n "${MAX_HIGHS}" ] && [ "${highs}" -gt "${MAX_HIGHS}" ]
+then
+    echo "Highs=${highs} exceeds MAX_HIGHS=${MAX_HIGHS}"
+    exit 1
+fi

@@ -1,0 +1,13 @@
+name: ECR Scan Results
+description: Retrieves scan results from ECR and can optionally fail the build
+author: https://github.com/greg-aumann
+requirements: []
+configuration:
+  properties:
+    image-name:
+      type: string
+    max-criticals:
+      type: string
+    max-highs:
+      type: string
+  additionalProperties: false
