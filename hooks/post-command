@@ -41,7 +41,7 @@ do
         --image-ids imageTag="${IMAGE_TAG}" \
         --query "imageDetails[0].imageScanStatus.status" \
         --output text)
-    sleep 1
+    sleep 2
 done
 
 # retrieve counts of criticals and highs or fail build if scan failed
@@ -67,17 +67,21 @@ case "${scan_status}" in
 esac
 
 # report results
-echo "Number of Criticals=${criticals}"
-echo "Number of Highs=${highs}"
+buildkite-agent annotate "Number of Criticals=${criticals}"
+buildkite-agent annotate "Number of Highs=${highs}"
 
 # check if thresholds are exceeded and if so fail build
+fail_build="false"
 if [ -n "${MAX_CRITICALS}" ] && [ "${criticals}" -gt "${MAX_CRITICALS}" ]
 then
-    echo "Criticals=${criticals} exceeds MAX_CRITICALS=${MAX_CRITICALS}"
-    exit 1
+    buildkite-agent annotate --style error "Criticals=${criticals} exceeds MAX_CRITICALS=${MAX_CRITICALS}"
+    fail_build="true"
 fi
 if  [ -n "${MAX_HIGHS}" ] && [ "${highs}" -gt "${MAX_HIGHS}" ]
 then
-    echo "Highs=${highs} exceeds MAX_HIGHS=${MAX_HIGHS}"
+    buildkite-agent annotate --style error "Highs=${highs} exceeds MAX_HIGHS=${MAX_HIGHS}"
+    fail_build="true"
+fi
+if  [ "${fail_build}" = "true" ]
     exit 1
 fi
