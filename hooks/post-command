@@ -83,5 +83,6 @@ then
     fail_build="true"
 fi
 if  [ "${fail_build}" = "true" ]
+then
     exit 1
 fi
