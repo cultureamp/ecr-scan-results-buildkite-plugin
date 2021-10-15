@@ -31,19 +31,6 @@ REPO_NAME="${FULL_REPO_NAME#*/}"
 IMAGE_TAG="${IMAGE_NAME#*:}"
 REPOSITORY_ID="${IMAGE_NAME%%.*}"
 
-# poll until scan is COMPLETE or FAILED
-#scan_status="IN_PROGRESS"
-#while [ "${scan_status}" = "IN_PROGRESS" ]
-#do
-#    scan_status=$(aws ecr describe-images \
-#        --registry-id "${REPOSITORY_ID}" \
-#        --repository-name "${REPO_NAME}" \
-#        --image-ids imageTag="${IMAGE_TAG}" \
-#        --query "imageDetails[0].imageScanStatus.status" \
-#        --output text)
-#    sleep 2
-#done
-
 aws ecr wait image-scan-complete \
     --registry-id "${REPOSITORY_ID}" \
     --repository-name "${REPO_NAME}" \
@@ -66,18 +53,18 @@ highs=$(aws ecr describe-images \
     --output text)
 
 # report results
-annotation=$(printf "%4d Critical vulnerabilities\n%4d High vulnerabilities\n" "${criticals}" "${highs}")
+annotation=$(printf "%4d Critical vulnerabilities<br />%4d High vulnerabilities<br />" "${criticals}" "${highs}")
 
 # check if thresholds are exceeded and if so fail build
 fail_build="false"
 if [ -n "${MAX_CRITICALS}" ] && [ "${criticals}" -gt "${MAX_CRITICALS}" ]
 then
-    annotation=$(printf "%s\nNumber of critical vulnerabilities exceeds threshold MAX_CRITICALS=%d\n" "${annotation}" "${criticals}")
+    annotation=$(printf "%sNumber of critical vulnerabilities exceeds threshold MAX_CRITICALS=%d<br />" "${annotation}" "${criticals}")
     fail_build="true"
 fi
 if  [ -n "${MAX_HIGHS}" ] && [ "${highs}" -gt "${MAX_HIGHS}" ]
 then
-    annotation=$(printf "%s\nNumber of critical vulnerabilities exceeds threshold MAX_HIGHS=%d\n" "${annotation}" "${highs}")
+    annotation=$(printf "%sNumber of high vulnerabilities exceeds threshold MAX_HIGHS=%d" "${annotation}" "${highs}")
     fail_build="true"
 fi
 if  [ "${fail_build}" = "true" ]
