@@ -59,12 +59,12 @@ annotation=$(printf "%4d Critical vulnerabilities<br />%4d High vulnerabilities<
 fail_build="false"
 if [ -n "${MAX_CRITICALS}" ] && [ "${criticals}" -gt "${MAX_CRITICALS}" ]
 then
-    annotation=$(printf "%sNumber of critical vulnerabilities exceeds threshold MAX_CRITICALS=%d<br />" "${annotation}" "${criticals}")
+    annotation=$(printf "%sNumber of critical vulnerabilities exceeds threshold MAX_CRITICALS=%d<br />" "${annotation}" "${MAX_CRITICALS}")
     fail_build="true"
 fi
 if  [ -n "${MAX_HIGHS}" ] && [ "${highs}" -gt "${MAX_HIGHS}" ]
 then
-    annotation=$(printf "%sNumber of high vulnerabilities exceeds threshold MAX_HIGHS=%d" "${annotation}" "${highs}")
+    annotation=$(printf "%sNumber of high vulnerabilities exceeds threshold MAX_HIGHS=%d" "${annotation}" "${MAX_HIGHS}")
     fail_build="true"
 fi
 if  [ "${fail_build}" = "true" ]
