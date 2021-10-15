@@ -50,27 +50,20 @@ aws ecr wait image-scan-complete \
     --image-id imageTag="${IMAGE_TAG}"
 
 
-# retrieve counts of criticals and highs or fail build if scan failed
-case "${scan_status}" in
-    "COMPLETE")
-        criticals=$(aws ecr describe-images \
-            --registry-id "${REPOSITORY_ID}" \
-            --repository-name "${REPO_NAME}" \
-            --image-ids imageTag="${IMAGE_TAG}" \
-            --query "imageDetails[0].imageScanFindingsSummary.findingSeverityCounts.CRITICAL" \
-            --output text)
-        highs=$(aws ecr describe-images \
-            --registry-id "${REPOSITORY_ID}" \
-            --repository-name "${REPO_NAME}" \
-            --image-ids imageTag="${IMAGE_TAG}" \
-            --query "imageDetails[0].imageScanFindingsSummary.findingSeverityCounts.HIGH" \
-            --output text)
-        ;;
-    *)
-        buildkite-agent annotate --style error "ECR vulnerability scan failed with status: ${scan_status}"
-        exit 1
-        ;;
-esac
+# retrieve counts of criticals and highs
+criticals=$(aws ecr describe-images \
+    --registry-id "${REPOSITORY_ID}" \
+    --repository-name "${REPO_NAME}" \
+    --image-ids imageTag="${IMAGE_TAG}" \
+    --query "imageDetails[0].imageScanFindingsSummary.findingSeverityCounts.CRITICAL" \
+    --output text)
+
+highs=$(aws ecr describe-images \
+    --registry-id "${REPOSITORY_ID}" \
+    --repository-name "${REPO_NAME}" \
+    --image-ids imageTag="${IMAGE_TAG}" \
+    --query "imageDetails[0].imageScanFindingsSummary.findingSeverityCounts.HIGH" \
+    --output text)
 
 # report results
 annotation=$(printf "%4d Critical vulnerabilities\n%4d High vulnerabilities\n" "${criticals}" "${highs}")
