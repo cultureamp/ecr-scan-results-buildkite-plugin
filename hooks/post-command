@@ -32,17 +32,23 @@ IMAGE_TAG="${IMAGE_NAME#*:}"
 REPOSITORY_ID="${IMAGE_NAME%%.*}"
 
 # poll until scan is COMPLETE or FAILED
-scan_status="IN_PROGRESS"
-while [ "${scan_status}" = "IN_PROGRESS" ]
-do
-    scan_status=$(aws ecr describe-images \
-        --registry-id "${REPOSITORY_ID}" \
-        --repository-name "${REPO_NAME}" \
-        --image-ids imageTag="${IMAGE_TAG}" \
-        --query "imageDetails[0].imageScanStatus.status" \
-        --output text)
-    sleep 2
-done
+#scan_status="IN_PROGRESS"
+#while [ "${scan_status}" = "IN_PROGRESS" ]
+#do
+#    scan_status=$(aws ecr describe-images \
+#        --registry-id "${REPOSITORY_ID}" \
+#        --repository-name "${REPO_NAME}" \
+#        --image-ids imageTag="${IMAGE_TAG}" \
+#        --query "imageDetails[0].imageScanStatus.status" \
+#        --output text)
+#    sleep 2
+#done
+
+aws ecr wait image-scan-complete \
+    --registry-id "${REPOSITORY_ID}" \
+    --repository-name "${REPO_NAME}" \
+    --image-id imageTag="${IMAGE_TAG}"
+
 
 # retrieve counts of criticals and highs or fail build if scan failed
 case "${scan_status}" in
@@ -61,28 +67,30 @@ case "${scan_status}" in
             --output text)
         ;;
     *)
-        echo "ECR vulnerability scan failed with status: ${scan_status}"
+        buildkite-agent annotate --style error "ECR vulnerability scan failed with status: ${scan_status}"
         exit 1
         ;;
 esac
 
 # report results
-buildkite-agent annotate "Number of Criticals=${criticals}"
-buildkite-agent annotate "Number of Highs=${highs}"
+annotation=$(printf "%4d Critical vulnerabilities\n%4d High vulnerabilities\n" "${criticals}" "${highs}")
 
 # check if thresholds are exceeded and if so fail build
 fail_build="false"
 if [ -n "${MAX_CRITICALS}" ] && [ "${criticals}" -gt "${MAX_CRITICALS}" ]
 then
-    buildkite-agent annotate --style error "Criticals=${criticals} exceeds MAX_CRITICALS=${MAX_CRITICALS}"
+    annotation=$(printf "%s\nNumber of critical vulnerabilities exceeds threshold MAX_CRITICALS=%d\n" "${annotation}" "${criticals}")
     fail_build="true"
 fi
 if  [ -n "${MAX_HIGHS}" ] && [ "${highs}" -gt "${MAX_HIGHS}" ]
 then
-    buildkite-agent annotate --style error "Highs=${highs} exceeds MAX_HIGHS=${MAX_HIGHS}"
+    annotation=$(printf "%s\nNumber of critical vulnerabilities exceeds threshold MAX_HIGHS=%d\n" "${annotation}" "${highs}")
     fail_build="true"
 fi
 if  [ "${fail_build}" = "true" ]
 then
+    buildkite-agent annotate --style error "${annotation}"
     exit 1
+else
+    buildkite-agent annotate --style info "${annotation}"
 fi
