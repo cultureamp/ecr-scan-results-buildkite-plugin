@@ -1,6 +1,8 @@
 #! /bin/bash
 set -euo pipefail
 
+env | sort
+
 # check all inputs exist
 if [ -n "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME}" ]
 then
