@@ -1,26 +1,50 @@
 #! /bin/bash
 set -euo pipefail
 
-env | sort
-
-# check all inputs exist
+# check all inputs exist and are valid
+image_name_pattern="^[0-9]{12}\.dkr\.ecr\.[a-z][a-z1-9-]+\.amazonaws.com/[^:]+:[^:]+$"
+count_pattern="(^$)|(^[0-9]+$)"
 if [ -n "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME}" ]
 then
     IMAGE_NAME="${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME}"
+    if [[ ! "${IMAGE_NAME}" =~ ${image_name_pattern} ]]
+    then
+        annotation=$(printf "Error: value for IMAGE_NAME must be of the form AWS_ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/REPOSITORY_NAME:IMAGE_TAG with the text in capitals replaced with the appropriate values.\n")
+        echo -n "${annotation}"
+        buildkite-agent annotate --style error "${annotation}"
+        exit 1
+    fi
 else
-    echo "Error: no value for IMAGE_NAME Supplied"
+    annotation=$(printf "Error: no value for IMAGE_NAME configured.\n")
+    echo -n "${annotation}"
+    buildkite-agent annotate --style error "${annotation}"
+    exit 1
 fi
-if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME_MAX_CRITICALS+x}" ]
+if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS+x}" ]
 then
     MAX_CRITICALS="0"
 else
-    MAX_CRITICALS="${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME_MAX_CRITICALS}"
+    MAX_CRITICALS="${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS}"
+    if [[ ! "${MAX_CRITICALS}" =~ ${count_pattern} ]]
+    then
+        annotation=$(printf "Error: value for MAX_CRITICALS must be an empty string or a string containing a non-negative integer.\n")
+        echo -n "${annotation}"
+        buildkite-agent annotate --style error "${annotation}"
+        exit 1
+    fi
 fi
-if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME_MAX_HIGHS+x}" ]
+if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS+x}" ]
 then
     MAX_HIGHS="0"
 else
-    MAX_HIGHS="${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME_MAX_HIGHS}"
+    MAX_HIGHS="${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS}"
+    if [[ ! "${MAX_HIGHS}" =~ ${count_pattern} ]]
+    then
+        annotation=$(printf "Error: value for MAX_HIGHS must be an empty string or a string containing a non-negative integer.\n")
+        echo -n "${annotation}"
+        buildkite-agent annotate --style error "${annotation}"
+        exit 1
+    fi
 fi
 
 # print input values
@@ -33,26 +57,44 @@ REPO_NAME="${FULL_REPO_NAME#*/}"
 IMAGE_TAG="${IMAGE_NAME#*:}"
 REPOSITORY_ID="${IMAGE_NAME%%.*}"
 
-aws ecr wait image-scan-complete \
-    --registry-id "${REPOSITORY_ID}" \
-    --repository-name "${REPO_NAME}" \
-    --image-id imageTag="${IMAGE_TAG}"
+# poll until scan is COMPLETE or FAILED
+scan_status="IN_PROGRESS"
+i="0"
+while [ "${scan_status}" = "IN_PROGRESS" ]  && [ "$i" -le "100" ]
+do
+    scan_status=$(aws ecr describe-images \
+        --registry-id "${REPOSITORY_ID}" \
+        --repository-name "${REPO_NAME}" \
+        --image-ids imageTag="${IMAGE_TAG}" \
+        --query "imageDetails[0].imageScanStatus.status" \
+        --output text)
+    sleep 3
+    ((i=i+1))
+done
 
-
-# retrieve counts of criticals and highs
-criticals=$(aws ecr describe-images \
-    --registry-id "${REPOSITORY_ID}" \
-    --repository-name "${REPO_NAME}" \
-    --image-ids imageTag="${IMAGE_TAG}" \
-    --query "imageDetails[0].imageScanFindingsSummary.findingSeverityCounts.CRITICAL" \
-    --output text)
-
-highs=$(aws ecr describe-images \
-    --registry-id "${REPOSITORY_ID}" \
-    --repository-name "${REPO_NAME}" \
-    --image-ids imageTag="${IMAGE_TAG}" \
-    --query "imageDetails[0].imageScanFindingsSummary.findingSeverityCounts.HIGH" \
-    --output text)
+# retrieve counts of criticals and highs or fail build if scan failed
+case "${scan_status}" in
+    "COMPLETE")
+        criticals=$(aws ecr describe-images \
+            --registry-id "${REPOSITORY_ID}" \
+            --repository-name "${REPO_NAME}" \
+            --image-ids imageTag="${IMAGE_TAG}" \
+            --query "imageDetails[0].imageScanFindingsSummary.findingSeverityCounts.CRITICAL" \
+            --output text)
+        highs=$(aws ecr describe-images \
+            --registry-id "${REPOSITORY_ID}" \
+            --repository-name "${REPO_NAME}" \
+            --image-ids imageTag="${IMAGE_TAG}" \
+            --query "imageDetails[0].imageScanFindingsSummary.findingSeverityCounts.HIGH" \
+            --output text)
+        ;;
+    *)
+        annotation=$(printf "Error: ECR vulnerability scan failed with status: %s\n" "${scan_status}")
+        echo -n "${annotation}"
+        buildkite-agent annotate --style error "${annotation}"
+        exit 1
+        ;;
+esac
 
 # report results
 annotation=$(printf "%4d Critical vulnerabilities<br />%4d High vulnerabilities<br />" "${criticals}" "${highs}")
@@ -69,6 +111,7 @@ then
     annotation=$(printf "%sNumber of high vulnerabilities exceeds threshold MAX_HIGHS=%d" "${annotation}" "${MAX_HIGHS}")
     fail_build="true"
 fi
+echo -n "${annotation}"
 if  [ "${fail_build}" = "true" ]
 then
     buildkite-agent annotate --style error "${annotation}"
