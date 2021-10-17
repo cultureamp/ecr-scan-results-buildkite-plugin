@@ -97,26 +97,27 @@ case "${scan_status}" in
 esac
 
 # report results
-annotation=$(printf "%4d Critical vulnerabilities\n%4d High vulnerabilities\n" "${criticals}" "${highs}")
-buildkite-agent annotate --style error --context vuln_counts "${annotation//\n/<br />}"
+annotation=$(printf "%4d Critical vulnerabilities<br />%4d High vulnerabilities<br />" "${criticals}" "${highs}")
+buildkite-agent annotate --style error --context vuln_counts "${annotation}"
+echo -n "${annotation//<br />/\\n}"
 
 # check if thresholds are exceeded and if so fail build
 fail_build="false"
 annotation=""
 if [ -n "${MAX_CRITICALS}" ] && [ "${criticals}" -gt "${MAX_CRITICALS}" ]
 then
-    annotation=$(printf "%sNumber of critical vulnerabilities exceeds threshold MAX_CRITICALS=%d\n" "${annotation}" "${MAX_CRITICALS}")
+    annotation=$(printf "%sNumber of critical vulnerabilities exceeds threshold MAX_CRITICALS=%d<br />" "${annotation}" "${MAX_CRITICALS}")
     fail_build="true"
 fi
 if  [ -n "${MAX_HIGHS}" ] && [ "${highs}" -gt "${MAX_HIGHS}" ]
 then
-    annotation=$(printf "%sNumber of high vulnerabilities exceeds threshold MAX_HIGHS=%d\n" "${annotation}" "${MAX_HIGHS}")
+    annotation=$(printf "%sNumber of high vulnerabilities exceeds threshold MAX_HIGHS=%d<br />" "${annotation}" "${MAX_HIGHS}")
     fail_build="true"
 fi
 echo -n "${annotation}"
 if  [ "${fail_build}" = "true" ]
 then
-    echo -n "${annotation}"
-    buildkite-agent annotate --style error --context fail_reason "${annotation//\n/<br />}"
+    echo -n "${annotation//<br />/\\n}"
+    buildkite-agent annotate --style error --context fail_reason "${annotation}"
     exit 1
 fi
