@@ -108,7 +108,6 @@ then
     annotation=$(printf "%sNumber of high vulnerabilities exceeds threshold MAX_HIGHS=%d<br />" "${annotation}" "${MAX_HIGHS}")
     fail_build="true"
 fi
-echo -n "${annotation}"
 if  [ "${fail_build}" = "true" ]
 then
     buildkite-agent annotate --style error --context fail_reason "${annotation}"
