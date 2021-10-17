@@ -11,13 +11,13 @@ then
     then
         annotation=$(printf "Error: value for IMAGE_NAME must be of the form AWS_ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/REPOSITORY_NAME:IMAGE_TAG with the text in capitals replaced with the appropriate values.\n")
         echo -n "${annotation}"
-        buildkite-agent annotate --style error "${annotation}"
+        buildkite-agent annotate --style error --context "exit_reason" "${annotation}"
         exit 1
     fi
 else
     annotation=$(printf "Error: no value for IMAGE_NAME configured.\n")
     echo -n "${annotation}"
-    buildkite-agent annotate --style error "${annotation}"
+    buildkite-agent annotate --style error --context "exit_reason" "${annotation}"
     exit 1
 fi
 if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS+x}" ]
@@ -29,7 +29,7 @@ else
     then
         annotation=$(printf "Error: value for MAX_CRITICALS must be an empty string or a string containing a non-negative integer.\n")
         echo -n "${annotation}"
-        buildkite-agent annotate --style error "${annotation}"
+        buildkite-agent annotate --style error --context "exit_reason" "${annotation}"
         exit 1
     fi
 fi
@@ -42,7 +42,7 @@ else
     then
         annotation=$(printf "Error: value for MAX_HIGHS must be an empty string or a string containing a non-negative integer.\n")
         echo -n "${annotation}"
-        buildkite-agent annotate --style error "${annotation}"
+        buildkite-agent annotate --style error --context "exit_reason" "${annotation}"
         exit 1
     fi
 fi
@@ -91,31 +91,32 @@ case "${scan_status}" in
     *)
         annotation=$(printf "Error: ECR vulnerability scan failed with status: %s\n" "${scan_status}")
         echo -n "${annotation}"
-        buildkite-agent annotate --style error "${annotation}"
+        buildkite-agent annotate --style error --context "exit_reason" "${annotation}"
         exit 1
         ;;
 esac
 
 # report results
-annotation=$(printf "%4d Critical vulnerabilities<br />%4d High vulnerabilities<br />" "${criticals}" "${highs}")
+annotation=$(printf "%4d Critical vulnerabilities\n%4d High vulnerabilities\n" "${criticals}" "${highs}")
+buildkite-agent annotate --style errorr --context "vuln_counts" "${annotation//\n/<br />}"
 
 # check if thresholds are exceeded and if so fail build
 fail_build="false"
+annotation=""
 if [ -n "${MAX_CRITICALS}" ] && [ "${criticals}" -gt "${MAX_CRITICALS}" ]
 then
-    annotation=$(printf "%sNumber of critical vulnerabilities exceeds threshold MAX_CRITICALS=%d<br />" "${annotation}" "${MAX_CRITICALS}")
+    annotation=$(printf "%sNumber of critical vulnerabilities exceeds threshold MAX_CRITICALS=%d\n" "${annotation}" "${MAX_CRITICALS}")
     fail_build="true"
 fi
 if  [ -n "${MAX_HIGHS}" ] && [ "${highs}" -gt "${MAX_HIGHS}" ]
 then
-    annotation=$(printf "%sNumber of high vulnerabilities exceeds threshold MAX_HIGHS=%d" "${annotation}" "${MAX_HIGHS}")
+    annotation=$(printf "%sNumber of high vulnerabilities exceeds threshold MAX_HIGHS=%d\n" "${annotation}" "${MAX_HIGHS}")
     fail_build="true"
 fi
 echo -n "${annotation}"
 if  [ "${fail_build}" = "true" ]
 then
-    buildkite-agent annotate --style error "${annotation}"
+    echo -n "${annotation}"
+    buildkite-agent annotate --style error --context "fail_reason" "${annotation//\n/<br />}"
     exit 1
-else
-    buildkite-agent annotate --style info "${annotation}"
 fi
