@@ -51,7 +51,9 @@ echo "MAX_HIGHS=${MAX_HIGHS}"
 FULL_REPO_NAME="${IMAGE_NAME%:*}"
 REPO_NAME="${FULL_REPO_NAME#*/}"
 IMAGE_TAG="${IMAGE_NAME#*:}"
-REPOSITORY_ID="${IMAGE_NAME%%.*}"
+IFS="." read -ra dot_fields <<< "${IMAGE_NAME}"
+REPOSITORY_ID="${dot_fields[0]}"
+REGION="${dot_fields[3]}"
 
 # poll until scan is COMPLETE or FAILED
 scan_status="IN_PROGRESS"
@@ -83,6 +85,12 @@ case "${scan_status}" in
             --image-ids imageTag="${IMAGE_TAG}" \
             --query "imageDetails[0].imageScanFindingsSummary.findingSeverityCounts.HIGH" \
             --output text)
+        image_digest=$(aws ecr describe-images \
+            --registry-id "${REPOSITORY_ID}" \
+            --repository-name "${REPO_NAME}" \
+            --image-ids imageTag="${IMAGE_TAG}" \
+            --query "imageDetails[0].imageDigest" \
+            --output text)
         ;;
     *)
         annotation=$(printf "Error: ECR vulnerability scan failed with status: %s\n" "${scan_status}")
@@ -92,7 +100,8 @@ case "${scan_status}" in
 esac
 
 # report results
-annotation=$(printf "%4d Critical vulnerabilities<br />%4d High vulnerabilities<br />" "${criticals}" "${highs}")
+vuln_url=$(printf "https://%s.console.aws.amazon.com/ecr/repositories/private/%s/%s/image/sha256:%s/scan-results/?region=%s" "${REGION}" "${REPOSITORY_ID}" "${REPO_NAME}" "${image_digest}" "${REGION}")
+annotation=$(printf "%4d Critical vulnerabilities<br />%4d High vulnerabilities<br />Browse to <a href="%s">image vulnerabilities</a> when logged into the appropriate AWS account with ecr:DescribeImages and ecr:DescribeImageScanFindings permissions" "${criticals}" "${highs}" "${vuln_url}")
 buildkite-agent annotate --style info --context vuln_counts "${annotation}"
 
 # check if thresholds are exceeded and if so fail build
