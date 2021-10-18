@@ -18,7 +18,7 @@ else
     buildkite-agent annotate --style error --context exit_reason "${annotation}"
     exit 1
 fi
-if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS+x}" ]
+if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS}" ]
 then
     MAX_CRITICALS="0"
 else
@@ -30,7 +30,7 @@ else
         exit 1
     fi
 fi
-if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS+x}" ]
+if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS}" ]
 then
     MAX_HIGHS="0"
 else
@@ -93,7 +93,7 @@ esac
 
 # report results
 annotation=$(printf "%4d Critical vulnerabilities<br />%4d High vulnerabilities<br />" "${criticals}" "${highs}")
-buildkite-agent annotate --style error --context vuln_counts "${annotation}"
+buildkite-agent annotate --style info --context vuln_counts "${annotation}"
 
 # check if thresholds are exceeded and if so fail build
 fail_build="false"
