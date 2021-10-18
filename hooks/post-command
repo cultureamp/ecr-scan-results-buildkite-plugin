@@ -118,7 +118,7 @@ vuln_url=$(printf "https://%s.console.aws.amazon.com/ecr/repositories/private/%s
 
 if [ -n "${IMAGE_LABEL}" ]
 then
-    image_number_annotation=$(printf "IMAGE_LABEL: %s<br />" "${IMAGE_LABEL}")
+    image_number_annotation=$(printf "IMAGE_LABEL: \"%s\"<br />" "${IMAGE_LABEL}")
 else
     image_number_annotation=""
 fi
