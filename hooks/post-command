@@ -115,7 +115,7 @@ esac
 
 # report results
 vuln_url=$(printf "https://%s.console.aws.amazon.com/ecr/repositories/private/%s/%s/image/%s/scan-results/?region=%s" "${REGION}" "${REPOSITORY_ID}" "${REPO_NAME}" "${image_digest}" "${REGION}")
-annotation=$(printf "%4d Critical vulnerabilities<br />%4d High vulnerabilities<br />Browse to <a href=\"%s\">image vulnerabilities</a> when logged into the appropriate AWS account with <code>ecr:DescribeImages</code> and <code>ecr:DescribeImageScanFindings</code> permissions" "${criticals}" "${highs}" "${vuln_url}")
+annotation=$(printf "%4d Critical vulnerabilities<br />%4d High vulnerabilities<br />Browse to <a href=\"%s\">image vulnerabilities</a> when logged into the appropriate AWS account with `ecr:DescribeImages` and `ecr:DescribeImageScanFindings` permissions" "${criticals}" "${highs}" "${vuln_url}")
 buildkite-agent annotate --style info --context "vuln_counts${IMAGE_NUMBER}" "${annotation}"
 
 # check if thresholds are exceeded and if so fail build
