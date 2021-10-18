@@ -10,6 +10,4 @@ configuration:
       type: string
     max-highs:
       type: string
-    image-number:
-      type: string
   additionalProperties: false
