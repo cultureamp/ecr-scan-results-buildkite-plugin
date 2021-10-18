@@ -46,7 +46,8 @@ if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_LABEL+x}" ]
 then
     IMAGE_LABEL=""
 else
-    IMAGE_LABEL="_${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_LABEL}"
+    IMAGE_LABEL="${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_LABEL}"
+    IMAGE_LABEL_APP="_${IMAGE_LABEL}"
     if [[ ! "${IMAGE_LABEL}" =~ [a-z][a-z0-9]* ]]
     then
         annotation=$(printf "Error: value for IMAGE_LABEL must be a string beginning with a lowercase letter and consisting of lower case letters and digits.\n")
@@ -106,7 +107,7 @@ case "${scan_status}" in
         ;;
     *)
         annotation=$(printf "Error: ECR vulnerability scan failed with status: %s\n" "${scan_status}")
-        buildkite-agent annotate --style error --context "exit_reason${IMAGE_LABEL}" "${annotation}"
+        buildkite-agent annotate --style error --context "exit_reason${IMAGE_LABEL_APP}" "${annotation}"
         exit 1
         ;;
 esac
@@ -116,12 +117,12 @@ vuln_url=$(printf "https://%s.console.aws.amazon.com/ecr/repositories/private/%s
 
 if [ -n "${IMAGE_LABEL}" ]
 then
-    image_number_annotation=$(printf "IMAGE_LABEL=%s<br />" "${IMAGE_LABEL}")
+    image_number_annotation=$(printf "IMAGE_LABEL: %s<br />" "${IMAGE_LABEL}")
 else
     image_number_annotation=""
 fi
 annotation=$(printf "%s%4d Critical vulnerabilities<br />%4d High vulnerabilities<br />Browse to <a href=\"%s\">image vulnerabilities</a> when logged into the appropriate AWS account with ecr:DescribeImages and ecr:DescribeImageScanFindings permissions" "${image_number_annotation}" "${criticals}" "${highs}" "${vuln_url}")
-buildkite-agent annotate --style info --context "vuln_counts${IMAGE_LABEL}" "${annotation}"
+buildkite-agent annotate --style info --context "vuln_counts${IMAGE_LABEL_APP}" "${annotation}"
 
 # check if thresholds are exceeded and if so fail build
 fail_build="false"
@@ -138,6 +139,6 @@ then
 fi
 if  [ "${fail_build}" = "true" ]
 then
-    buildkite-agent annotate --style error --context "fail_reason${IMAGE_LABEL}" "${annotation}"
+    buildkite-agent annotate --style error --context "fail_reason${IMAGE_LABEL_APP}" "${annotation}"
     exit 1
 fi
