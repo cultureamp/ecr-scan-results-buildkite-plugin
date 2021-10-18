@@ -44,6 +44,18 @@ else
         exit 1
     fi
 fi
+if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NUMBER}" ]
+then
+    IMAGE_NUMBER=""
+else
+    IMAGE_NUMBER="_${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NUMBER}"
+    if [[ ! "${IMAGE_NUMBER}" =~ [1-9] ]]
+    then
+        annotation=$(printf "Error: value for IMAGE_NUMBER must be a single digit positive integer.\n")
+        buildkite-agent annotate --style error --context exit_reason "${annotation}"
+        exit 1
+    fi
+fi
 
 # print input values
 echo "IMAGE_NAME=${IMAGE_NAME}"
@@ -96,15 +108,15 @@ case "${scan_status}" in
         ;;
     *)
         annotation=$(printf "Error: ECR vulnerability scan failed with status: %s\n" "${scan_status}")
-        buildkite-agent annotate --style error --context exit_reason "${annotation}"
+        buildkite-agent annotate --style error --context "exit_reason${IMAGE_NUMBER}" "${annotation}"
         exit 1
         ;;
 esac
 
 # report results
 vuln_url=$(printf "https://%s.console.aws.amazon.com/ecr/repositories/private/%s/%s/image/%s/scan-results/?region=%s" "${REGION}" "${REPOSITORY_ID}" "${REPO_NAME}" "${image_digest}" "${REGION}")
-annotation=$(printf "%4d Critical vulnerabilities<br />%4d High vulnerabilities<br />Browse to <a href=\"%s\">image vulnerabilities</a> when logged into the appropriate AWS account with <span style=\"background-color: gray; font-family: monospace\">ecr:DescribeImages</span> and ecr:DescribeImageScanFindings permissions" "${criticals}" "${highs}" "${vuln_url}")
-buildkite-agent annotate --style info --context vuln_counts "${annotation}"
+annotation=$(printf "%4d Critical vulnerabilities<br />%4d High vulnerabilities<br />Browse to <a href=\"%s\">image vulnerabilities</a> when logged into the appropriate AWS account with <code>ecr:DescribeImages</code> and <code>ecr:DescribeImageScanFindings</code> permissions" "${criticals}" "${highs}" "${vuln_url}")
+buildkite-agent annotate --style info --context "vuln_counts${IMAGE_NUMBER}" "${annotation}"
 
 # check if thresholds are exceeded and if so fail build
 fail_build="false"
@@ -121,6 +133,6 @@ then
 fi
 if  [ "${fail_build}" = "true" ]
 then
-    buildkite-agent annotate --style error --context fail_reason "${annotation}"
+    buildkite-agent annotate --style error --context "fail_reason${IMAGE_NUMBER}" "${annotation}"
     exit 1
 fi
