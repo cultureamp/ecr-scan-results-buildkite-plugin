@@ -18,7 +18,7 @@ else
     buildkite-agent annotate --style error --context exit_reason "${annotation}"
     exit 1
 fi
-if [ -n "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS}" ]
+if [[ -n "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS}" ]]
 then
     MAX_CRITICALS="${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS}"
     if [[ ! "${MAX_CRITICALS}" =~ ${count_pattern} ]]
@@ -30,7 +30,7 @@ then
 else
     MAX_CRITICALS="0"
 fi
-if [ -n "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS}" ]
+if [[ -n "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS}" ]]
 then
     MAX_HIGHS="${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS}"
     if [[ ! "${MAX_HIGHS}" =~ ${count_pattern} ]]
