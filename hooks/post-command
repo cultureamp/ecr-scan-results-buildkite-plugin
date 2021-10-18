@@ -3,7 +3,7 @@ set -euo pipefail
 
 # check all inputs exist and are valid
 image_name_pattern="^[0-9]{12}\.dkr\.ecr\.[a-z][a-z1-9-]+\.amazonaws.com/[^:]+:[^:]+$"
-count_pattern="(^$)|(^[0-9]+$)"
+count_pattern="^[0-9]+$"
 if [ -n "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME}" ]
 then
     IMAGE_NAME="${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME}"
@@ -94,12 +94,14 @@ case "${scan_status}" in
             --image-ids imageTag="${IMAGE_TAG}" \
             --query "imageDetails[0].imageScanFindingsSummary.findingSeverityCounts.CRITICAL" \
             --output text)
+        if [ "${criticals}" = "None" ]; then criticals="0"; fi
         highs=$(aws ecr describe-images \
             --registry-id "${REPOSITORY_ID}" \
             --repository-name "${REPO_NAME}" \
             --image-ids imageTag="${IMAGE_TAG}" \
             --query "imageDetails[0].imageScanFindingsSummary.findingSeverityCounts.HIGH" \
             --output text)
+        if [ "${highs}" = "None" ]; then highs="0"; fi
         image_digest=$(aws ecr describe-images \
             --registry-id "${REPOSITORY_ID}" \
             --repository-name "${REPO_NAME}" \
