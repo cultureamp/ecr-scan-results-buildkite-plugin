@@ -56,8 +56,8 @@ If the number of critical vulnerabilities in the image exceeds this threshold th
 ### `max-highs` (Optional, string)
 If the number of high vulnerabilities in the image exceeds this threshold the build is failed. Defaults to 0.  Use a sufficiently large number (e.g. 999) to allow the build to always pass.
 
-### `image-number` (Optional, string)
-If this plugin is used for multiple images in the same pipeline then set `image-number` to a different number for each image, e.g. `1`, `2` etc. If the pipeline only builds one image then don't use this parameter. See the example pipeline below for how to use this parameter.
+### `image-label` (Optional, string)
+If this plugin is used for multiple images in the same pipeline then set `image-label` to a different alphanumeric label for each image, e.g. `development`, `master` etc. If the pipeline only builds one image then don't use this parameter. See the example pipeline below for how to use this parameter.
 
 ```yml
 steps:
@@ -73,7 +73,7 @@ steps:
           image-name: "$DEV_BUILD_REPO:deploy-$DEV_BUILD_TAG"
           max-criticals: "2"
           max-highs: "20"
-          image-number: "1"
+          image-label: "development"
 
 
   - name: "build_and_push_master"
@@ -88,7 +88,7 @@ steps:
           image-name: "$MASTER_BUILD_REPO:deploy-$MASTER_BUILD_TAG"
           max-criticals: "1"
           max-highs: "10"
-          image-number: "2"
+          image-label: "master"
 ```
 
 
