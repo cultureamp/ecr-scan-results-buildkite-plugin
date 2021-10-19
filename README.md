@@ -101,4 +101,7 @@ This plugin assumes that the ECR repository has the ScanOnPush setting set (see 
 The Buildkite agent needs the AWS IAM `ecr:DescribeImages` permission to retrieve the vulnerability scan counts. Culture Amp build-roles created by `Base Infrastructure for Services` have all been modified to include this permission.
 
 ### Scatch images are not supported
-ECR cannot scan scratch based images. Nor does it need to since the underlying container doesnt not contain anything. If this plugin is installed and pointed at a scratch image you may receive an error and it may block the pipeline as a result. The error `UnsupportImageError` is expected in this scenario see (https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning-troubleshooting.html) for more information.
+
+ECR cannot scan scratch based images, and this should be OK as the underlying container doesn't contain packages to scan.
+
+If this plugin is installed and pointed at a scratch image you may receive an error and it may block the pipeline as a result. The error `UnsupportedImageError` is expected in this scenario; see [the ECR docs](https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning-troubleshooting.html) for more information.
