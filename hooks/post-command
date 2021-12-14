@@ -1,6 +1,24 @@
 #! /bin/bash
 set -euo pipefail
 
+function notify_error {
+    exit_statement="
+A failure occurred while attempting to retrieve ECR scan results.
+
+This will not block CI, but please notify the ecr-scan-plugin maintainers of the issue.
+"
+
+    echo "^^^ +++"
+    echo "${exit_statement}"
+
+    # try to add an annotation, but skip if it doesn't work
+    buildkite-agent annotate --style warning "${exit_statement}" || true
+
+    exit 0
+}
+
+trap notify_error ERR
+
 # check all inputs exist and are valid
 image_name_pattern="^[0-9]{12}\.dkr\.ecr\.[a-z][a-z1-9-]+\.amazonaws.com/[^:]+:[^:]+$"
 count_pattern="^[0-9]+$"
