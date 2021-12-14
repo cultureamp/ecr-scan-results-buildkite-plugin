@@ -88,13 +88,17 @@ scan_status="IN_PROGRESS"
 i="0"
 while [ "${scan_status}" = "IN_PROGRESS" ]  && [ "$i" -le "100" ]
 do
+    echo "Poll attempt ${i}..."
     scan_status=$(aws ecr describe-image-scan-findings \
         --registry-id "${REPOSITORY_ID}" \
         --repository-name "${REPO_NAME}" \
         --image-id "${image_identifier}" \
         --query "imageScanStatus.status" \
         --output text)
-    sleep 3
+
+    # Give some time for the results to be available
+    [ "$i" != "0" ] && sleep 3
+
     ((i=i+1))
 done
 
