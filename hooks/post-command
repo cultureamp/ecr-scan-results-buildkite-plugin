@@ -99,6 +99,8 @@ image_digest=$(aws ecr describe-images \
 
 image_identifier="imageDigest=${image_digest}"
 
+echo "Using image digest: ${image_digest}"
+
 echo "--- waiting for scan results to be available..."
 
 # poll until scan is COMPLETE or FAILED
@@ -120,7 +122,17 @@ do
     ((i=i+1))
 done
 
-if [[ "${scan_status}" != "COMPLETE" && "${scan_status}" != "ACTIVE" ]]; then
+if [[ "${scan_status}" == "UNSUPPORTED_IMAGE" ]]; then
+    annotation=$(printf "Warning: ECR vulnerability scan does not support this image type: %s\n\nThe \`ecr-scan-results\` plugin will not supply useful results for this image: \`${IMAGE_NAME}\`" "${scan_status}")
+
+    echo "^^^ +++"
+    echo "${annotation}"
+
+    buildkite-agent annotate --style warning --context "exit_reason${IMAGE_LABEL_APP}" "${annotation}"
+
+    # not a blocking error
+    exit 0
+elif [[ "${scan_status}" != "COMPLETE" && "${scan_status}" != "ACTIVE" ]]; then
     annotation=$(printf "Error: ECR vulnerability scan failed with status: %s\n" "${scan_status}")
 
     echo "^^^ +++"
