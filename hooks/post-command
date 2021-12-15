@@ -99,6 +99,8 @@ image_digest=$(aws ecr describe-images \
 
 image_identifier="imageDigest=${image_digest}"
 
+echo "Using image digest: ${image_digest}"
+
 echo "--- waiting for scan results to be available..."
 
 # poll until scan is COMPLETE or FAILED
