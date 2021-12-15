@@ -8,7 +8,7 @@ Add the following lines to your `pipeline.yml`:
 
 ```yml
     plugins:
-      - cultureamp/ecr-scan-results#v1.1.1:
+      - cultureamp/ecr-scan-results#v1.1.4:
           image-name: "$BUILD_REPO:deploy-$BUILD_TAG"
 ```
 
@@ -23,7 +23,7 @@ steps:
     plugins:
       - cultureamp/aws-assume-role:
           role: ${BUILD_ROLE}
-      - cultureamp/ecr-scan-results#v1.1.1:
+      - cultureamp/ecr-scan-results#v1.1.4:
           image-name: "$BUILD_REPO:deploy-$BUILD_TAG"
 ```
 
@@ -38,7 +38,7 @@ steps:
     plugins:
       - cultureamp/aws-assume-role:
           role: ${BUILD_ROLE}
-      - cultureamp/ecr-scan-results#v1.1.1:
+      - cultureamp/ecr-scan-results#v1.1.4:
           image-name: "$BUILD_REPO:deploy-$BUILD_TAG"
           max-criticals: "1"
           max-highs: "10"
@@ -69,7 +69,7 @@ steps:
     plugins:
       cultureamp/aws-assume-role:
         role: ${DEV_BUILD_ROLE}
-        - cultureamp/ecr-scan-results#v1.1.1:
+        - cultureamp/ecr-scan-results#v1.1.4:
           image-name: "$DEV_BUILD_REPO:deploy-$DEV_BUILD_TAG"
           max-criticals: "2"
           max-highs: "20"
@@ -84,7 +84,7 @@ steps:
     plugins:
       cultureamp/aws-assume-role:
         role: ${MASTER_BUILD_ROLE}
-        - cultureamp/ecr-scan-results#v1.1.1:
+        - cultureamp/ecr-scan-results#v1.1.4:
           image-name: "$MASTER_BUILD_REPO:deploy-$MASTER_BUILD_TAG"
           max-criticals: "1"
           max-highs: "10"
@@ -100,7 +100,7 @@ This plugin assumes that the ECR repository has the ScanOnPush setting set (see 
 ### Agent role requires the ecr:DescribeImages permission.
 The Buildkite agent needs the AWS IAM `ecr:DescribeImages` permission to retrieve the vulnerability scan counts. Culture Amp build-roles created by `Base Infrastructure for Services` have all been modified to include this permission.
 
-### Scatch images are not supported
+### Scratch images are not supported
 
 ECR cannot scan scratch based images, and this should be OK as the underlying container doesn't contain packages to scan.
 
