@@ -90,6 +90,16 @@ REGION="${dot_fields[3]}"
 
 echo "--- retrieving image digest"
 
+cat << EOM
+using inputs:
+    FULL_REPO_NAME="${FULL_REPO_NAME}"
+    REPO_NAME="${REPO_NAME}"
+    IMAGE_TAG="${IMAGE_TAG}"
+    REPOSITORY_ID="${REPOSITORY_ID}"
+    REGION="${REGION}"
+
+EOM
+
 image_digest=$(aws ecr describe-images \
         --registry-id "${REPOSITORY_ID}" \
         --repository-name "${REPO_NAME}" \
@@ -109,12 +119,13 @@ i="0"
 while [ "${scan_status}" = "IN_PROGRESS" ]  && [ "$i" -le "100" ]
 do
     echo "Poll attempt ${i}..."
-    scan_status=$(aws ecr describe-image-scan-findings \
+    scan_status="$(aws ecr describe-image-scan-findings \
         --registry-id "${REPOSITORY_ID}" \
         --repository-name "${REPO_NAME}" \
         --image-id "${image_identifier}" \
+        --no-paginate \
         --query "imageScanStatus.status" \
-        --output text)
+        --output text)"
 
     # Give some time for the results to be available
     [ "$i" != "0" ] && sleep 3
@@ -152,6 +163,7 @@ criticals=$(aws ecr describe-image-scan-findings \
     --registry-id "${REPOSITORY_ID}" \
     --repository-name "${REPO_NAME}" \
     --image-id "${image_identifier}" \
+    --no-paginate \
     --query "imageScanFindings.findingSeverityCounts.CRITICAL" \
     --output text)
 if [ "${criticals}" = "None" ]; then criticals="0"; fi
@@ -160,6 +172,7 @@ highs=$(aws ecr describe-image-scan-findings \
     --registry-id "${REPOSITORY_ID}" \
     --repository-name "${REPO_NAME}" \
     --image-id "${image_identifier}" \
+    --no-paginate \
     --query "imageScanFindings.findingSeverityCounts.HIGH" \
     --output text)
 if [ "${highs}" = "None" ]; then highs="0"; fi
