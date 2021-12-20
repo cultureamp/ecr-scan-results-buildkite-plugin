@@ -113,10 +113,15 @@ echo "Using image digest: ${image_digest}"
 
 echo "--- waiting for scan results to be available..."
 
+# seconds to wait between attempts
+poll_wait=3
+# number of attempts
+poll_attempts=20
+
 # poll until scan is COMPLETE or FAILED
 scan_status="SCAN_NOT_PRESENT"
 i="0"
-while [[ "${scan_status}" = "SCAN_NOT_PRESENT" || "${scan_status}" = "IN_PROGRESS" || "${scan_status}" = "PENDING" ]]  && [ "$i" -le "20" ]
+while [[ "${scan_status}" = "SCAN_NOT_PRESENT" || "${scan_status}" = "IN_PROGRESS" || "${scan_status}" = "PENDING" ]]  && [ "$i" -le "${poll_attempts}" ]
 do
     echo "Poll attempt ${i}..."
     if ! scan_status="$(aws ecr describe-image-scan-findings \
@@ -139,7 +144,7 @@ do
     echo "scan status: ${scan_status}"
 
     # Give some time for the results to be available
-    [ "$i" != "0" ] && sleep 3
+    [ "$i" != "0" ] && sleep "${poll_wait}"
 
     ((i=i+1))
 done
