@@ -113,10 +113,15 @@ echo "Using image digest: ${image_digest}"
 
 echo "--- waiting for scan results to be available..."
 
+# seconds to wait between attempts
+poll_wait=3
+# number of attempts
+poll_attempts=20
+
 # poll until scan is COMPLETE or FAILED
 scan_status="SCAN_NOT_PRESENT"
 i="0"
-while [[ "${scan_status}" = "SCAN_NOT_PRESENT" || "${scan_status}" = "IN_PROGRESS" || "${scan_status}" = "PENDING" ]]  && [ "$i" -le "20" ]
+while [[ "${scan_status}" = "SCAN_NOT_PRESENT" || "${scan_status}" = "IN_PROGRESS" || "${scan_status}" = "PENDING" ]]  && [ "$i" -le "${poll_attempts}" ]
 do
     echo "Poll attempt ${i}..."
     if ! scan_status="$(aws ecr describe-image-scan-findings \
@@ -139,7 +144,7 @@ do
     echo "scan status: ${scan_status}"
 
     # Give some time for the results to be available
-    [ "$i" != "0" ] && sleep 3
+    [ "$i" != "0" ] && sleep "${poll_wait}"
 
     ((i=i+1))
 done
@@ -155,14 +160,17 @@ if [[ "${scan_status}" == "UNSUPPORTED_IMAGE" ]]; then
     # not a blocking error
     exit 0
 elif [[ "${scan_status}" != "COMPLETE" && "${scan_status}" != "ACTIVE" ]]; then
-    annotation=$(printf "Error: ECR vulnerability scan failed with status: %s\n" "${scan_status}")
+    annotation=$(printf "ECR vulnerability scan failed with status: %s.\n\nVulnerability details not available." "${scan_status}")
+    if [[ "${scan_status}" = "SCAN_NOT_PRESENT" ]]; then
+        annotation=$(printf "No ECR vulnerability scan available for image: \`%s\`\n\nThe results may be taking some time to report, or there may be an issue with scan configuration." "${IMAGE_NAME}")
+    fi
 
     echo "^^^ +++"
     echo "${annotation}"
 
-    buildkite-agent annotate --style error --context "exit_reason${IMAGE_LABEL_APP}" "${annotation}"
+    buildkite-agent annotate --style warning --context "exit_reason${IMAGE_LABEL_APP}" "${annotation}"
 
-    exit 1
+    exit 0
 fi
 
 echo "scan complete"
