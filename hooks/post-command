@@ -167,7 +167,7 @@ elif [[ "${scan_status}" != "COMPLETE" && "${scan_status}" != "ACTIVE" ]]; then
 
     buildkite-agent annotate --style error --context "exit_reason${IMAGE_LABEL_APP}" "${annotation}"
 
-    exit 1
+    exit 0
 fi
 
 echo "scan complete"
