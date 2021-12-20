@@ -8,7 +8,7 @@ Add the following lines to your `pipeline.yml`:
 
 ```yml
     plugins:
-      - cultureamp/ecr-scan-results#v1.1.4:
+      - cultureamp/ecr-scan-results#v1.1.7:
           image-name: "$BUILD_REPO:deploy-$BUILD_TAG"
 ```
 
@@ -23,7 +23,7 @@ steps:
     plugins:
       - cultureamp/aws-assume-role:
           role: ${BUILD_ROLE}
-      - cultureamp/ecr-scan-results#v1.1.4:
+      - cultureamp/ecr-scan-results#v1.1.7:
           image-name: "$BUILD_REPO:deploy-$BUILD_TAG"
 ```
 
@@ -38,7 +38,7 @@ steps:
     plugins:
       - cultureamp/aws-assume-role:
           role: ${BUILD_ROLE}
-      - cultureamp/ecr-scan-results#v1.1.4:
+      - cultureamp/ecr-scan-results#v1.1.7:
           image-name: "$BUILD_REPO:deploy-$BUILD_TAG"
           max-criticals: "1"
           max-highs: "10"
@@ -69,7 +69,7 @@ steps:
     plugins:
       cultureamp/aws-assume-role:
         role: ${DEV_BUILD_ROLE}
-        - cultureamp/ecr-scan-results#v1.1.4:
+        - cultureamp/ecr-scan-results#v1.1.7:
           image-name: "$DEV_BUILD_REPO:deploy-$DEV_BUILD_TAG"
           max-criticals: "2"
           max-highs: "20"
@@ -84,7 +84,7 @@ steps:
     plugins:
       cultureamp/aws-assume-role:
         role: ${MASTER_BUILD_ROLE}
-        - cultureamp/ecr-scan-results#v1.1.4:
+        - cultureamp/ecr-scan-results#v1.1.7:
           image-name: "$MASTER_BUILD_REPO:deploy-$MASTER_BUILD_TAG"
           max-criticals: "1"
           max-highs: "10"
