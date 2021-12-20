@@ -12,7 +12,7 @@ This will not block CI, but please notify the ecr-scan-plugin maintainers of the
     echo "${exit_statement}"
 
     # try to add an annotation, but skip if it doesn't work
-    echo buildkite-agent annotate --style warning "${exit_statement}" || true
+    buildkite-agent annotate --style warning "${exit_statement}" || true
 
     exit 0
 }
@@ -28,12 +28,12 @@ then
     if [[ ! "${IMAGE_NAME}" =~ ${image_name_pattern} ]]
     then
         annotation=$(printf "Error: value for IMAGE_NAME must be of the form AWS_ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/REPOSITORY_NAME:IMAGE_TAG with the text in capitals replaced with the appropriate values.\n")
-        echo buildkite-agent annotate --style error --context exit_reason "${annotation}"
+        buildkite-agent annotate --style error --context exit_reason "${annotation}"
         exit 1
     fi
 else
     annotation=$(printf "Error: no value for IMAGE_NAME configured.\n")
-    echo buildkite-agent annotate --style error --context exit_reason "${annotation}"
+    buildkite-agent annotate --style error --context exit_reason "${annotation}"
     exit 1
 fi
 if [ -z "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS+x}" ]
@@ -44,7 +44,7 @@ else
     if [[ ! "${MAX_CRITICALS}" =~ ${count_pattern} ]]
     then
         annotation=$(printf "Error: value for MAX_CRITICALS must be an empty string or a string containing a non-negative integer.\n")
-        echo buildkite-agent annotate --style error --context exit_reason "${annotation}"
+        buildkite-agent annotate --style error --context exit_reason "${annotation}"
         exit 1
     fi
 fi
@@ -56,7 +56,7 @@ else
     if [[ ! "${MAX_HIGHS}" =~ ${count_pattern} ]]
     then
         annotation=$(printf "Error: value for MAX_HIGHS must be an empty string or a string containing a non-negative integer.\n")
-        echo buildkite-agent annotate --style error --context exit_reason "${annotation}"
+        buildkite-agent annotate --style error --context exit_reason "${annotation}"
         exit 1
     fi
 fi
@@ -70,7 +70,7 @@ else
     if [[ ! "${IMAGE_LABEL}" =~ [a-z][a-z0-9]* ]]
     then
         annotation=$(printf "Error: value for IMAGE_LABEL must be a string beginning with a lowercase letter and consisting of lower case letters and digits.\n")
-        echo buildkite-agent annotate --style error --context exit_reason "${annotation}"
+        buildkite-agent annotate --style error --context exit_reason "${annotation}"
         exit 1
     fi
 fi
@@ -122,7 +122,7 @@ do
     if ! scan_status="$(aws ecr describe-image-scan-findings \
         --registry-id "${REPOSITORY_ID}" \
         --repository-name "${REPO_NAME}" \
-        --image-id "imageTag=${IMAGE_TAG}foo" \
+        --image-id "${image_identifier}" \
         --no-paginate \
         --query "imageScanStatus.status" \
         --output text 2>&1)"; then
@@ -149,7 +149,7 @@ if [[ "${scan_status}" == "UNSUPPORTED_IMAGE" ]]; then
     echo "^^^ +++"
     echo "${annotation}"
 
-    echo buildkite-agent annotate --style warning --context "exit_reason${IMAGE_LABEL_APP}" "${annotation}"
+    buildkite-agent annotate --style warning --context "exit_reason${IMAGE_LABEL_APP}" "${annotation}"
 
     # not a blocking error
     exit 0
@@ -159,7 +159,7 @@ elif [[ "${scan_status}" != "COMPLETE" && "${scan_status}" != "ACTIVE" ]]; then
     echo "^^^ +++"
     echo "${annotation}"
 
-    echo buildkite-agent annotate --style error --context "exit_reason${IMAGE_LABEL_APP}" "${annotation}"
+    buildkite-agent annotate --style error --context "exit_reason${IMAGE_LABEL_APP}" "${annotation}"
 
     exit 1
 fi
@@ -214,6 +214,6 @@ then
 fi
 if  [ "${fail_build}" = "true" ]
 then
-    echo buildkite-agent annotate --style error --context "fail_reason${IMAGE_LABEL_APP}" "${annotation}"
+    buildkite-agent annotate --style error --context "fail_reason${IMAGE_LABEL_APP}" "${annotation}"
     exit 1
 fi
