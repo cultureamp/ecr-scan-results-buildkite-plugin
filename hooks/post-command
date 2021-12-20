@@ -160,7 +160,10 @@ if [[ "${scan_status}" == "UNSUPPORTED_IMAGE" ]]; then
     # not a blocking error
     exit 0
 elif [[ "${scan_status}" != "COMPLETE" && "${scan_status}" != "ACTIVE" ]]; then
-    annotation=$(printf "ECR vulnerability scan failed with status: %s\n\nVulnerability details not available." "${scan_status}")
+    annotation=$(printf "ECR vulnerability scan failed with status: %s.\n\nVulnerability details not available." "${scan_status}")
+    if [[ "${scan_status}" = "SCAN_NOT_PRESENT" ]]; then
+        annotation=$(printf "No ECR vulnerability scan available for image: \`%s\`\n\nThe results may be taking some time to report, or there may be an issue with scan configuration." "${IMAGE_NAME}")
+    fi
 
     echo "^^^ +++"
     echo "${annotation}"
