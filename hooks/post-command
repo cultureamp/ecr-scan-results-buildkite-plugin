@@ -190,30 +190,48 @@ if [ "${highs}" = "None" ]; then highs="0"; fi
 # report results
 vuln_url=$(printf "https://%s.console.aws.amazon.com/ecr/repositories/private/%s/%s/image/%s/scan-results/?region=%s" "${REGION}" "${REPOSITORY_ID}" "${REPO_NAME}" "${image_digest}" "${REGION}")
 
+image_label_header="#### Vulnerability summary"
 if [ -n "${IMAGE_LABEL}" ]
 then
-    image_number_annotation=$(printf "IMAGE_LABEL: \"%s\"<br />" "${IMAGE_LABEL}")
-else
-    image_number_annotation=""
+    image_label_header=$(printf "#### Vulnerability summary for \"%s\"\n\n" "${IMAGE_LABEL}")
 fi
-annotation=$(printf "%s%4d Critical vulnerabilities<br />%4d High vulnerabilities<br />Browse to <a href=\"%s\">image vulnerabilities</a> when logged into the appropriate AWS account with ecr:DescribeImages and ecr:DescribeImageScanFindings permissions" "${image_number_annotation}" "${criticals}" "${highs}" "${vuln_url}")
-echo buildkite-agent annotate --style info --context "vuln_counts${IMAGE_LABEL_APP}" "${annotation}"
+
+annotation_style="info"
 
 # check if thresholds are exceeded and if so fail build
 fail_build="false"
-annotation="${image_number_annotation}"
+exceeded_criticals=""
+exceeded_highs=""
+
 if [ -n "${MAX_CRITICALS}" ] && [ "${criticals}" -gt "${MAX_CRITICALS}" ]
 then
-    annotation=$(printf "%sNumber of critical vulnerabilities exceeds threshold MAX_CRITICALS=%d<br />" "${annotation}" "${MAX_CRITICALS}")
+    exceeded_criticals=$(printf "**exceeds threshold %d**" "${MAX_CRITICALS}")
+    annotation_style="error"
     fail_build="true"
 fi
+
 if  [ -n "${MAX_HIGHS}" ] && [ "${highs}" -gt "${MAX_HIGHS}" ]
 then
-    annotation=$(printf "%sNumber of high vulnerabilities exceeds threshold MAX_HIGHS=%d<br />" "${annotation}" "${MAX_HIGHS}")
+    exceeded_highs=$(printf "**exceeds threshold %d**" "${MAX_HIGHS}")
+    annotation_style="error"
     fail_build="true"
 fi
+
+annotation=$(cat << EOM
+${image_label_header}
+
+- Critical: ${criticals} ${exceeded_criticals}
+- High: ${highs} ${exceeded_highs}
+
+<a href="${vuln_url}">Vulnerability details are available</a> in the AWS console. This link will work
+when logged into the appropriate AWS account (${REPOSITORY_ID}) with \`ecr:DescribeImages\`
+and \`ecr:DescribeImageScanFindings\` permissions.
+EOM
+)
+
+buildkite-agent annotate --style "${annotation_style}" --context "vuln_counts${IMAGE_LABEL_APP}" "${annotation}"
+
 if  [ "${fail_build}" = "true" ]
 then
-    buildkite-agent annotate --style error --context "fail_reason${IMAGE_LABEL_APP}" "${annotation}"
     exit 1
 fi
