@@ -114,9 +114,9 @@ echo "Using image digest: ${image_digest}"
 echo "--- waiting for scan results to be available..."
 
 # poll until scan is COMPLETE or FAILED
-scan_status="IN_PROGRESS"
+scan_status="SCAN_NOT_PRESENT"
 i="0"
-while [ "${scan_status}" = "IN_PROGRESS" ]  && [ "$i" -le "20" ]
+while [[ "${scan_status}" = "SCAN_NOT_PRESENT" || "${scan_status}" = "IN_PROGRESS" || "${scan_status}" = "PENDING" ]]  && [ "$i" -le "20" ]
 do
     echo "Poll attempt ${i}..."
     if ! scan_status="$(aws ecr describe-image-scan-findings \
@@ -129,13 +129,14 @@ do
 
         if grep -q "ScanNotFoundException" <<<"$scan_status"; then
             # if the scan isn't found, give it some more time to find the result
-            echo "Scan results not yet present"
-            scan_status="IN_PROGRESS"
+            scan_status="SCAN_NOT_PRESENT"
         else
             echo 1>&2 "${scan_status}"
             notify_error
         fi
     fi
+
+    echo "scan status: ${scan_status}"
 
     # Give some time for the results to be available
     [ "$i" != "0" ] && sleep 3
