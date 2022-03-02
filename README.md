@@ -7,9 +7,12 @@ Buildkite plugin to retrieve ECR scan results
 Add the following lines to your `pipeline.yml`:
 
 ```yml
+steps:
+  - command: "command which creates an image"
+    # the docker-compose plugin may be used here instead of a command
     plugins:
-      - cultureamp/ecr-scan-results#v1.1.7:
-          image-name: "$BUILD_REPO:deploy-$BUILD_TAG"
+    - cultureamp/ecr-scan-results#v1.1.7:
+        image-name: "$BUILD_REPO:deploy-$BUILD_TAG"
 ```
 
 In a pipeline this will look something like:
@@ -67,14 +70,13 @@ steps:
     agents:
       queue: build-unrestricted
     plugins:
-      cultureamp/aws-assume-role:
-        role: ${DEV_BUILD_ROLE}
-        - cultureamp/ecr-scan-results#v1.1.7:
+      - cultureamp/aws-assume-role:
+          role: ${DEV_BUILD_ROLE}
+      - cultureamp/ecr-scan-results#v1.1.7:
           image-name: "$DEV_BUILD_REPO:deploy-$DEV_BUILD_TAG"
           max-criticals: "2"
           max-highs: "20"
           image-label: "development"
-
 
   - name: "build_and_push_master"
     command: "bin/ci_build_and_push.sh"
@@ -82,9 +84,9 @@ steps:
     agents:
       queue: build-restricted
     plugins:
-      cultureamp/aws-assume-role:
-        role: ${MASTER_BUILD_ROLE}
-        - cultureamp/ecr-scan-results#v1.1.7:
+      - cultureamp/aws-assume-role:
+          role: ${MASTER_BUILD_ROLE}
+      - cultureamp/ecr-scan-results#v1.1.7:
           image-name: "$MASTER_BUILD_REPO:deploy-$MASTER_BUILD_TAG"
           max-criticals: "1"
           max-highs: "10"
