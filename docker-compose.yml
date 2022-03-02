@@ -4,3 +4,8 @@ services:
     command: ['--id', 'cultureamp/ecr-scan-results']
     volumes:
       - ".:/plugin:ro"
+
+  tests:
+    image: buildkite/plugin-tester
+    volumes:
+      - ".:/plugin:ro"
