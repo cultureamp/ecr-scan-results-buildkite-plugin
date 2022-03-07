@@ -80,7 +80,7 @@ load '../lib/interface'
 
   assert_success
   assert_line --partial "No ECR vulnerability scan available for image"
-  assert_line --partial "buildkite-agent annotate --style warning --context exit_reason_imagelabel No ECR vulnerability scan available for image:"
+  assert_line --partial "buildkite-agent annotate --context ecr_scan_results_failed_imagelabel --style warning No ECR vulnerability scan available for image:"
 
   unset get_ecr_image_digest
   unset poll_ecr_scan_result
@@ -107,7 +107,7 @@ load '../lib/interface'
 
   assert_success
   assert_line --partial "Warning: ECR vulnerability scan does not support this image type"
-  assert_line --partial "buildkite-agent annotate --style warning --context exit_reason_imagelabel Warning: ECR vulnerability scan does not support"
+  assert_line --partial "buildkite-agent annotate --context ecr_scan_results_failed_imagelabel --style warning Warning: ECR vulnerability scan does not support"
 
   unset get_ecr_image_digest
   unset poll_ecr_scan_result

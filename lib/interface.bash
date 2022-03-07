@@ -81,30 +81,17 @@ EOM
   scan_status="$(poll_ecr_scan_result "${REPOSITORY_ID}" "${REPO_NAME}" "${image_identifier}" "${POLL_ATTEMPTS:-"20"}")"
 
   if [[ "${scan_status}" == "UNSUPPORTED_IMAGE" ]]; then
-      annotation=$(printf "Warning: ECR vulnerability scan does not support this image type (%s).\n\nThe \`ecr-scan-results\` plugin will not supply useful results for this image: \`${IMAGE_NAME}\`" "${scan_status}")
-
-      echo "^^^ +++"
-      echo "${annotation}"
-
-      buildkite-agent annotate --style warning --context "exit_reason${IMAGE_LABEL_APP}" "${annotation}"
-
-      # not a blocking error
-      exit 0
+    annotation=$(printf "Warning: ECR vulnerability scan does not support this image type (%s).\n\nThe \`ecr-scan-results\` plugin will not supply useful results for this image: \`%s\`" "${scan_status}" "${IMAGE_NAME}")
+    soft_failure "${annotation}" "${IMAGE_LABEL}"
   elif [[ "${scan_status}" != "COMPLETE" && "${scan_status}" != "ACTIVE" ]]; then
-      annotation=$(printf "ECR vulnerability scan failed with status: %s.\n\nVulnerability details not available." "${scan_status}")
-      if [[ "${scan_status}" = "SCAN_NOT_PRESENT" ]]; then
-          annotation=$(printf "No ECR vulnerability scan available for image: \`%s\`\n\nThe results may be taking some time to report, or there may be an issue with scan configuration." "${IMAGE_NAME}")
-      fi
-
-      echo "^^^ +++"
-      echo "${annotation}"
-
-      buildkite-agent annotate --style warning --context "exit_reason${IMAGE_LABEL_APP}" "${annotation}"
-
-      exit 0
+    annotation=$(printf "ECR vulnerability scan failed with status: %s.\n\nVulnerability details not available." "${scan_status}")
+    if [[ "${scan_status}" = "SCAN_NOT_PRESENT" ]]; then
+        annotation=$(printf "No ECR vulnerability scan available for image: \`%s\`\n\nThe results may be taking some time to report, or there may be an issue with scan configuration." "${IMAGE_NAME}")
+    fi
+    soft_failure "${annotation}" "${IMAGE_LABEL}"
   fi
 
-  echo "scan complete"
+  echo "ECR scan complete."
 
   echo "--- querying results..."
 
