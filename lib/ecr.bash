@@ -31,7 +31,10 @@ function poll_ecr_scan_result {
   i="1"
   while [[ "${scan_status}" = "SCAN_NOT_PRESENT" || "${scan_status}" = "IN_PROGRESS" || "${scan_status}" = "PENDING" ]]  && [ "$i" -le "${poll_attempts}" ]
   do
-      echo 1>&2 "Poll attempt ${i}..."
+      # Give some time for the results to be available
+      [ "$i" != "1" ] && sleep "${poll_wait}"
+
+      echo 1>&2 "...poll attempt ${i}..."
       if ! scan_status="$(aws ecr describe-image-scan-findings \
           --registry-id "${repository_id}" \
           --repository-name "${repo_name}" \
@@ -49,10 +52,7 @@ function poll_ecr_scan_result {
           fi
       fi
 
-      echo 1>&2 "scan status: ${scan_status}"
-
-      # Give some time for the results to be available
-      [ "$i" != "0" ] && sleep "${poll_wait}"
+      echo 1>&2 "...scan status: ${scan_status}..."
 
       ((i=i+1))
   done
