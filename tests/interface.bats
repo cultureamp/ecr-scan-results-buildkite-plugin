@@ -61,7 +61,33 @@ load '../lib/interface'
   assert_line --partial "'image-label' argument must be an alphanumeric string"
 }
 
-@test "When scan result is not found, it fails with a helpful error message" {
+@test "When scan result is not found, and image-label is not provided, it fails with a helpful error message" {
+  export BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME="012345678912.dkr.ecr.us-west-2.amazonaws.com/repo-name:image-tag"
+  export BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS="0"
+  export BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS="0"
+  export POLL_ATTEMPTS="1"
+
+  function get_ecr_image_digest() { echo "image-digest"; }
+  export -f get_ecr_image_digest
+
+  function poll_ecr_scan_result() { echo "SCAN_NOT_PRESENT"; }
+  export -f poll_ecr_scan_result
+
+  stub buildkite-agent '* : echo buildkite-agent $@'
+
+  run post_command
+
+  assert_success
+  assert_line --partial "No ECR vulnerability scan available for image"
+  assert_line --partial "buildkite-agent annotate --context ecr_scan_results_failed_ --style warning No ECR vulnerability scan available for image:"
+
+  unset get_ecr_image_digest
+  unset poll_ecr_scan_result
+
+  unstub buildkite-agent
+}
+
+@test "When scan result is not found, and image-label is provided, it fails with a helpful error message" {
   export BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME="012345678912.dkr.ecr.us-west-2.amazonaws.com/repo-name:image-tag"
   export BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS="0"
   export BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS="0"

@@ -41,7 +41,7 @@ function post_command {
     configuration_error "'max-highs' argument must be a positive integer (when supplied)"
   fi
 
-  if [[ ! "${image_label}" =~ ^[a-z][a-z0-9]*$ ]]
+  if [[ -n "${image_label}" && ! "${image_label}" =~ ^[a-z][a-z0-9]*$ ]]
   then
     configuration_error "'image-label' argument must be an alphanumeric string that starts with a letter (when supplied)"
   fi
