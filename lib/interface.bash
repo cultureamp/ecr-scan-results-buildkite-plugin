@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 dir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 
@@ -8,9 +9,11 @@ dir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 . "$dir/../lib/errors.bash"
 # shellcheck source=lib/ecr.bash
 . "$dir/../lib/ecr.bash"
+# shellcheck source=lib/results.bash
+. "$dir/../lib/results.bash"
 
 function post_command {
-  trap notify_error ERR
+  # trap notify_error ERR
 
   # check all inputs exist and are valid
   local image_name_pattern="^[0-9]{12}\.dkr\.ecr\.[a-z][a-z1-9-]+\.amazonaws.com/[^:]+:[^:]+$"
@@ -21,7 +24,7 @@ function post_command {
   local max_highs; max_highs="$(plugin_read_config "MAX_HIGHS" "0")"
   local image_label; image_label="$(plugin_read_config "IMAGE_LABEL")"
   local image_label_app="_${image_label}"
-
+echo "image_label: ${image_label}"
   # allow for override in testing
   local poll_attempts="${POLL_ATTEMPTS:-"20"}"
 
@@ -41,7 +44,7 @@ function post_command {
     configuration_error "'max-highs' argument must be a positive integer (when supplied)"
   fi
 
-  if [[ -n "${image_label}" && ! "${image_label}" =~ ^[a-z][a-z0-9]*$ ]]
+  if [[ -n "${image_label}" && ! "${image_label}" =~ ^[a-z][a-z0-9_-]*$ ]]
   then
     configuration_error "'image-label' argument must be an alphanumeric string that starts with a letter (when supplied)"
   fi
@@ -76,10 +79,21 @@ EOM
   # Translate an image tag to an image digest: this is more specific and reliable
   # than just using the image tag.
   echo "--- retrieving image digest"
-  image_digest="$(get_ecr_image_digest "${repository_id}" "${repo_name}" "${image_tag}")"
+#  aws ecr describe-images \
+#         --registry-id "${repository_id}" \
+#         --repository-name "${repo_name}" \
+#         --image-id imageTag="${image_tag}" \
+#         --query "imageDetails[0].imageDigest" \
+#         --output text
+
+# get_ecr_image_digest "${repository_id}" "${repo_name}" "${image_tag}"
+
+  image_digest="$( get_ecr_image_digest "${repository_id}" "${repo_name}" "${image_tag}" )"
   image_identifier="imageDigest=${image_digest}"
   echo "Using image digest: ${image_digest}"
 
+  # Wait for the scan to be ready. Depending on the type of scanning active, the
+  # result may be "COMPLETE" or "ACTIVE".
   echo "--- waiting for scan results to be available..."
   scan_status="$(poll_ecr_scan_result "${repository_id}" "${repo_name}" "${image_identifier}" "${poll_attempts}")"
 
@@ -98,24 +112,13 @@ EOM
 
   echo "--- querying results..."
 
-  # retrieve counts of criticals and highs or fail build if scan failed
-  criticals=$(aws ecr describe-image-scan-findings \
-      --registry-id "${repository_id}" \
-      --repository-name "${repo_name}" \
-      --image-id "${image_identifier}" \
-      --no-paginate \
-      --query "imageScanFindings.findingSeverityCounts.CRITICAL" \
-      --output text)
-  if [ "${criticals}" = "None" ]; then criticals="0"; fi
+  # Query the results and save in a local temp file
+  local scan_results_file; scan_results_file="$(write_scan_results  "${repository_id}" "${repo_name}" "${image_identifier}")"
 
-  highs=$(aws ecr describe-image-scan-findings \
-      --registry-id "${repository_id}" \
-      --repository-name "${repo_name}" \
-      --image-id "${image_identifier}" \
-      --no-paginate \
-      --query "imageScanFindings.findingSeverityCounts.HIGH" \
-      --output text)
-  if [ "${highs}" = "None" ]; then highs="0"; fi
+  echo "${scan_results_file}"
+
+  criticals=0
+  highs=0
 
   # report results
   vuln_url=$(printf "https://%s.console.aws.amazon.com/ecr/repositories/private/%s/%s/image/%s/scan-results/?region=%s" "${region}" "${repository_id}" "${repo_name}" "${image_digest}" "${region}")

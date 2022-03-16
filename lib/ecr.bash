@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 function get_ecr_image_digest {
   local repository_id="${1}"
@@ -7,12 +8,14 @@ function get_ecr_image_digest {
 
   local image_digest
 
-  image_digest=$(aws ecr describe-images \
-        --registry-id "${repository_id}" \
-        --repository-name "${repo_name}" \
-        --image-id imageTag="${image_tag}" \
-        --query "imageDetails[0].imageDigest" \
-        --output text)
+  if ! image_digest="$(aws ecr describe-images \
+      --registry-id "${repository_id}" \
+      --repository-name "${repo_name}" \
+      --image-id imageTag="${image_tag}" \
+      --query "imageDetails[0].imageDigest" \
+      --output text)"; then
+    return 1
+  fi
 
   echo "${image_digest}"
 }
@@ -60,3 +63,21 @@ function poll_ecr_scan_result {
   echo "${scan_status}"
 }
 
+function write_scan_results {
+  local repository_id="${1}"
+  local repo_name="${2}"
+  local image_identifier="${3}"
+
+  local output_file; output_file="$(mktemp -t ecr-scan-results.XXXXXX)"
+
+  if ! aws ecr describe-image-scan-findings \
+      --registry-id "${repository_id}xx" \
+      --repository-name "${repo_name}" \
+      --image-id "${image_identifier}" \
+      --output json \
+      --no-paginate > "${output_file}"; then
+    return 1
+  fi
+
+  echo "${output_file}"
+}

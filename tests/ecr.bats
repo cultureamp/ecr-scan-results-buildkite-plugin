@@ -12,6 +12,43 @@ load '../lib/ecr'
 # export [stub_command]_STUB_DEBUG=/dev/tty
 # export AWS_STUB_DEBUG=/dev/tty
 
+@test "When image tag is not found, it fails" {
+  local registry_id="012345678912"
+  local repo_name="repo-name"
+  local image_tag="image-tag"
+  local poll_attempts="1"
+
+  describe_image_digest="--registry-id ${registry_id} --repository-name ${repo_name} --image-id imageTag=${image_tag}"
+
+  stub aws \
+    "ecr describe-images ${describe_image_digest} * : echo digest-failed; exit 1"
+
+  run get_ecr_image_digest "${registry_id}" "${repo_name}" "${image_tag}" "${poll_attempts}"
+
+  assert_failure
+  assert_line  "digest-failed"
+
+  unstub aws
+}
+
+@test "When image tag is found, it returns the current digest" {
+  local registry_id="012345678912"
+  local repo_name="repo-name"
+  local image_tag="imageDigest=image-hash"
+  local poll_attempts="1"
+
+  describe_image_digest="--registry-id ${registry_id} --repository-name ${repo_name} --image-id imageTag=${image_tag}"
+
+  stub aws \
+    "ecr describe-images ${describe_image_digest} * : echo image-digest"
+
+  run get_ecr_image_digest "${registry_id}" "${repo_name}" "${image_tag}" "${poll_attempts}"
+
+  assert_success
+  assert_line  "image-digest"
+
+  unstub aws
+}
 
 @test "When scan result is not found, it returns SCAN_NOT_PRESENT" {
   local registry_id="012345678912"
