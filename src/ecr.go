@@ -2,17 +2,16 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 )
 
-var registryImageExpr = regexp.MustCompile("^(?P<registryId>[^.]+)\\.dkr\\.ecr\\.(?P<region>[^.]+).amazonaws.com/(?P<repoName>[^:]+)(?::(?P<tag>.+))?$")
+var registryImageExpr = regexp.MustCompile(`^(?P<registryId>[^.]+)\.dkr\.ecr\.(?P<region>[^.]+).amazonaws.com/(?P<repoName>[^:]+)(?::(?P<tag>.+))?$`)
 
 type RegistryInfo struct {
 	RegistryID string
@@ -87,6 +86,18 @@ func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo RegistryInf
 	return digestInfo, nil
 }
 
+func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo RegistryInfo) error {
+	waiter := ecr.NewImageScanCompleteWaiter(r.Client)
+
+	return waiter.Wait(ctx, &ecr.DescribeImageScanFindingsInput{
+		RegistryId:     &digestInfo.RegistryID,
+		RepositoryName: &digestInfo.Name,
+		ImageId: &types.ImageIdentifier{
+			ImageTag: &digestInfo.Tag,
+		},
+	}, 30*time.Second)
+}
+
 func (r *RegistryScan) GetScanFindings(ctx context.Context, digestInfo RegistryInfo) (*ecr.DescribeImageScanFindingsOutput, error) {
 	pg := ecr.NewDescribeImageScanFindingsPaginator(r.Client, &ecr.DescribeImageScanFindingsInput{
 		RegistryId:     &digestInfo.RegistryID,
@@ -95,24 +106,29 @@ func (r *RegistryScan) GetScanFindings(ctx context.Context, digestInfo RegistryI
 			ImageTag: &digestInfo.Tag,
 		},
 	})
-	pageNum := 1
+
+	var out *ecr.DescribeImageScanFindingsOutput
+
 	for pg.HasMorePages() {
-		out, err := pg.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-		bytes, err := json.Marshal(out)
+		pg, err := pg.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		err = ioutil.WriteFile(fmt.Sprintf("result.%02d.json", pageNum), bytes, 0644)
-		if err != nil {
-			return nil, err
-		}
+		if out == nil {
+			out = pg
+		} else if out.ImageScanFindings != nil {
+			findings := out.ImageScanFindings
+			if findings == nil {
+				findings = &types.ImageScanFindings{}
+				out.ImageScanFindings = findings
+			}
 
-		pageNum++
+			// build the entire set in memory 🤞
+			findings.Findings = append(findings.Findings, pg.ImageScanFindings.Findings...)
+			findings.EnhancedFindings = append(findings.EnhancedFindings, pg.ImageScanFindings.EnhancedFindings...)
+		}
 	}
 
-	return nil, nil
+	return out, nil
 }

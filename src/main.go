@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"io/fs"
 	"log"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/kelseyhightower/envconfig"
@@ -43,10 +46,22 @@ func main() {
 
 	log.Printf("%s", imageDigest)
 
+	err = scan.WaitForScanFindings(ctx, imageDigest)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	findings, err := scan.GetScanFindings(ctx, imageDigest)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	findingSer, err := json.MarshalIndent(findings, "", "  ")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	os.WriteFile("result.json", findingSer, fs.ModePerm)
 
 	log.Printf("%+v", findings)
 }
