@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"io/fs"
-	"log"
 	"os"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/cultureamp/ecrscanresults/buildkite"
+	"github.com/cultureamp/ecrscanresults/registry"
+	"github.com/cultureamp/ecrscanresults/report"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -16,52 +19,88 @@ type Config struct {
 }
 
 func main() {
-	var buildConfig Config
-	if err := envconfig.Process("", &buildConfig); err != nil {
-		log.Fatal(err.Error())
+	var pluginConfig Config
+	if err := envconfig.Process("", &pluginConfig); err != nil {
+		buildkite.LogFailuref("plugin configuration error: %s", err.Error())
 	}
-	log.Printf("Config: %+v\n", buildConfig)
 
 	ctx := context.Background()
 
-	awsConfig, err := config.LoadDefaultConfig(context.Background(), config.WithRegion("us-west-2"))
+	if err := runCommand(ctx, pluginConfig); err != nil {
+		buildkite.LogFailuref("command failed: %s", err.Error())
+	}
+}
+
+func runCommand(ctx context.Context, pluginConfig Config) error {
+	imageId, err := registry.RegistryInfoFromUrl(pluginConfig.Repository)
 	if err != nil {
-		log.Fatal(err.Error())
+		return err
 	}
 
-	scan, err := NewRegistryScan(awsConfig)
+	awsConfig, err := createAwsConfiguration()
 	if err != nil {
-		log.Fatal(err.Error())
+		return err
 	}
 
-	imageId, err := RegistryInfoFromUrl(buildConfig.Repository)
+	scan, err := registry.NewRegistryScan(awsConfig)
 	if err != nil {
-		log.Fatal(err.Error())
+		return err
 	}
 
+	buildkite.Logf("Getting image digest for %s\n", imageId)
 	imageDigest, err := scan.GetLabelDigest(ctx, imageId)
 	if err != nil {
-		log.Fatal(err.Error())
+		return err
 	}
 
-	log.Printf("%s", imageDigest)
-
+	buildkite.LogGroupf(":ecr: Getting ECR scan results for %s\n", imageDigest)
 	err = scan.WaitForScanFindings(ctx, imageDigest)
 	if err != nil {
-		log.Fatal(err.Error())
+		return err
 	}
 
 	findings, err := scan.GetScanFindings(ctx, imageDigest)
 	if err != nil {
-		log.Fatal(err.Error())
+		return err
 	}
 
-	findingSer, err := json.MarshalIndent(findings, "", "  ")
+	buildkite.LogGroup("Creating report annotation")
+	annotationCtx := report.AnnotationContext{
+		Image:        imageId,
+		ScanFindings: *findings.ImageScanFindings,
+	}
+
+	buildkite.Logf("%d findings in report\n", len(annotationCtx.ScanFindings.Findings))
+
+	annotation, err := annotationCtx.Render()
 	if err != nil {
-		log.Fatal(err.Error())
+		return err
 	}
 
-	os.WriteFile("result.json", findingSer, fs.ModePerm)
+	annotationStyle := "info"
+	agent := buildkite.BuildkiteAgent{}
 
-	log.Printf("%+v", findings)
+	err = agent.Annotate(ctx, annotationStyle, annotationStyle, "scan_results_"+imageDigest.Tag)
+	if err != nil {
+		return err
+	}
+
+	os.WriteFile("result.html", annotation, fs.ModePerm)
+
+	return nil
+}
+
+func createAwsConfiguration() (aws.Config, error) {
+	region := os.Getenv("AWS_REGION")
+	if region == "" {
+		region = os.Getenv("DEFAULT_AWS_REGION")
+	}
+
+	if region == "" {
+		return aws.Config{}, fmt.Errorf("could not configure AWS client: AWS_REGION and DEFAULT_AWS_REGION is not set")
+	}
+
+	awsConfig, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(region))
+
+	return awsConfig, err
 }
