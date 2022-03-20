@@ -1,0 +1,39 @@
+name: Publish plugin image
+
+on:
+  push:
+    # branches: ['release']
+
+env:
+  IMAGE_NAME: cultureampci/ecr-scan-results-buildkite-plugin
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: cultureampci/ecr-scan-results-buildkite-plugin
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: src
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
