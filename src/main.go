@@ -20,13 +20,13 @@ type Config struct {
 func main() {
 	var pluginConfig Config
 	if err := envconfig.Process("", &pluginConfig); err != nil {
-		buildkite.LogFailuref("plugin configuration error: %s", err.Error())
+		buildkite.LogFatalf("plugin configuration error: %s\n", err.Error())
 	}
 
 	ctx := context.Background()
 
 	if err := runCommand(ctx, pluginConfig); err != nil {
-		buildkite.LogFailuref("command failed: %s", err.Error())
+		buildkite.LogFatalf("command failed: %s\n", err.Error())
 	}
 }
 

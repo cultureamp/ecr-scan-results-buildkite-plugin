@@ -1,6 +1,9 @@
 package buildkite
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 func LogGroup(message string) {
 	fmt.Printf("--- %s\n", message)
@@ -22,8 +25,10 @@ func Logf(format string, a ...interface{}) {
 	fmt.Printf(format, a...)
 }
 
-func LogFailuref(format string, a ...interface{}) {
+func LogFatalf(format string, a ...interface{}) {
 	// make sure the current group is expanded
 	fmt.Println("^^^ +++")
 	fmt.Printf(format, a...)
+
+	os.Exit(1)
 }
