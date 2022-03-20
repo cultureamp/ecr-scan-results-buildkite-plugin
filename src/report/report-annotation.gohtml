@@ -16,6 +16,7 @@ there is no indentation: indented output can be rendered differently.
 </div>
 {{ end }}
 </dl>
+{{ if .ScanFindings.Findings }}
 <details>
 <summary>Vulnerability details</summary>
 <div>
@@ -43,3 +44,4 @@ there is no indentation: indented output can be rendered differently.
 </p>
 </div>
 </details>
+{{ end }}
