@@ -18,5 +18,6 @@ func (a BuildkiteAgent) Annotate(ctx context.Context, message string, style stri
 	}
 
 	// run command buildkite-agent annotate --style <style> --context <context> <message>
-	return syscall.Exec(executable, []string{"executable", "annotate", "--style", style, "--context", annotationContext, message}, os.Environ())
+	// return syscall.Exec(executable, []string{executable, "annotate", "--style", style, "--context", annotationContext, message}, os.Environ())
+	return syscall.Exec(executable, []string{executable, "annotate", message}, os.Environ())
 }
