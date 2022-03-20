@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io/fs"
 	"os"
 
@@ -37,7 +36,7 @@ func runCommand(ctx context.Context, pluginConfig Config) error {
 		return err
 	}
 
-	awsConfig, err := createAwsConfiguration()
+	awsConfig, err := createAwsConfiguration(imageId.Region)
 	if err != nil {
 		return err
 	}
@@ -90,16 +89,7 @@ func runCommand(ctx context.Context, pluginConfig Config) error {
 	return nil
 }
 
-func createAwsConfiguration() (aws.Config, error) {
-	region := os.Getenv("AWS_REGION")
-	if region == "" {
-		region = os.Getenv("DEFAULT_AWS_REGION")
-	}
-
-	if region == "" {
-		return aws.Config{}, fmt.Errorf("could not configure AWS client: AWS_REGION and DEFAULT_AWS_REGION is not set")
-	}
-
+func createAwsConfiguration(region string) (aws.Config, error) {
 	awsConfig, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(region))
 
 	return awsConfig, err
