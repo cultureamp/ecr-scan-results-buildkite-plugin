@@ -63,7 +63,7 @@ func runCommand(ctx context.Context, pluginConfig Config) error {
 		return err
 	}
 
-	buildkite.LogGroup("Creating report annotation")
+	buildkite.Log("Creating report annotation...")
 	annotationCtx := report.AnnotationContext{
 		Image:        imageId,
 		ScanFindings: *findings.ImageScanFindings,
