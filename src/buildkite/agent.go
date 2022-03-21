@@ -19,7 +19,7 @@ func (a BuildkiteAgent) ArtifactUpload(ctx context.Context, path string) error {
 	return execAgentCommand(ctx, "artifact", "upload", path)
 }
 
-func execAgentCommand(ctx context.Context, command string, args ...string) error {
+func execAgentCommand(ctx context.Context, args ...string) error {
 	executableName := "buildkite-agent"
 	executable, err := osexec.LookPath(executableName)
 	if err != nil {
