@@ -7,6 +7,7 @@ there is no indentation: indented output can be rendered differently.
 
 */}}
 <h4>Vulnerability summary for "{{ .Image.Name }}:{{ .Image.Tag }}"</h4>
+{{ if .ScanFindings.FindingSeverityCounts }}
 <dl class="flex flex-wrap mxn1">
 {{ range $key, $value := .ScanFindings.FindingSeverityCounts }}
 <div class="m1 p1 flex-auto">
@@ -16,6 +17,9 @@ there is no indentation: indented output can be rendered differently.
 </div>
 {{ end }}
 </dl>
+{{ else }}
+<p>No vulnerabilities reported.</p>
+{{ end }}
 {{ if .ScanFindings.Findings }}
 <details>
 <summary>Vulnerability details</summary>
