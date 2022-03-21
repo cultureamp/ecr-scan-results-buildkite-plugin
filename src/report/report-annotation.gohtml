@@ -10,7 +10,7 @@ there is no indentation: indented output can be rendered differently.
 {{ if .ScanFindings.FindingSeverityCounts }}
 <dl class="flex flex-wrap mxn1">
 {{ range $key, $value := .ScanFindings.FindingSeverityCounts }}
-<div class="m1 p1 flex-auto">
+<div class="m1 p1 mr3">
 <dt>{{ $key | lowerCase | titleCase }}</dt>
 <dd><h1 class="m0">{{ $value }}</h1>
 </dd>
@@ -43,9 +43,10 @@ there is no indentation: indented output can be rendered differently.
 </tr>
 {{ end }}
 </table>
-<p class="p1">
-<i>scanned: <span title="{{ .ScanFindings.ImageScanCompletedAt }}">{{ .ScanFindings.ImageScanCompletedAt | timeAgo }}</span></i> | <i><span title="{{ .ScanFindings.VulnerabilitySourceUpdatedAt }}">{{ .ScanFindings.VulnerabilitySourceUpdatedAt | timeAgo }}</span></i>
-</p>
 </div>
 </details>
 {{ end }}
+<p class="p1">
+<i>scan completed: <span title="{{ .ScanFindings.ImageScanCompletedAt }}">{{ .ScanFindings.ImageScanCompletedAt | timeAgo }}</span></i> |
+<i>source updated: <span title="{{ .ScanFindings.VulnerabilitySourceUpdatedAt }}">{{ .ScanFindings.VulnerabilitySourceUpdatedAt | timeAgo }}</span></i>
+</p>
