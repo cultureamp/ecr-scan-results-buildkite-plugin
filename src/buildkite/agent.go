@@ -23,7 +23,7 @@ func (a BuildkiteAgent) ArtifactUpload(ctx context.Context, path string) error {
 }
 
 func execAgentSyscall(ctx context.Context, executableName string, args ...string) error {
-	Logf("Executing: %s %s", executableName, strings.Join(args, " "))
+	Logf("Executing: %s %s\n", executableName, strings.Join(args, " "))
 
 	executable, err := osexec.LookPath(executableName)
 	if err != nil {
@@ -35,7 +35,7 @@ func execAgentSyscall(ctx context.Context, executableName string, args ...string
 }
 
 func execCmdWithStdin(ctx context.Context, executableName string, stdin string, args ...string) error {
-	Logf("Executing: %s %s", executableName, strings.Join(args, " "))
+	Logf("Executing: %s %s\n", executableName, strings.Join(args, " "))
 
 	cmd := osexec.CommandContext(ctx, executableName, args...)
 
