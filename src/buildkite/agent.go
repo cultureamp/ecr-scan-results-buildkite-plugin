@@ -12,12 +12,20 @@ type BuildkiteAgent struct {
 }
 
 func (a BuildkiteAgent) Annotate(ctx context.Context, message string, style string, annotationContext string) error {
-	executable, err := osexec.LookPath("buildkite-agent")
+	return execAgentCommand(ctx, "annotate", "--style", style, "--context", annotationContext, message)
+}
+
+func (a BuildkiteAgent) ArtifactUpload(ctx context.Context, path string) error {
+	return execAgentCommand(ctx, "artifact", "upload", path)
+}
+
+func execAgentCommand(ctx context.Context, command string, args ...string) error {
+	executableName := "buildkite-agent"
+	executable, err := osexec.LookPath(executableName)
 	if err != nil {
 		return err
 	}
 
-	// run command buildkite-agent annotate --style <style> --context <context> <message>
-	// return syscall.Exec(executable, []string{executable, "annotate", "--style", style, "--context", annotationContext, message}, os.Environ())
-	return syscall.Exec(executable, []string{executable, "annotate", message}, os.Environ())
+	execArgs := append([]string{executableName}, args...)
+	return syscall.Exec(executable, execArgs, os.Environ())
 }

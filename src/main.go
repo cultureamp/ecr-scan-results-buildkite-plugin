@@ -79,12 +79,18 @@ func runCommand(ctx context.Context, pluginConfig Config) error {
 	annotationStyle := "info"
 	agent := buildkite.BuildkiteAgent{}
 
-	err = agent.Annotate(ctx, annotationStyle, annotationStyle, "scan_results_"+imageDigest.Tag)
+	err = agent.Annotate(ctx, string(annotation), annotationStyle, "scan_results_"+imageDigest.Tag)
 	if err != nil {
 		return err
 	}
 
+	// temporary
 	os.WriteFile("result.html", annotation, fs.ModePerm)
+
+	err = agent.ArtifactUpload(ctx, "result.html")
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
