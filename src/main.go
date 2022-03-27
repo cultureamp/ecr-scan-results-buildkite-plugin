@@ -31,6 +31,8 @@ func main() {
 }
 
 func runCommand(ctx context.Context, pluginConfig Config) error {
+	buildkite.Logf("Scan results report requested for %s\n", pluginConfig.Repository)
+
 	imageId, err := registry.RegistryInfoFromUrl(pluginConfig.Repository)
 	if err != nil {
 		return err
@@ -52,7 +54,9 @@ func runCommand(ctx context.Context, pluginConfig Config) error {
 		return err
 	}
 
-	buildkite.LogGroupf(":ecr: Getting ECR scan results for %s\n", imageDigest)
+	buildkite.Logf("Digest: %s\n", imageDigest)
+
+	buildkite.LogGroupf(":ecr: Creating ECR scan results report for %s\n", imageId)
 	err = scan.WaitForScanFindings(ctx, imageDigest)
 	if err != nil {
 		return err

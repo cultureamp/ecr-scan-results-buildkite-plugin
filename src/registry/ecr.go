@@ -14,24 +14,29 @@ import (
 var registryImageExpr = regexp.MustCompile(`^(?P<registryId>[^.]+)\.dkr\.ecr\.(?P<region>[^.]+).amazonaws.com/(?P<repoName>[^:]+)(?::(?P<tag>.+))?$`)
 
 type RegistryInfo struct {
+	// RegistryID is the AWS ECR account ID of the source registry.
 	RegistryID string
-	Region     string
-	Name       string
-	Tag        string
+	// Region is the AWS region of the registry.
+	Region string
+	// Name is the ECR repository name.
+	Name string
+	// Tag is the image label or an image digest.
+	Tag string
 }
 
 func (i RegistryInfo) String() string {
 	return fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s:%s", i.RegistryID, i.Region, i.Name, i.Tag)
 }
 
-func RegistryInfoFromUrl(arn string) (RegistryInfo, error) {
+func RegistryInfoFromUrl(url string) (RegistryInfo, error) {
 	info := RegistryInfo{}
 	names := registryImageExpr.SubexpNames()
-	match := registryImageExpr.FindStringSubmatch(arn)
+	match := registryImageExpr.FindStringSubmatch(url)
 	if match == nil {
-		return info, fmt.Errorf("invalid registry URL: %s", arn)
+		return info, fmt.Errorf("invalid registry URL: %s", url)
 	}
 
+	// build the struct using the named subexpressions from the expression
 	for i, value := range match {
 		nm := names[i]
 		switch nm {
