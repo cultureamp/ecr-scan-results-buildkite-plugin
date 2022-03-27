@@ -81,7 +81,7 @@ func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo RegistryInf
 
 	// copy input and update tag from label to digest
 	digestInfo := imageInfo
-	digestInfo.Tag = out.ImageDetails[0].ImageTags[0]
+	digestInfo.Tag = *out.ImageDetails[0].ImageDigest
 
 	return digestInfo, nil
 }
