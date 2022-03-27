@@ -98,7 +98,7 @@ func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo Regis
 		RegistryId:     &digestInfo.RegistryID,
 		RepositoryName: &digestInfo.Name,
 		ImageId: &types.ImageIdentifier{
-			ImageTag: &digestInfo.Tag,
+			ImageDigest: &digestInfo.Tag,
 		},
 	}, 30*time.Second)
 }
@@ -108,7 +108,7 @@ func (r *RegistryScan) GetScanFindings(ctx context.Context, digestInfo RegistryI
 		RegistryId:     &digestInfo.RegistryID,
 		RepositoryName: &digestInfo.Name,
 		ImageId: &types.ImageIdentifier{
-			ImageTag: &digestInfo.Tag,
+			ImageDigest: &digestInfo.Tag,
 		},
 	})
 
