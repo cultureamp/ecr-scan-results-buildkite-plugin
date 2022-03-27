@@ -19,5 +19,7 @@ jq '. | strptime("%Y-%m-%dT%H:%M:%S+1100") '
 jq '.[0:1] + (.[1:]|ascii_downcase)'
 "MEDIUM"
 
+jq .
+$ BUILDKITE_PLUGINS="[{\"github.com/buildkite-plugins/docker-compose-buildkite-plugin#v3.7.0\":{\"env\":[\"VERSION\",\"BUILDKITE_BRANCH\",\"BUILDKITE_COMMIT\",\"BUILDKITE_BUILD_NUMBER\"],\"run\":\"build\",\"config\":\"src/splunkforwarder/docker-compose.ci.yml\",\"volumes\":[\"./src/splunkforwarder:/build\",\"./dist:/build/dist\"]}}]"  echo $BUILDKITE_PLUGINS
 
 #https://us-west-2.console.aws.amazon.com/ecr/repositories/private/226140413739/development/bff-version/image/sha256:b1190e61f2f9add880761d5069f575ea501f85306c10d90beda2427e4e0daa7f/scan-results/?region=us-west-2

@@ -1,7 +1,9 @@
 name: ECR Scan Results
-description: Retrieves scan results from ECR and can optionally fail the build
+description: Retrieves scan results from ECR and can optionally fail the build.
 author: https://github.com/greg-aumann
-requirements: []
+requirements:
+  - docker
+  - jq
 configuration:
   properties:
     image-name:
