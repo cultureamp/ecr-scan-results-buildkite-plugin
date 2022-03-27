@@ -94,13 +94,23 @@ func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo RegistryInf
 func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo RegistryInfo) error {
 	waiter := ecr.NewImageScanCompleteWaiter(r.Client)
 
+	// wait between attempts for between 3 and 15 secs (exponential backoff)
+	// wait for a maximum of 3 minutes
+	minAttemptDelay := 3 * time.Second
+	maxAttemptDelay := 15 * time.Second
+	maxTotalDelay := 3 * time.Minute
+
 	return waiter.Wait(ctx, &ecr.DescribeImageScanFindingsInput{
 		RegistryId:     &digestInfo.RegistryID,
 		RepositoryName: &digestInfo.Name,
 		ImageId: &types.ImageIdentifier{
 			ImageDigest: &digestInfo.Tag,
 		},
-	}, 30*time.Second)
+	}, maxTotalDelay, func(opts *ecr.ImageScanCompleteWaiterOptions) {
+		opts.LogWaitAttempts = true
+		opts.MinDelay = minAttemptDelay
+		opts.MaxDelay = maxAttemptDelay
+	})
 }
 
 func (r *RegistryScan) GetScanFindings(ctx context.Context, digestInfo RegistryInfo) (*ecr.DescribeImageScanFindingsOutput, error) {
