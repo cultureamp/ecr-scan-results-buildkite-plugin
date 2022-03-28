@@ -11,14 +11,14 @@ import (
 	osexec "golang.org/x/sys/execabs"
 )
 
-type BuildkiteAgent struct {
+type Agent struct {
 }
 
-func (a BuildkiteAgent) Annotate(ctx context.Context, message string, style string, annotationContext string) error {
+func (a Agent) Annotate(ctx context.Context, message string, style string, annotationContext string) error {
 	return execCmdWithStdin(ctx, "buildkite-agent", message, "annotate", "--style", style, "--context", annotationContext)
 }
 
-func (a BuildkiteAgent) ArtifactUpload(ctx context.Context, path string) error {
+func (a Agent) ArtifactUpload(ctx context.Context, path string) error {
 	return execAgentSyscall(ctx, "buildkite-agent", "artifact", "upload", path)
 }
 
