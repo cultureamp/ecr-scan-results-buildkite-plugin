@@ -18,6 +18,7 @@ import (
 
 type Config struct {
 	Repository                string `envconfig:"IMAGE_NAME" split_words:"true" required:"true"`
+	ImageLabel                string `envconfig:"IMAGE_LABEL" split_words:"true"`
 	CriticalSeverityThreshold int32  `envconfig:"MAX_CRITICALS" split_words:"true"`
 	HighSeverityThreshold     int32  `envconfig:"MAX_HIGHS" split_words:"true"`
 }
@@ -110,6 +111,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	buildkite.Log("Creating report annotation...")
 	annotationCtx := report.AnnotationContext{
 		Image:                     imageId,
+		ImageLabel:                pluginConfig.ImageLabel,
 		ScanFindings:              *findings.ImageScanFindings,
 		CriticalSeverityThreshold: pluginConfig.CriticalSeverityThreshold,
 		HighSeverityThreshold:     pluginConfig.HighSeverityThreshold,

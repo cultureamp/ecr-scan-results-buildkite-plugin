@@ -77,42 +77,9 @@ allow the build to always pass.
 
 ### `image-label` (Optional, string)
 
-If this plugin is used for multiple images in the same pipeline then set
-`image-label` to a different alphanumeric label for each image, e.g.
-`development`, `master` etc. If the pipeline only builds one image then don't
-use this parameter. See the example pipeline below for how to use this
-parameter.
-
-```yml
-steps:
-  - name: "build_and_push_dev"
-    command: "bin/ci_build_and_push.sh"
-    branches: '!master'
-    agents:
-      queue: build-unrestricted
-    plugins:
-      - cultureamp/aws-assume-role:
-          role: ${DEV_BUILD_ROLE}
-      - cultureamp/ecr-scan-results#v1.1.7:
-          image-name: "$DEV_BUILD_REPO:deploy-$DEV_BUILD_TAG"
-          max-criticals: "2"
-          max-highs: "20"
-          image-label: "development"
-
-  - name: "build_and_push_master"
-    command: "bin/ci_build_and_push.sh"
-    branches: 'master'
-    agents:
-      queue: build-restricted
-    plugins:
-      - cultureamp/aws-assume-role:
-          role: ${MASTER_BUILD_ROLE}
-      - cultureamp/ecr-scan-results#v1.1.7:
-          image-name: "$MASTER_BUILD_REPO:deploy-$MASTER_BUILD_TAG"
-          max-criticals: "1"
-          max-highs: "10"
-          image-label: "master"
-```
+When supplied, this is used to title the report annotation in place of the
+repository name and tag. Useful sometimes when the repo name and tag make the
+reports harder to scan visually.
 
 ## Requirements
 
