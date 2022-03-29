@@ -19,6 +19,7 @@ var annotationTemplateSource string
 
 type AnnotationContext struct {
 	Image                     registry.RegistryInfo
+	ImageLabel                string
 	ScanFindings              types.ImageScanFindings
 	CriticalSeverityThreshold int32
 	HighSeverityThreshold     int32
