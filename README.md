@@ -1,6 +1,9 @@
 # ECR Scan Results Buildkite Plugin
 
-Buildkite plugin to retrieve ECR scan results
+Buildkite plugin to retrieve ECR scan results from AWS's ECR image scanning
+service. By default the plugin will cause the step to fail if there are critical
+or high vulnerabilities reported, but there are configurable thresholds on this
+behaviour.
 
 ## Example
 
