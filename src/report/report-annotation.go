@@ -18,8 +18,10 @@ import (
 var annotationTemplateSource string
 
 type AnnotationContext struct {
-	Image        registry.RegistryInfo
-	ScanFindings types.ImageScanFindings
+	Image                     registry.RegistryInfo
+	ScanFindings              types.ImageScanFindings
+	CriticalSeverityThreshold int32
+	HighSeverityThreshold     int32
 }
 
 func (c AnnotationContext) Render() ([]byte, error) {
