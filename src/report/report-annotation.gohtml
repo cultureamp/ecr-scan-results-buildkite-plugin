@@ -6,13 +6,19 @@ This template renders _MARKDOWN_, even though it's mostly HTML. This is why
 there is no indentation: indented output can be rendered differently.
 
 */}}
+{{ $criticalThreshold := .CriticalSeverityThreshold }}
+{{ $highThreshold := .HighSeverityThreshold }}
 <h4>Vulnerability summary for "{{ .Image.Name }}:{{ .Image.Tag }}"</h4>
 {{ if .ScanFindings.FindingSeverityCounts }}
 <dl class="flex flex-wrap mxn1">
 {{ range $key, $value := .ScanFindings.FindingSeverityCounts }}
+{{ $exceedsThreshold := (or
+    (and (eq $key "CRITICAL") (gt $value $criticalThreshold))
+    (and (eq $key "HIGH") (gt $value $highThreshold))
+) }}
 <div class="m1 p1 mr3">
 <dt>{{ $key | lowerCase | titleCase }}</dt>
-<dd><h1 class="m0">{{ $value }}</h1>
+<dd><h1 class="m0{{ if $exceedsThreshold }} red{{ end }}">{{ $value }}</h1>
 </dd>
 </div>
 {{ end }}
