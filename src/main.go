@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -16,13 +17,23 @@ import (
 )
 
 type Config struct {
-	Repository string `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME" required:"true"`
+	Repository                string `envconfig:"IMAGE_NAME" split_words:"true" required:"true"`
+	CriticalSeverityThreshold int32  `envconfig:"MAX_CRITICALS" split_words:"true"`
+	HighSeverityThreshold     int32  `envconfig:"MAX_HIGHS" split_words:"true"`
 }
 
 func main() {
 	var pluginConfig Config
-	if err := envconfig.Process("", &pluginConfig); err != nil {
+	if err := envconfig.Process("BUILDKITE_PLUGIN_ECR_SCAN_RESULTS", &pluginConfig); err != nil {
 		buildkite.LogFailuref("plugin configuration error: %s\n", err.Error())
+		os.Exit(1)
+	}
+	if pluginConfig.CriticalSeverityThreshold < 0 {
+		buildkite.LogFailuref("max-criticals must be greater than or equal to 0")
+		os.Exit(1)
+	}
+	if pluginConfig.HighSeverityThreshold < 0 {
+		buildkite.LogFailuref("max-highs must be greater than or equal to 0")
 		os.Exit(1)
 	}
 
@@ -50,6 +61,7 @@ func main() {
 
 func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent) error {
 	buildkite.Logf("Scan results report requested for %s\n", pluginConfig.Repository)
+	buildkite.Logf("Thresholds: criticals %d highs %d\n", pluginConfig.CriticalSeverityThreshold, pluginConfig.HighSeverityThreshold)
 
 	imageId, err := registry.RegistryInfoFromUrl(pluginConfig.Repository)
 	if err != nil {
@@ -89,10 +101,18 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 
 	buildkite.Logf("retrieved. %d findings in report.\n", len(findings.ImageScanFindings.Findings))
 
+	criticalFindings := findings.ImageScanFindings.FindingSeverityCounts["CRITICAL"]
+	highFindings := findings.ImageScanFindings.FindingSeverityCounts["HIGH"]
+	overThreshold :=
+		criticalFindings > pluginConfig.CriticalSeverityThreshold ||
+			highFindings > pluginConfig.HighSeverityThreshold
+
 	buildkite.Log("Creating report annotation...")
 	annotationCtx := report.AnnotationContext{
-		Image:        imageId,
-		ScanFindings: *findings.ImageScanFindings,
+		Image:                     imageId,
+		ScanFindings:              *findings.ImageScanFindings,
+		CriticalSeverityThreshold: pluginConfig.CriticalSeverityThreshold,
+		HighSeverityThreshold:     pluginConfig.HighSeverityThreshold,
 	}
 
 	annotation, err := annotationCtx.Render()
@@ -102,6 +122,11 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	buildkite.Log("done.")
 
 	annotationStyle := "info"
+	if overThreshold {
+		annotationStyle = "error"
+	} else if criticalFindings > 0 || highFindings > 0 {
+		annotationStyle = "warning"
+	}
 
 	err = agent.Annotate(ctx, string(annotation), annotationStyle, "scan_results_"+imageDigest.Tag)
 	if err != nil {
@@ -121,6 +146,11 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	}
 
 	buildkite.Log("done.")
+
+	// exceeding threshold is a fatal error
+	if overThreshold {
+		return errors.New("vulnerability threshold exceeded")
+	}
 
 	return nil
 }
