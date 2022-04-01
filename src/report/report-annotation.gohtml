@@ -8,7 +8,12 @@ there is no indentation: indented output can be rendered differently.
 */}}
 {{ $criticalThreshold := .CriticalSeverityThreshold }}
 {{ $highThreshold := .HighSeverityThreshold }}
+{{ if .ImageLabel }}
+<h4>Vulnerability summary for "{{ .ImageLabel }}"</h4>
+<p class="h6 regular italic">{{ .Image.Name }}:{{ .Image.Tag }}</p>
+{{ else }}
 <h4>Vulnerability summary for "{{ .Image.Name }}:{{ .Image.Tag }}"</h4>
+{{ end }}
 {{ if .ScanFindings.FindingSeverityCounts }}
 <dl class="flex flex-wrap mxn1">
 {{ range $key, $value := .ScanFindings.FindingSeverityCounts }}

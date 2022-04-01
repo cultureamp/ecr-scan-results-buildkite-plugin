@@ -77,11 +77,9 @@ allow the build to always pass.
 
 ### `image-label` (Optional, string)
 
-> ⚠️ Deprecated. This parameter is ignored.
->
-> This was used to differentiate different images in the same pipeline, but this
-> is no longer required. The plugin is smarter about how it creates annotations
-> and doesn't need this to disambiguate any more.
+When supplied, this is used to title the report annotation in place of the
+repository name and tag. Useful sometimes when the repo name and tag make the
+reports harder to scan visually.
 
 ## Requirements
 
