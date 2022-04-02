@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -55,7 +56,7 @@ func main() {
 			// annotation fails. We annotate to notify the user of the issue,
 			// otherwise it would be lost in the log.
 			annotation := fmt.Sprintf("ECR scan results plugin could not create a result for the image %s", "")
-			_ = agent.Annotate(ctx, annotation, "error", pluginConfig.Repository)
+			_ = agent.Annotate(ctx, annotation, "error", hash(pluginConfig.Repository))
 		}
 	}
 }
@@ -152,4 +153,12 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	}
 
 	return nil
+}
+
+func hash(data ...string) string {
+	h := sha256.New()
+	for _, d := range data {
+		h.Write([]byte(d))
+	}
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
