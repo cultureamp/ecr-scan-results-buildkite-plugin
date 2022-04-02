@@ -76,6 +76,9 @@ function post_command {
 
   # pass the plugin arguments
   args+=( --env "BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME" )
+  args+=( --env "BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_LABEL" )
+  args+=( --env "BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS" )
+  args+=( --env "BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS" )
 
   args+=("$runtime_image")
 
