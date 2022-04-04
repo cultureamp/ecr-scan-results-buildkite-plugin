@@ -6,19 +6,26 @@ dir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 # shellcheck source=lib/shared.bash
 . "$dir/../lib/shared.bash"
 
+plugin_prefix="BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_"
+plugin_name="github.com/cultureamp/ecr-scan-results-buildkite-plugin"
+plugin_image_name="cultureampci/ecr-scan-results-buildkite-plugin"
+
 function post_command {
 
-  # find the plugin version in use - this will be used as the tag for the runtime image that will be pulled
-  plugin_name="github.com/cultureamp/ecr-scan-results-buildkite-plugin"
+  # Find the plugin version in use - this will be used as the tag for the
+  # runtime image that will be pulled. If the plugin is defined twice in one
+  # step, the version of the first defined will be used for both. This is a
+  # reasonable compromise for an edge case.
   version_query=". | map_values(keys) | flatten | map(select(startswith(\"$plugin_name\"))) | first | split(\"#\") | .[1]"
-  plugin_version="$(jq --raw-output "$version_query" <<<"$BUILDKITE_PLUGINS")"
+  plugin_version="$(jq --raw-output "$version_query" <<<"${BUILDKITE_PLUGINS:-}")"
 
-  if [[ "$plugin_version" = "null" ]]; then
+  if [[ "$plugin_version" = "null" || -z "${plugin_version}" ]]; then
     echo "🚨 no plugin version found, using tag 'latest'"
     plugin_version="latest"
   fi
 
-  runtime_image="cultureampci/ecr-scan-results-buildkite-plugin:${plugin_version}"
+  # This is the image that will be pulled and used to run the plugin.
+  runtime_image="${plugin_image_name}:${plugin_version}"
 
   echo "Pulling ECR scan results runtime image ($plugin_version) .."
   docker pull "${runtime_image}"
@@ -74,11 +81,10 @@ function post_command {
     args+=( --env "AWS_DEFAULT_REGION" )
   fi
 
-  # pass the plugin arguments
-  args+=( --env "BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME" )
-  args+=( --env "BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_LABEL" )
-  args+=( --env "BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS" )
-  args+=( --env "BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS" )
+  # pass through all the plugin arguments defined
+  for var in $(compgen -e | grep "$plugin_prefix"); do
+    args+=( "--env" "$var" )
+  done
 
   args+=("$runtime_image")
 
