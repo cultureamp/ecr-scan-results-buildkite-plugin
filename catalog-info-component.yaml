@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ecr-scan-results-buildkite-plugin
+  description: > # OPTIONAL: a nice multiline description here would nice
+    Buildkite plugin to retrieve ECR scan results
+  tags:
+    - users-internal
+    - camp-foundations
+    - data-internal-use-only
+  annotations:
+    github.com/project-slug: cultureamp/ecr-scan-results-buildkite-plugin
+    github.com/team-slug: cultureamp/sre
+spec:
+  type: library
+  owner: SRE
+  lifecycle: production
