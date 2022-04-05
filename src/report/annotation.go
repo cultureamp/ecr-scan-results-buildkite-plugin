@@ -14,7 +14,7 @@ import (
 	"github.com/justincampbell/timeago"
 )
 
-//go:embed report-annotation.gohtml
+//go:embed annotation.gohtml
 var annotationTemplateSource string
 
 type AnnotationContext struct {
