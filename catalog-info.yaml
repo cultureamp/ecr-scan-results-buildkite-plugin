@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: ecr-scan-results-buildkite-plugin-location
+  tags:
+    - camp-foundations
+spec:
+  targets:
+    - ./catalog-info-component.yaml
