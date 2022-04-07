@@ -110,11 +110,14 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 
 	buildkite.Log("Uploading report as an artifact...")
 	filename := fmt.Sprintf("result.%s.html", strings.TrimPrefix(imageDigest.Tag, "sha256:"))
-	os.WriteFile(filename, annotation, fs.ModePerm)
+	err = os.WriteFile(filename, annotation, fs.ModePerm)
+	if err != nil {
+		return runtimeerrors.NonFatal("could not write report artifact", err)
+	}
 
 	err = agent.ArtifactUpload(ctx, "result*.html")
 	if err != nil {
-		return runtimeerrors.NonFatal("could not annotate build", err)
+		return runtimeerrors.NonFatal("could not upload report artifact", err)
 	}
 
 	buildkite.Log("done.")

@@ -59,7 +59,6 @@ type RegistryScan struct {
 }
 
 func NewRegistryScan(config aws.Config) (*RegistryScan, error) {
-
 	client := ecr.NewFromConfig(config)
 
 	return &RegistryScan{

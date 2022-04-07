@@ -60,7 +60,7 @@ func execCmdWithStdin(ctx context.Context, executableName string, stdin string, 
 
 	if err := cmd.Wait(); err != nil {
 		_ = cmd.Process.Signal(os.Kill)
-		return fmt.Errorf("Failed to wait for command termination: %v", err)
+		return fmt.Errorf("Failed to wait for command termination: %w", err)
 	}
 
 	waitStatus := cmd.ProcessState.Sys().(syscall.WaitStatus)
