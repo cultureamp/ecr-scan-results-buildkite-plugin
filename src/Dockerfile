@@ -1,20 +1,30 @@
-FROM public.ecr.aws/docker/library/golang:1.18-alpine AS builder
+ARG BUILDER_IMAGE=public.ecr.aws/docker/library/golang:1.18-alpine
+ARG DISTROLESS_IMAGE=gcr.io/distroless/static
 
-RUN apk add --upate --no-cache git
+FROM ${BUILDER_IMAGE} as builder
 
-ENV CGO_ENABLED=0
+# Ensure ca-certficates are up to date
+RUN update-ca-certificates
+
 WORKDIR /src
 
-COPY go.mod go.sum ./
+COPY go.mod .
+
 RUN go mod download
+RUN go mod verify
 
 COPY . ./
 
-RUN go build -o ecrscanresults main.go
+# build as a static binary without debug symbols
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+      -ldflags='-w -s -extldflags "-static"' -a \
+      -o /dist/ecrscanresults .
 
-FROM public.ecr.aws/docker/library/alpine:3.15 AS production
+# runtime image using static distroless base
+# using static nonroot image
+# user:group is nobody:nobody, uid:gid = 65534:65534
+FROM ${DISTROLESS_IMAGE}
 
-RUN apk add --update --no-cache ca-certificates
-COPY --from=builder /src/ecrscanresults /ecrscanresults
+COPY --from=builder /dist/ecrscanresults /ecrscanresults
 
-CMD ["/ecrscanresults"]
+ENTRYPOINT ["/ecrscanresults"]
