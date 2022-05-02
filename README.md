@@ -14,8 +14,8 @@ steps:
   - command: "command which creates an image"
     # the docker-compose plugin may be used here instead of a command
     plugins:
-    - cultureamp/ecr-scan-results#v1.2.0:
-        image-name: "$BUILD_REPO:deploy-$BUILD_TAG"
+      - cultureamp/ecr-scan-results#v1.2.0:
+          image-name: "$BUILD_REPO:deploy-$BUILD_TAG"
 ```
 
 In a pipeline this will look something like:
