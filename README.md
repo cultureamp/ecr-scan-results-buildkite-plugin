@@ -90,7 +90,7 @@ reports harder to scan visually.
 
 ### ECR Scan on Push
 
-This plugin assumes that the ECR repository has the ScanOnPush setting set (see
+This plugin assumes that the ECR repository has the `ScanOnPush` setting set (see
 the [AWS
 docs](https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html)
 for more information). By default this is not set on AWS ECR repositories.
