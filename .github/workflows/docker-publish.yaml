@@ -1,8 +1,6 @@
 name: publish-plugin-image
 
-on:
-  push:
-    # branches: ['release']
+on: "push"
 
 env:
   IMAGE_NAME: cultureampci/ecr-scan-results-buildkite-plugin
