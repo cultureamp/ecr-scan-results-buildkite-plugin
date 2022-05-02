@@ -5,6 +5,11 @@ service. By default the plugin will cause the step to fail if there are critical
 or high vulnerabilities reported, but there are configurable thresholds on this
 behaviour.
 
+> ℹ️ TIP: if you want the build to continue when vulnerabilities are found, be
+> sure to supply values for `max-criticals` and `max-highs` parameters. If these
+> are set to high values your build will never fail, but details will be
+> supplied in the annotation.
+
 ## Example
 
 Add the following lines to your `pipeline.yml`:
