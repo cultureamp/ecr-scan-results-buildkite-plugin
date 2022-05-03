@@ -15,31 +15,21 @@ type Agent struct {
 }
 
 func (a Agent) Annotate(ctx context.Context, message string, style string, annotationContext string) error {
-	return execCmdWithStdin(ctx, "buildkite-agent", message, "annotate", "--style", style, "--context", annotationContext)
+	return execCmd(ctx, "buildkite-agent", &message, "annotate", "--style", style, "--context", annotationContext)
 }
 
 func (a Agent) ArtifactUpload(ctx context.Context, path string) error {
-	return execAgentSyscall(ctx, "buildkite-agent", "artifact", "upload", path)
+	return execCmd(ctx, "buildkite-agent", nil, "artifact", "upload", path)
 }
 
-func execAgentSyscall(ctx context.Context, executableName string, args ...string) error {
-	Logf("Executing: %s %s\n", executableName, strings.Join(args, " "))
-
-	executable, err := osexec.LookPath(executableName)
-	if err != nil {
-		return err
-	}
-
-	execArgs := append([]string{executableName}, args...)
-	return syscall.Exec(executable, execArgs, os.Environ())
-}
-
-func execCmdWithStdin(ctx context.Context, executableName string, stdin string, args ...string) error {
+func execCmd(ctx context.Context, executableName string, stdin *string, args ...string) error {
 	Logf("Executing: %s %s\n", executableName, strings.Join(args, " "))
 
 	cmd := osexec.CommandContext(ctx, executableName, args...)
 
-	cmd.Stdin = strings.NewReader(stdin)
+	if stdin != nil {
+		cmd.Stdin = strings.NewReader(*stdin)
+	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -60,13 +50,13 @@ func execCmdWithStdin(ctx context.Context, executableName string, stdin string, 
 
 	if err := cmd.Wait(); err != nil {
 		_ = cmd.Process.Signal(os.Kill)
-		return fmt.Errorf("Failed to wait for command termination: %w", err)
+		return fmt.Errorf("failed to wait for command termination: %w", err)
 	}
 
 	waitStatus := cmd.ProcessState.Sys().(syscall.WaitStatus)
 	exitStatus := waitStatus.ExitStatus()
 	if exitStatus != 0 {
-		return fmt.Errorf("Command exited with non-zero status: %d", exitStatus)
+		return fmt.Errorf("command exited with non-zero status: %d", exitStatus)
 	}
 
 	return nil
