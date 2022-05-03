@@ -17,6 +17,8 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+const pluginEnvironmentPrefix = "BUILDKITE_PLUGIN_ECR_SCAN_RESULTS"
+
 type Config struct {
 	Repository                string `envconfig:"IMAGE_NAME" split_words:"true" required:"true"`
 	ImageLabel                string `envconfig:"IMAGE_LABEL" split_words:"true"`
@@ -26,7 +28,7 @@ type Config struct {
 
 func main() {
 	var pluginConfig Config
-	if err := envconfig.Process("BUILDKITE_PLUGIN_ECR_SCAN_RESULTS", &pluginConfig); err != nil {
+	if err := envconfig.Process(pluginEnvironmentPrefix, &pluginConfig); err != nil {
 		buildkite.LogFailuref("plugin configuration error: %s\n", err.Error())
 		os.Exit(1)
 	}
@@ -108,6 +110,8 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	overThreshold :=
 		criticalFindings > pluginConfig.CriticalSeverityThreshold ||
 			highFindings > pluginConfig.HighSeverityThreshold
+
+	buildkite.Logf("Severity counts: critical=%d high=%d overThreshold=%v\n", criticalFindings, highFindings, overThreshold)
 
 	buildkite.Log("Creating report annotation...")
 	annotationCtx := report.AnnotationContext{
