@@ -126,7 +126,7 @@ load '../lib/interface'
 }
 
 @test "When Buildkite env file is present, its contents are passed to the docker run command"  {
-  export BUILDKITE_ENV_FILE="${dir}/../tests/fixtures/buildkite-test.env"
+  export BUILDKITE_ENV_FILE="${BATS_TEST_DIRNAME}/fixtures/buildkite-test.env"
 
   stub docker \
     '* : echo stubbed docker $@' \

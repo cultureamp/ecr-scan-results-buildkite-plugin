@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-dir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
-
-# shellcheck source=lib/shared.bash
-. "$dir/../lib/shared.bash"
-
 plugin_prefix="BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_"
 plugin_name="github.com/cultureamp/ecr-scan-results-buildkite-plugin"
 plugin_image_name="cultureampci/ecr-scan-results-buildkite-plugin"
