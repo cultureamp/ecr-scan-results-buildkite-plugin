@@ -1,0 +1,63 @@
+{{/*
+
+Expects an instance of AnnotationContext as its context.
+
+This template renders _MARKDOWN_, even though it's mostly HTML. This is why
+there is no indentation: indented output can be rendered differently.
+
+*/}}
+{{ $criticalThreshold := .CriticalSeverityThreshold }}
+{{ $highThreshold := .HighSeverityThreshold }}
+{{ if .ImageLabel }}
+<h4>Vulnerability summary for "{{ .ImageLabel }}"</h4>
+<p class="h6 regular italic">{{ .Image.Name }}:{{ .Image.Tag }}</p>
+{{ else }}
+<h4>Vulnerability summary for "{{ .Image.Name }}:{{ .Image.Tag }}"</h4>
+{{ end }}
+{{ if .ScanFindings.FindingSeverityCounts }}
+<dl class="flex flex-wrap mxn1">
+{{ range $key, $value := .ScanFindings.FindingSeverityCounts }}
+{{ $exceedsThreshold := (or
+    (and (eq $key "CRITICAL") (gt $value $criticalThreshold))
+    (and (eq $key "HIGH") (gt $value $highThreshold))
+) }}
+<div class="m1 p1 mr3">
+<dt>{{ $key | lowerCase | titleCase }}</dt>
+<dd><h1 class="m0{{ if $exceedsThreshold }} red{{ end }}">{{ $value }}</h1>
+</dd>
+</div>
+{{ end }}
+</dl>
+{{ else }}
+<p>No vulnerabilities reported.</p>
+{{ end }}
+{{ if .ScanFindings.Findings }}
+<details>
+<summary>Vulnerability details</summary>
+<div>
+<table>
+<tr>
+<th>CVE</th>
+<th>Severity</th>
+<th>Effects</th>
+<th>CVSS score</th>
+<th>Vector</th>
+</tr>
+{{ range $f := .ScanFindings.Findings }}
+{{ $vector := $f | findingAttribute "CVSS2_VECTOR"}}
+<tr>
+<td>{{ if $f.Uri }}<a href="{{ $f.Uri }}">{{ $f.Name }}</a>{{ else }}{{ $f.Name }}{{ end }}</td>
+<td>{{ $f.Severity | string | lowerCase | titleCase }}</td>
+<td>{{ $f | findingAttribute "package_name" | nbsp }} {{ $f | findingAttribute "package_version" | nbsp }}</td>
+<td>{{ $f | findingAttribute "CVSS2_SCORE" | nbsp}}</td>
+<td>{{ if $vector }}<a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=({{ $vector }})">{{ $vector }}</a>{{ else }}&nbsp;{{ end }}</td>
+</tr>
+{{ end }}
+</table>
+</div>
+</details>
+{{ end }}
+<p class="p1">
+<i>scan completed: <span title="{{ .ScanFindings.ImageScanCompletedAt }}">{{ .ScanFindings.ImageScanCompletedAt | timeAgo }}</span></i> |
+<i>source updated: <span title="{{ .ScanFindings.VulnerabilitySourceUpdatedAt }}">{{ .ScanFindings.VulnerabilitySourceUpdatedAt | timeAgo }}</span></i>
+</p>
