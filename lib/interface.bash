@@ -7,6 +7,17 @@ plugin_image_name="cultureampci/ecr-scan-results-buildkite-plugin"
 
 function post_command {
 
+  # TEMP print some info
+  echo "===="
+  echo "pwd: ${PWD}"
+  echo ""
+  echo "ls:"
+  ls -lah
+  echo ""
+  echo "whoami:"
+  whoami
+  echo "===="
+
   # Find the plugin version in use - this will be used as the tag for the
   # runtime image that will be pulled. If the plugin is defined twice in one
   # step, the version of the first defined will be used for both. This is a
@@ -80,6 +91,12 @@ function post_command {
   for var in $(compgen -e | grep "$plugin_prefix"); do
     args+=( "--env" "$var" )
   done
+
+  # pass through cve ignorelist as volume
+  CVE_IGNORELIST_PATH="./buildkite/ecr_cve_ignorelist.json"
+  if [[ -f "$CVE_IGNORELIST_PATH" ]] ; then
+    args+=( --volume "/ecr_cve_ignorelist.json:$CVE_IGNORELIST_PATH" )
+  fi
 
   args+=("$runtime_image")
 

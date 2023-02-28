@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -39,6 +40,24 @@ func main() {
 	if pluginConfig.HighSeverityThreshold < 0 {
 		buildkite.LogFailuref("max-highs must be greater than or equal to 0")
 		os.Exit(1)
+	}
+
+  fmt.Println("reading / dir (expecting to see cve ignorelist)")
+  files1, err1 := ioutil.ReadDir("/")
+	if err1 != nil {
+		fmt.Printf("%v", err1)
+	}
+	for _, file := range files1 {
+		fmt.Println(file.Name(), file.IsDir())
+	}
+
+  fmt.Println("reading .buildkite dir (expect empty)")
+  files2, err2 := ioutil.ReadDir(".buildkite")
+	if err2 != nil {
+		fmt.Printf("%v", err2)
+	}
+	for _, file := range files2 {
+		fmt.Println(file.Name(), file.IsDir())
 	}
 
 	ctx := context.Background()
