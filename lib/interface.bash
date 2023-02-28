@@ -11,8 +11,11 @@ function post_command {
   echo "===="
   echo "pwd: ${PWD}"
   echo ""
-  echo "ls:"
+  echo "ls .:"
   ls -lah
+  echo ""
+  echo "ls .buildkite:"
+  ls .buildkite -lah
   echo ""
   echo "whoami:"
   whoami
@@ -93,8 +96,10 @@ function post_command {
   done
 
   # pass through cve ignorelist as volume
-  CVE_IGNORELIST_PATH="./buildkite/ecr_cve_ignorelist.json"
+  CVE_IGNORELIST_PATH=".buildkite/ecr_cve_ignorelist.json"
+  echo $CVE_IGNORELIST_PATH
   if [[ -f "$CVE_IGNORELIST_PATH" ]] ; then
+    echo CVE_IGNORELIST found!
     args+=( --volume "/ecr_cve_ignorelist.json:$CVE_IGNORELIST_PATH" )
   fi
 
