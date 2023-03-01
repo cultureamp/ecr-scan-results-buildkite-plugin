@@ -7,23 +7,6 @@ plugin_image_name="cultureampci/ecr-scan-results-buildkite-plugin"
 
 function post_command {
 
-  # TEMP print some info
-  echo "===="
-  echo "pwd: ${PWD}"
-  echo ""
-  echo "ls .:"
-  ls -lah
-  echo ""
-  echo "ls .buildkite:"
-  ls .buildkite -lah
-  echo ""
-  echo "whoami:"
-  whoami
-  echo ""
-  echo "PWD: $PWD"
-  echo "pwd: $(pwd)"
-  echo "===="
-
   # Find the plugin version in use - this will be used as the tag for the
   # runtime image that will be pulled. If the plugin is defined twice in one
   # step, the version of the first defined will be used for both. This is a

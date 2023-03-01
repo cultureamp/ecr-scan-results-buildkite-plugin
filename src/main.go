@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -27,6 +28,30 @@ type Config struct {
 	HighSeverityThreshold     int32  `envconfig:"MAX_HIGHS" split_words:"true"`
 }
 
+type CveIgnorelist = map[string]struct {
+	ignore_date   string
+	signed_off_by string
+	justification string
+	notes         string // optional, can be ""
+}
+
+func readCveIgnorelist(path string) CveIgnorelist {
+	ignorelistStr, err := ioutil.ReadFile(path)
+	if err != nil {
+		// TODO maybe not always an error?
+		fmt.Printf("Error when opening file: %v", err)
+	}
+	fmt.Println("ignorelistStr: ", ignorelistStr)
+
+	var ignorelist CveIgnorelist
+	err = json.Unmarshal(ignorelistStr, &ignorelist)
+	if err != nil {
+		fmt.Printf("Error during Unmarshal(): %v", err)
+	}
+
+	return ignorelist
+}
+
 func main() {
 	var pluginConfig Config
 	if err := envconfig.Process(pluginEnvironmentPrefix, &pluginConfig); err != nil {
@@ -42,23 +67,8 @@ func main() {
 		os.Exit(1)
 	}
 
-  fmt.Println("reading / dir (expecting to see cve ignorelist)")
-  files1, err1 := ioutil.ReadDir("/")
-	if err1 != nil {
-		fmt.Printf("%v", err1)
-	}
-	for _, file := range files1 {
-		fmt.Println(file.Name(), file.IsDir())
-	}
-
-  fmt.Println("reading .buildkite dir (expect empty)")
-  files2, err2 := ioutil.ReadDir(".buildkite")
-	if err2 != nil {
-		fmt.Printf("%v", err2)
-	}
-	for _, file := range files2 {
-		fmt.Println(file.Name(), file.IsDir())
-	}
+	cveIgnorelist := readCveIgnorelist("/ecr_cve_ignorelist.json")
+	fmt.Println("cveIgnorelist: ", cveIgnorelist)
 
 	ctx := context.Background()
 	agent := buildkite.Agent{}
