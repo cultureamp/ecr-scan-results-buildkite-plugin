@@ -96,11 +96,11 @@ function post_command {
   done
 
   # pass through cve ignorelist as volume
-  CVE_IGNORELIST_PATH=".buildkite/ecr_cve_ignorelist.json"
-  echo $CVE_IGNORELIST_PATH
+  CVE_IGNORELIST_PATH="$PWD/.buildkite/ecr_cve_ignorelist.json"
+  echo "$CVE_IGNORELIST_PATH"
   if [[ -f "$CVE_IGNORELIST_PATH" ]] ; then
     echo CVE_IGNORELIST found!
-    args+=( --volume "/ecr_cve_ignorelist.json:$CVE_IGNORELIST_PATH" )
+    args+=( --volume "$CVE_IGNORELIST_PATH:/ecr_cve_ignorelist.json" )
   fi
 
   args+=("$runtime_image")
