@@ -33,5 +33,5 @@ jobs:
         with:
           context: src
           push: true
-          tags: "cultureampci/ecr-scan-results-buildkite-plugin:add-cve-ignorelist"
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
