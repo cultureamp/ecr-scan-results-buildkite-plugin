@@ -28,7 +28,7 @@ func (i RegistryInfo) String() string {
 	return fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s:%s", i.RegistryID, i.Region, i.Name, i.Tag)
 }
 
-func RegistryInfoFromUrl(url string) (RegistryInfo, error) {
+func RegistryInfoFromURL(url string) (RegistryInfo, error) {
 	info := RegistryInfo{}
 	names := registryImageExpr.SubexpNames()
 	match := registryImageExpr.FindStringSubmatch(url)

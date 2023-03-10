@@ -67,7 +67,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	buildkite.Logf("Scan results report requested for %s\n", pluginConfig.Repository)
 	buildkite.Logf("Thresholds: criticals %d highs %d\n", pluginConfig.CriticalSeverityThreshold, pluginConfig.HighSeverityThreshold)
 
-	imageID, err := registry.RegistryInfoFromUrl(pluginConfig.Repository)
+	imageID, err := registry.RegistryInfoFromURL(pluginConfig.Repository)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 
 	buildkite.Log("Creating report annotation...")
 	annotationCtx := report.AnnotationContext{
-		Image:                     imageId,
+		Image:                     imageID,
 		ImageLabel:                pluginConfig.ImageLabel,
 		ScanFindings:              *findings.ImageScanFindings,
 		CriticalSeverityThreshold: pluginConfig.CriticalSeverityThreshold,
