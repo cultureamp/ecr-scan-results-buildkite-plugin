@@ -23,6 +23,7 @@ linters:
   - wsl
   - errname
   - exhaustivestruct
+  - exhaustruct
   - nilnil
   - nlreturn
   - goconst
@@ -40,6 +41,11 @@ linters:
   - golint
   - scopelint
   - maligned
+  - deadcode
+  - ifshort
+  - structcheck
+  - nosnakecase
+  - varcheck
 
 linters-settings:
   gosec:
