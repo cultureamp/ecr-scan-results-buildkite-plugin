@@ -1,6 +1,3 @@
-run:
-  go: 1.18
-
 issues:
   exclude-rules:
     - path: buildkite/agent.go
