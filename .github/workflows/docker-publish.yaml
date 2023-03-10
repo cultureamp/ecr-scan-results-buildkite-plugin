@@ -1,6 +1,6 @@
 name: publish-plugin-image
 
-on: "push"
+on: workflow_dispatch
 
 env:
   IMAGE_NAME: cultureampci/ecr-scan-results-buildkite-plugin
