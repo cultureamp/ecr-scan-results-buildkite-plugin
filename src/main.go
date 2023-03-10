@@ -72,7 +72,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 		return err
 	}
 
-	awsConfig, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(imageId.Region))
+	awsConfig, err := config.LoadDefaultConfig(ctx, config.WithRegion(imageId.Region))
 	if err != nil {
 		return runtimeerrors.NonFatal("could not configure AWS access", err)
 	}
