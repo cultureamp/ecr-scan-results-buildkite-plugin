@@ -67,12 +67,12 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	buildkite.Logf("Scan results report requested for %s\n", pluginConfig.Repository)
 	buildkite.Logf("Thresholds: criticals %d highs %d\n", pluginConfig.CriticalSeverityThreshold, pluginConfig.HighSeverityThreshold)
 
-	imageId, err := registry.RegistryInfoFromUrl(pluginConfig.Repository)
+	imageID, err := registry.RegistryInfoFromURL(pluginConfig.Repository)
 	if err != nil {
 		return err
 	}
 
-	awsConfig, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(imageId.Region))
+	awsConfig, err := config.LoadDefaultConfig(ctx, config.WithRegion(imageID.Region))
 	if err != nil {
 		return runtimeerrors.NonFatal("could not configure AWS access", err)
 	}
@@ -82,15 +82,15 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 		return runtimeerrors.NonFatal("could not set up ECR access", err)
 	}
 
-	buildkite.Logf("Getting image digest for %s\n", imageId)
-	imageDigest, err := scan.GetLabelDigest(ctx, imageId)
+	buildkite.Logf("Getting image digest for %s\n", imageID)
+	imageDigest, err := scan.GetLabelDigest(ctx, imageID)
 	if err != nil {
 		return runtimeerrors.NonFatal("could not find digest for image", err)
 	}
 
 	buildkite.Logf("Digest: %s\n", imageDigest)
 
-	buildkite.LogGroupf(":ecr: Creating ECR scan results report for %s\n", imageId)
+	buildkite.LogGroupf(":ecr: Creating ECR scan results report for %s\n", imageID)
 	err = scan.WaitForScanFindings(ctx, imageDigest)
 	if err != nil {
 		return runtimeerrors.NonFatal("could not retrieve scan results", err)
@@ -115,7 +115,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 
 	buildkite.Log("Creating report annotation...")
 	annotationCtx := report.AnnotationContext{
-		Image:                     imageId,
+		Image:                     imageID,
 		ImageLabel:                pluginConfig.ImageLabel,
 		ScanFindings:              *findings.ImageScanFindings,
 		CriticalSeverityThreshold: pluginConfig.CriticalSeverityThreshold,

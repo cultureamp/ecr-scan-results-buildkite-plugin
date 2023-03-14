@@ -1,6 +1,3 @@
-run:
-  go: 1.18
-
 issues:
   exclude-rules:
     - path: buildkite/agent.go
@@ -26,6 +23,7 @@ linters:
   - wsl
   - errname
   - exhaustivestruct
+  - exhaustruct
   - nilnil
   - nlreturn
   - goconst
@@ -43,6 +41,11 @@ linters:
   - golint
   - scopelint
   - maligned
+  - deadcode
+  - ifshort
+  - structcheck
+  - nosnakecase
+  - varcheck
 
 linters-settings:
   gosec:

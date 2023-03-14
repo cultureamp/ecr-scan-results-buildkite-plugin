@@ -12,6 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/cultureamp/ecrscanresults/registry"
 	"github.com/justincampbell/timeago"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 //go:embed annotation.gohtml
@@ -29,7 +31,10 @@ func (c AnnotationContext) Render() ([]byte, error) {
 	t, err := template.
 		New("annotation").
 		Funcs(template.FuncMap{
-			"titleCase":        strings.Title,
+			"titleCase": func(s string) string {
+				c := cases.Title(language.English)
+				return c.String(s)
+			},
 			"lowerCase":        strings.ToLower,
 			"findingAttribute": findingAttributeValue,
 			"nbsp": func(input string) any {

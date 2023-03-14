@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRegistryInfoFromUrlSucceeds(t *testing.T) {
+func TestRegistryInfoFromURLSucceeds(t *testing.T) {
 	cases := []struct {
 		test     string
 		url      string
@@ -37,17 +37,17 @@ func TestRegistryInfoFromUrlSucceeds(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.test, func(t *testing.T) {
-			info, err := RegistryInfoFromUrl(c.url)
+			info, err := RegistryInfoFromURL(c.url)
 			require.NoError(t, err)
 			assert.Equal(t, c.expected, info)
 		})
 	}
 }
 
-func TestRegistryInfoFromUrlFails(t *testing.T) {
+func TestRegistryInfoFromURLFails(t *testing.T) {
 	url := "123456789012.dkr.ecr.us-west-2.amazonaws.com"
 
-	info, err := RegistryInfoFromUrl(url)
+	info, err := RegistryInfoFromURL(url)
 	require.Error(t, err)
 	assert.ErrorContains(t, err, "invalid registry URL")
 
