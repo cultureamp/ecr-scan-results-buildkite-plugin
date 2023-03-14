@@ -10,12 +10,12 @@ load '../lib/interface'
 
 # Uncomment the following line to debug stub failures
 # export [stub_command]_STUB_DEBUG=/dev/tty
-# export DOCKER_STUB_DEBUG=/dev/tty
+#export DOCKER_STUB_DEBUG=/dev/tty
 
 @test "When no configuration is supplied, it runs docker with the latest image" {
   stub docker \
-    '* : echo stubbed docker $@' \
-    '* : echo stubbed docker $@'
+    ':: echo stubbed docker $@' \
+    ':: echo stubbed docker $@'
   run post_command
 
   assert_success
@@ -28,8 +28,8 @@ load '../lib/interface'
 @test "When plugin configuration is supplied, it runs docker with the configured version"  {
   export BUILDKITE_PLUGINS="[{\"github.com/buildkite-plugins/ecr-buildkite-plugin#v1.2.0\":{\"login\":true,\"account_ids\":\"0123456789\"}},{\"github.com/cultureamp/ecr-scan-results-buildkite-plugin#version1\":{\"image-name\":\"0123456789.dkr.ecr.us-west-2.amazonaws.com/master/web-gateway/ecs:build-2801\",\"image-label\":\"web-gateway\"}}]"
   stub docker \
-    '* : echo stubbed docker $@' \
-    '* : echo stubbed docker $@'
+    ':: echo stubbed docker $@' \
+    ':: echo stubbed docker $@'
   run post_command
 
   assert_success
@@ -43,8 +43,8 @@ load '../lib/interface'
 @test "When multiple plugin configurations are supplied, it runs docker with the first configured version"  {
   export BUILDKITE_PLUGINS="[{\"github.com/buildkite-plugins/ecr-buildkite-plugin#v1.2.0\":{\"login\":true,\"account_ids\":\"0123456789\"}},{\"github.com/cultureamp/ecr-scan-results-buildkite-plugin#version0\":{\"image-name\":\"0123456789.dkr.ecr.us-west-2.amazonaws.com/master/web-gateway/ecs:build-2801\",\"image-label\":\"web-gateway\"}},{\"github.com/cultureamp/ecr-scan-results-buildkite-plugin#version1\":{\"image-name\":\"0123456789.dkr.ecr.us-west-2.amazonaws.com/master/web-gateway/ecs:build-2801\",\"image-label\":\"web-gateway\"}}]"
   stub docker \
-    '* : echo stubbed docker $@' \
-    '* : echo stubbed docker $@'
+    ':: echo stubbed docker $@' \
+    ':: echo stubbed docker $@'
   run post_command
 
   assert_success
@@ -56,8 +56,8 @@ load '../lib/interface'
 
 @test "When no plugin parameters are supplied, no parameters are passed to the docker run command"  {
   stub docker \
-    '* : echo stubbed docker $@' \
-    '* : echo stubbed docker $@'
+    ':: echo stubbed docker $@' \
+    ':: echo stubbed docker $@'
 
   run post_command
 
@@ -72,8 +72,8 @@ load '../lib/interface'
   export BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_TWO="two"
 
   stub docker \
-    '* : echo stubbed docker $@' \
-    '* : echo stubbed docker $@'
+    ':: echo stubbed docker $@' \
+    ':: echo stubbed docker $@'
 
   run post_command
 
@@ -92,8 +92,8 @@ load '../lib/interface'
   export AWS_DEFAULT_REGION="val"
 
   stub docker \
-    '* : echo stubbed docker $@' \
-    '* : echo stubbed docker $@'
+    ':: echo stubbed docker $@' \
+    ':: echo stubbed docker $@'
 
   run post_command
 
@@ -111,8 +111,8 @@ load '../lib/interface'
   export BUILDKITE_AGENT_BINARY_PATH="/bin/buildkite-agent"
 
   stub docker \
-    '* : echo stubbed docker $@' \
-    '* : echo stubbed docker $@'
+    ':: echo stubbed docker $@' \
+    ':: echo stubbed docker $@'
 
   run post_command
 
@@ -129,8 +129,8 @@ load '../lib/interface'
   export BUILDKITE_ENV_FILE="${BATS_TEST_DIRNAME}/fixtures/buildkite-test.env"
 
   stub docker \
-    '* : echo stubbed docker $@' \
-    '* : echo stubbed docker $@'
+    ':: echo stubbed docker $@' \
+    ':: echo stubbed docker $@'
 
   run post_command
 
