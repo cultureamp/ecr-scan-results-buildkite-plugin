@@ -1,0 +1,28 @@
+builds:
+  - binary: ecr-scan-results-buildkite-plugin
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - "386"
+      - amd64
+      - arm
+      - arm64
+      - ppc64le
+
+checksum:
+  name_template: 'checksums.txt'
+
+archives:
+  - format: 'binary'
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  use: github-native
+
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json

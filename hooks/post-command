@@ -1,9 +1,9 @@
-#! /bin/bash
+#!/bin/bash
 set -euo pipefail
 
 dir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 
-# shellcheck source=lib/interface.bash
-. "$dir/../lib/interface.bash"
+# shellcheck source=lib/download.bash
+. "$dir/../lib/download.bash"
 
-post_command
+download_binary_and_run "$@" || exit 1
