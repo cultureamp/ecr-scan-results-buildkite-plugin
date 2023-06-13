@@ -9,6 +9,8 @@ behaviour.
 > sure to supply values for `max-criticals` and `max-highs` parameters. If these
 > are set to high values your build will never fail, but details will be
 > supplied in the annotation.
+>
+> Check out the FAQs below for more information
 
 ## Example
 
@@ -77,7 +79,7 @@ to allow the build to always pass.
 ### `max-highs` (Optional, string)
 
 If the number of high vulnerabilities in the image exceeds this threshold the
-build is failed. Defaults to 0.  Use a sufficiently large number (e.g. 999) to
+build is failed. Defaults to 0. Use a sufficiently large number (e.g. 999) to
 allow the build to always pass.
 
 ### `image-label` (Optional, string)
@@ -113,3 +115,21 @@ error and it may block the pipeline as a result. The error
 `UnsupportedImageError` is expected in this scenario; see [the ECR
 docs](https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning-troubleshooting.html)
 for more information.
+
+## FAQ
+
+### I have a vulnerability that isn't resolved yet, but I can wait on fixing. How do I do configure this plugin so I can unblock my builds?
+
+Refer to how to set your [max-criticals](https://github.com/cultureamp/ecr-scan-results-buildkite-plugin#max-criticals-optional-string), and [max-highs](https://github.com/cultureamp/ecr-scan-results-buildkite-plugin#max-highs-optional-string).
+
+### Are there guidelines on using up?
+
+Yes. Changing the `max-criticals` and `max-high` settings should not be taken lightly.
+
+This option is effectively a deferral of fixing the vulnerability. **Assess the situation first**. If the CVE describes a scenario that aligns with how your project is used, then you should be working to fix it rather than defer it. For help on this, check out the following the steps outlined [here](https://cultureamp.atlassian.net/wiki/spaces/PST/pages/2960916852/Central+SRE+Support+FAQs#I-have-high%2Fcritical-vulnerabilities-for-my-ECR-image%2C-and-its-blocking-my-builds.-What%E2%80%99s-going-on%3F).
+
+Below are some recommendations if you choose to exercise this option:
+
+1. Set the thresholds to the number of identified high or critical vulnerabilities. This is so you’re not permitting more vulnerabilities than you should. Especially for those you can fix by updating dependencies or packages.
+
+2. Set a scheduled reminder for your team to check if a fix is available for the CVE. If a fix is available, address it, and then lower your threshold for the respective vulnerability severity.
