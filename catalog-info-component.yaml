@@ -5,7 +5,7 @@ metadata:
   description: |
     Buildkite plugin to retrieve ECR scan results
   tags:
-    - camp-foundations
+    - camp-sre
     - data-internal-use-only
     - users-internal
   annotations:
