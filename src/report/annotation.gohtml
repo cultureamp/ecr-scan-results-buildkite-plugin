@@ -45,7 +45,7 @@ there is no indentation: indented output can be rendered differently.
 <th>CVSS score</th>
 <th>Vector</th>
 </tr>
-{{ range $f := .ScanFindings.Findings }}
+{{ range $f := .ScanFindings.Findings | sortFindings }}
 {{ $vector := $f | findingAttribute "CVSS2_VECTOR"}}
 <tr>
 <td>{{ if $f.Uri }}<a href="{{ $f.Uri }}">{{ $f.Name }}</a>{{ else }}{{ $f.Name }}{{ end }}</td>

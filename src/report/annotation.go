@@ -53,6 +53,7 @@ func (c AnnotationContext) Render() ([]byte, error) {
 
 				return timeago.FromTime(*tm)
 			},
+			"sortFindings":   sortFindings,
 			"sortSeverities": sortSeverities,
 			"string": func(input any) (string, error) {
 				if strg, ok := input.(fmt.Stringer); ok {
@@ -83,6 +84,25 @@ func findingAttributeValue(name string, finding types.ImageScanFinding) string {
 		}
 	}
 	return ""
+}
+
+func sortFindings(findings []types.ImageScanFinding) []types.ImageScanFinding {
+	// shallow clone, don't affect source array
+	sorted := slices.Clone(findings)
+
+	// sort by severity rank, then CVE _descending_
+	slices.SortFunc(sorted, func(a, b types.ImageScanFinding) int {
+		sevRank := compareSeverities(string(a.Severity), string(b.Severity))
+		if sevRank != 0 {
+			return sevRank
+		}
+
+		// descending order of CVE, in general this means that newer CVEs will be at
+		// the top
+		return strings.Compare(aws.ToString(b.Name), aws.ToString(a.Name))
+	})
+
+	return sorted
 }
 
 func sortSeverities(severityCounts map[string]int32) []string {

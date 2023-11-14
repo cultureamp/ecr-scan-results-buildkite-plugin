@@ -50,10 +50,28 @@
 
 
 <tr>
+<td><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5200">CVE-2019-5200</a></td>
+<td>Critical</td>
+<td>5200-package 5200-version</td>
+<td>10.0</td>
+<td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=(AV%3aL%2fAC%3aL%2fAu%3aN%2fC%3aP%2fI%3aP%2fA%3aP)">AV:L/AC:L/Au:N/C:P/I:P/A:P</a></td>
+</tr>
+
+
+<tr>
 <td><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5188">CVE-2019-5188</a></td>
 <td>High</td>
 <td>e2fsprogs 1.44.1-1ubuntu1.1</td>
 <td>4.6</td>
+<td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=(AV%3aL%2fAC%3aL%2fAu%3aN%2fC%3aP%2fI%3aP%2fA%3aP)">AV:L/AC:L/Au:N/C:P/I:P/A:P</a></td>
+</tr>
+
+
+<tr>
+<td><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5300">CVE-2019-5300</a></td>
+<td>Aa-Bogus-Severity</td>
+<td>5300-package 5300-version</td>
+<td>10.0</td>
 <td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=(AV%3aL%2fAC%3aL%2fAu%3aN%2fC%3aP%2fI%3aP%2fA%3aP)">AV:L/AC:L/Au:N/C:P/I:P/A:P</a></td>
 </tr>
 
