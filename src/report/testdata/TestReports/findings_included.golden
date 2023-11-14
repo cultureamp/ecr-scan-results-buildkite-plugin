@@ -9,9 +9,27 @@
 <dl class="flex flex-wrap mxn1">
 
 
+
+
+<div class="m1 p1 mr3">
+<dt>Critical</dt>
+<dd><h1 class="m0 red">1</h1>
+</dd>
+</div>
+
+
+
 <div class="m1 p1 mr3">
 <dt>High</dt>
 <dd><h1 class="m0 red">1</h1>
+</dd>
+</div>
+
+
+
+<div class="m1 p1 mr3">
+<dt>Aa-Bogus-Severity</dt>
+<dd><h1 class="m0">1</h1>
 </dd>
 </div>
 

@@ -59,7 +59,9 @@ func TestReports(t *testing.T) {
 				ImageLabel: "label of image",
 				ScanFindings: types.ImageScanFindings{
 					FindingSeverityCounts: map[string]int32{
-						"HIGH": 1,
+						"HIGH":              1,
+						"AA-BOGUS-SEVERITY": 1,
+						"CRITICAL":          1,
 					},
 					Findings: []types.ImageScanFinding{
 						{

@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"html/template"
+	"slices"
 	"strings"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/cultureamp/ecrscanresults/registry"
 	"github.com/justincampbell/timeago"
+	"golang.org/x/exp/maps"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -51,6 +53,7 @@ func (c AnnotationContext) Render() ([]byte, error) {
 
 				return timeago.FromTime(*tm)
 			},
+			"sortSeverities": sortSeverities,
 			"string": func(input any) (string, error) {
 				if strg, ok := input.(fmt.Stringer); ok {
 					return strg.String(), nil
@@ -80,4 +83,44 @@ func findingAttributeValue(name string, finding types.ImageScanFinding) string {
 		}
 	}
 	return ""
+}
+
+func sortSeverities(severityCounts map[string]int32) []string {
+	// severities are the map key in the incoming data structure
+	severities := maps.Keys(severityCounts)
+
+	slices.SortFunc(severities, compareSeverities)
+
+	return severities
+}
+
+// sort severity strings by rank, then alphabetically
+func compareSeverities(a, b string) int {
+	rank := rankSeverity(a) - rankSeverity(b)
+
+	if rank != 0 {
+		return rank
+	}
+
+	// for unknown severities, sort alphabetically
+	return strings.Compare(a, b)
+}
+
+func rankSeverity(s string) int {
+	switch s {
+	case "CRITICAL":
+		return 0
+	case "HIGH":
+		return 1
+	case "MEDIUM":
+		return 2
+	case "LOW":
+		return 3
+	case "INFORMATIONAL":
+		return 4
+	case "UNDEFINED":
+		return 5
+	}
+
+	return 100
 }
