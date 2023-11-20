@@ -3,6 +3,13 @@ set -euo pipefail
 
 dir="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
 
+command_status="${BUILDKITE_COMMAND_EXIT_STATUS:-0}"
+if [[ "${command_status}" != "0" ]]; then
+  # if the build has failed, the image won't be present: skip the check
+  echo "~~~ skipping ECR scan check on failed build"
+  exit 0
+fi
+
 # shellcheck source=lib/download.bash
 . "$dir/../lib/download.bash"
 
