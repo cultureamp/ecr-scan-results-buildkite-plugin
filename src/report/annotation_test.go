@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/MarvinJWendt/testza"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/cultureamp/ecrscanresults/registry"
 	"github.com/cultureamp/ecrscanresults/report"
+	"github.com/hexops/autogold/v2"
+	"github.com/stretchr/testify/require"
 )
 
 func TestReports(t *testing.T) {
@@ -98,9 +99,8 @@ func TestReports(t *testing.T) {
 			fmt.Println(c.name, t.Name())
 			result, err := c.data.Render()
 
-			testza.AssertNoError(t, err)
-			err = testza.SnapshotCreateOrValidate(t, t.Name(), string(result))
-			testza.AssertNoError(t, err)
+			require.NoError(t, err)
+			autogold.ExpectFile(t, string(result))
 		})
 	}
 }
