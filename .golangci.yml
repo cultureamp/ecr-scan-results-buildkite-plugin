@@ -39,6 +39,7 @@ linters:
   - revive
   - tagalign
   - whitespace
+  - musttag
   # deprecated linters
   - interfacer
   - golint
@@ -62,5 +63,11 @@ linters-settings:
         audit: disabled
       G101: # "Look for hard-coded credentials"
         mode: strict
+
   cyclop:
     max-complexity: 20
+
+  exhaustive:
+    # Presence of "default" case in switch statements satisfies exhaustiveness,
+    # even if all enum members are not listed.
+    default-signifies-exhaustive: true
