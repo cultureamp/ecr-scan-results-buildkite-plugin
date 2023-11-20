@@ -16,14 +16,16 @@ there is no indentation: indented output can be rendered differently.
 {{ end }}
 {{ if .ScanFindings.FindingSeverityCounts }}
 <dl class="flex flex-wrap mxn1">
-{{ range $key, $value := .ScanFindings.FindingSeverityCounts }}
+{{ $counts := .ScanFindings.FindingSeverityCounts}}
+{{ range $severity := $counts | sortSeverities }}
+{{ $severityCount := index $counts . }}
 {{ $exceedsThreshold := (or
-    (and (eq $key "CRITICAL") (gt $value $criticalThreshold))
-    (and (eq $key "HIGH") (gt $value $highThreshold))
+    (and (eq $severity "CRITICAL") (gt $severityCount $criticalThreshold))
+    (and (eq $severity "HIGH") (gt $severityCount $highThreshold))
 ) }}
 <div class="m1 p1 mr3">
-<dt>{{ $key | lowerCase | titleCase }}</dt>
-<dd><h1 class="m0{{ if $exceedsThreshold }} red{{ end }}">{{ $value }}</h1>
+<dt>{{ $severity | lowerCase | titleCase }}</dt>
+<dd><h1 class="m0{{ if $exceedsThreshold }} red{{ end }}">{{ $severityCount }}</h1>
 </dd>
 </div>
 {{ end }}
@@ -43,7 +45,7 @@ there is no indentation: indented output can be rendered differently.
 <th>CVSS score</th>
 <th>Vector</th>
 </tr>
-{{ range $f := .ScanFindings.Findings }}
+{{ range $f := .ScanFindings.Findings | sortFindings }}
 {{ $vector := $f | findingAttribute "CVSS2_VECTOR"}}
 <tr>
 <td>{{ if $f.Uri }}<a href="{{ $f.Uri }}">{{ $f.Name }}</a>{{ else }}{{ $f.Name }}{{ end }}</td>
