@@ -48,8 +48,7 @@ func TestRegistryInfoFromURLFails(t *testing.T) {
 	url := "123456789012.dkr.ecr.us-west-2.amazonaws.com"
 
 	info, err := RegistryInfoFromURL(url)
-	require.Error(t, err)
-	assert.ErrorContains(t, err, "invalid registry URL")
+	require.ErrorContains(t, err, "invalid registry URL")
 
 	assert.Equal(t, RegistryInfo{}, info)
 }

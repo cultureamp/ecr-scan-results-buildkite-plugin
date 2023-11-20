@@ -16,6 +16,7 @@ linters:
   - paralleltest
   - gomnd
   - goerr113
+  - depguard
   - dupl
   - forbidigo
   - funlen
@@ -36,6 +37,8 @@ linters:
   - nestif
   - prealloc
   - revive
+  - tagalign
+  - whitespace
   # deprecated linters
   - interfacer
   - golint
