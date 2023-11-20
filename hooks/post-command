@@ -10,6 +10,11 @@ if [[ "${command_status}" != "0" ]]; then
   exit 0
 fi
 
+if [[ "${BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_BUILDKITE_PLUGIN_HOOK_TEST_MODE:-false}" = "true" ]]; then
+  echo "TEST: executing download"
+  exit 0
+fi
+
 # shellcheck source=lib/download.bash
 . "$dir/../lib/download.bash"
 
