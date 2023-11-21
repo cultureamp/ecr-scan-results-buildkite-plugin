@@ -145,7 +145,106 @@ func TestReports(t *testing.T) {
 				HighSeverityThreshold:     0,
 			},
 		},
-	}
+		{
+			name: "some findings ignored",
+			data: report.AnnotationContext{
+				Image: registry.RegistryInfo{
+					RegistryID: "0123456789",
+					Region:     "us-west-2",
+					Name:       "test-repo",
+					Tag:        "digest-value",
+				},
+				ImageLabel: "label of image",
+				FindingSummary: finding.Summary{
+					Counts: map[types.FindingSeverity]finding.SeverityCount{
+						"HIGH":              {Included: 1},
+						"AA-BOGUS-SEVERITY": {Included: 0, Ignored: 1},
+						"CRITICAL":          {Included: 1},
+					},
+					Ignored: map[string]struct{}{
+						"CVE-2019-5300": {},
+					},
+				},
+				ScanFindings: types.ImageScanFindings{
+					Findings: []types.ImageScanFinding{
+						{
+							Name:        aws.String("CVE-2019-5300"),
+							Description: aws.String("Another vulnerability."),
+							Uri:         aws.String("http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5300"),
+							Severity:    "AA-BOGUS-SEVERITY",
+							Attributes: []types.Attribute{
+								{
+									Key:   aws.String("package_version"),
+									Value: aws.String("5300-version"),
+								},
+								{
+									Key:   aws.String("package_name"),
+									Value: aws.String("5300-package"),
+								},
+								{
+									Key:   aws.String("CVSS2_VECTOR"),
+									Value: aws.String("AV:L/AC:L/Au:N/C:P/I:P/A:P"),
+								},
+								{
+									Key:   aws.String("CVSS2_SCORE"),
+									Value: aws.String("10.0"),
+								},
+							},
+						},
+						{
+							Name:        aws.String("CVE-2019-5188"),
+							Description: aws.String("A code execution vulnerability exists in the directory rehashing functionality of E2fsprogs e2fsck 1.45.4. A specially crafted ext4 directory can cause an out-of-bounds write on the stack, resulting in code execution. An attacker can corrupt a partition to trigger this vulnerability."),
+							Uri:         aws.String("http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5188"),
+							Severity:    "HIGH",
+							Attributes: []types.Attribute{
+								{
+									Key:   aws.String("package_version"),
+									Value: aws.String("1.44.1-1ubuntu1.1"),
+								},
+								{
+									Key:   aws.String("package_name"),
+									Value: aws.String("e2fsprogs"),
+								},
+								{
+									Key:   aws.String("CVSS2_VECTOR"),
+									Value: aws.String("AV:L/AC:L/Au:N/C:P/I:P/A:P"),
+								},
+								{
+									Key:   aws.String("CVSS2_SCORE"),
+									Value: aws.String("4.6"),
+								},
+							},
+						},
+						{
+							Name:        aws.String("CVE-2019-5200"),
+							Description: aws.String("Another vulnerability."),
+							Uri:         aws.String("http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5200"),
+							Severity:    "CRITICAL",
+							Attributes: []types.Attribute{
+								{
+									Key:   aws.String("package_version"),
+									Value: aws.String("5200-version"),
+								},
+								{
+									Key:   aws.String("package_name"),
+									Value: aws.String("5200-package"),
+								},
+								{
+									Key:   aws.String("CVSS2_VECTOR"),
+									Value: aws.String("AV:L/AC:L/Au:N/C:P/I:P/A:P"),
+								},
+								{
+									Key:   aws.String("CVSS2_SCORE"),
+									Value: aws.String("10.0"),
+								},
+							},
+						},
+					},
+				},
+				CriticalSeverityThreshold: 0,
+				HighSeverityThreshold:     0,
+			},
+		}}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

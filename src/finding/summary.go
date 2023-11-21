@@ -23,6 +23,11 @@ type Summary struct {
 	Ignored map[string]struct{}
 }
 
+func (s Summary) IsIgnored(id string) bool {
+	_, found := s.Ignored[id]
+	return found
+}
+
 func NewSummary() Summary {
 	return Summary{
 		Counts: map[types.FindingSeverity]SeverityCount{
