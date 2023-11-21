@@ -40,14 +40,17 @@
 </dl>
 
 
+
+
 <details>
 <summary>Vulnerability details</summary>
 <div>
+
 <table>
 <tr>
 <th>CVE</th>
 <th>Severity</th>
-<th>Effects</th>
+<th>Affects</th>
 <th>CVSS score</th>
 <th>Vector</th>
 </tr>
@@ -77,6 +80,8 @@
 </tr>
 
 </table>
+
+
 </div>
 </details>
 
