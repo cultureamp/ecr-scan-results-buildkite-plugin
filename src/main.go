@@ -139,7 +139,6 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	annotationCtx := report.AnnotationContext{
 		Image:                     imageID,
 		ImageLabel:                pluginConfig.ImageLabel,
-		ScanFindings:              *findings.ImageScanFindings,
 		FindingSummary:            findingSummary,
 		CriticalSeverityThreshold: pluginConfig.CriticalSeverityThreshold,
 		HighSeverityThreshold:     pluginConfig.HighSeverityThreshold,

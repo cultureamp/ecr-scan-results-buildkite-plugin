@@ -24,7 +24,8 @@ func TestSummarize(t *testing.T) {
 					types.FindingSeverity("CRITICAL"): {},
 					types.FindingSeverity("HIGH"):     {},
 				},
-				Ignored: map[string]struct{}{},
+				Details: []finding.Detail{},
+				Ignored: []finding.Detail{},
 			}),
 		},
 		{
@@ -41,7 +42,21 @@ func TestSummarize(t *testing.T) {
 					types.FindingSeverity("CRITICAL"): {Included: 1},
 					types.FindingSeverity("HIGH"):     {Included: 2},
 				},
-				Ignored: map[string]struct{}{},
+				Details: []finding.Detail{
+					{
+						Name:     "CVE-2019-5188",
+						Severity: types.FindingSeverity("HIGH"),
+					},
+					{
+						Name:     "CVE-2019-5200",
+						Severity: types.FindingSeverity("CRITICAL"),
+					},
+					{
+						Name:     "CVE-2019-5189",
+						Severity: types.FindingSeverity("HIGH"),
+					},
+				},
+				Ignored: []finding.Detail{},
 			}),
 		},
 		{
@@ -65,7 +80,23 @@ func TestSummarize(t *testing.T) {
 						Ignored:  1,
 					},
 				},
-				Ignored: map[string]struct{}{"CVE-2019-5189": {}},
+				Details: []finding.Detail{
+					{
+						Name:     "CVE-2019-5188",
+						Severity: types.FindingSeverity("HIGH"),
+					},
+					{
+						Name:     "CVE-2019-5200",
+						Severity: types.FindingSeverity("CRITICAL"),
+					},
+				},
+				Ignored: []finding.Detail{{
+					Name:     "CVE-2019-5189",
+					Severity: types.FindingSeverity("HIGH"),
+					Ignore: &findingconfig.Ignore{
+						ID: "CVE-2019-5189",
+					},
+				}},
 			}),
 		},
 	}

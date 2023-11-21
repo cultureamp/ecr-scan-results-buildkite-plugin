@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/cultureamp/ecrscanresults/finding"
 	"github.com/cultureamp/ecrscanresults/registry"
@@ -25,7 +24,6 @@ var annotationTemplateSource string
 type AnnotationContext struct {
 	Image                     registry.RegistryInfo
 	ImageLabel                string
-	ScanFindings              types.ImageScanFindings
 	FindingSummary            finding.Summary
 	CriticalSeverityThreshold int32
 	HighSeverityThreshold     int32
@@ -39,8 +37,7 @@ func (c AnnotationContext) Render() ([]byte, error) {
 				c := cases.Title(language.English)
 				return c.String(s)
 			},
-			"lowerCase":        strings.ToLower,
-			"findingAttribute": findingAttributeValue,
+			"lowerCase": strings.ToLower,
 			"nbsp": func(input string) any {
 				if len(input) > 0 {
 					return input
@@ -79,21 +76,12 @@ func (c AnnotationContext) Render() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func findingAttributeValue(name string, finding types.ImageScanFinding) string {
-	for _, a := range finding.Attributes {
-		if aws.ToString(a.Key) == name {
-			return aws.ToString(a.Value)
-		}
-	}
-	return ""
-}
-
-func sortFindings(findings []types.ImageScanFinding) []types.ImageScanFinding {
+func sortFindings(findings []finding.Detail) []finding.Detail {
 	// shallow clone, don't affect source array
 	sorted := slices.Clone(findings)
 
 	// sort by severity rank, then CVE _descending_
-	slices.SortFunc(sorted, func(a, b types.ImageScanFinding) int {
+	slices.SortFunc(sorted, func(a, b finding.Detail) int {
 		sevRank := compareSeverities(a.Severity, b.Severity)
 		if sevRank != 0 {
 			return sevRank
@@ -101,7 +89,7 @@ func sortFindings(findings []types.ImageScanFinding) []types.ImageScanFinding {
 
 		// descending order of CVE, in general this means that newer CVEs will be at
 		// the top
-		return strings.Compare(aws.ToString(b.Name), aws.ToString(a.Name))
+		return strings.Compare(b.Name, a.Name)
 	})
 
 	return sorted
