@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/cultureamp/ecrscanresults/finding"
+	"github.com/cultureamp/ecrscanresults/findingconfig"
 	"github.com/cultureamp/ecrscanresults/registry"
 	"github.com/justincampbell/timeago"
 	"golang.org/x/exp/maps"
@@ -33,6 +34,7 @@ func (c AnnotationContext) Render() ([]byte, error) {
 	t, err := template.
 		New("annotation").
 		Funcs(template.FuncMap{
+			"hasUntilValue": hasUntilValue,
 			"titleCase": func(s string) string {
 				c := cases.Title(language.English)
 				return c.String(s)
@@ -133,4 +135,8 @@ func rankSeverity(s string) int {
 	}
 
 	return 100
+}
+
+func hasUntilValue(until findingconfig.UntilTime) bool {
+	return time.Time(until).After(time.Time(findingconfig.UntilTime{}))
 }

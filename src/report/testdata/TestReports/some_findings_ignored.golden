@@ -15,7 +15,7 @@
 <div class="m1 p1 mr3">
 <dt>Critical</dt>
 <dd><h1 class="m0 red">1</h1>
-
+<em>+ 1 ignored</em>
 </dd>
 </div>
 
@@ -31,7 +31,7 @@
 
 
 <div class="m1 p1 mr3">
-<dt>Aa-Bogus-Severity</dt>
+<dt>Low</dt>
 <dd><h1 class="m0">0</h1>
 <em>+ 1 ignored</em>
 </dd>
@@ -40,14 +40,17 @@
 </dl>
 
 
+
+
 <details>
 <summary>Vulnerability details</summary>
 <div>
+
 <table>
 <tr>
 <th>CVE</th>
 <th>Severity</th>
-<th>Effects</th>
+<th>Affects</th>
 <th>CVSS score</th>
 <th>Vector</th>
 </tr>
@@ -68,15 +71,50 @@
 <td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=(AV%3aL%2fAC%3aL%2fAu%3aN%2fC%3aP%2fI%3aP%2fA%3aP)">AV:L/AC:L/Au:N/C:P/I:P/A:P</a></td>
 </tr>
 
+</table>
+
+
+
+<h5>Ignored vulnerabilities</h5>
+<p>The below findings have been ignored for the purposes of threshold calculations. See the table for details, and adjust the plugin configuration if this is incorrect.</p>
+<table>
 <tr>
-<td><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5300">CVE-2019-5300</a> (ignored)</td>
-<td>Aa-Bogus-Severity</td>
+<th>CVE</th>
+<th>Severity</th>
+<th>Ignored until<th>
+<th>Affects</th>
+<th>CVSS score</th>
+<th>Vector</th>
+</tr>
+
+<tr>
+<td><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5300">CVE-2019-5300</a></td>
+<td>Critical</td>
+<td>
+<details><summary>
+2023-12-31
+</summary><div>Ignored to give the base image a chance to be updated</div></details>
+</td>
 <td>5300-package 5300-version</td>
 <td>10.0</td>
 <td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=(AV%3aL%2fAC%3aL%2fAu%3aN%2fC%3aP%2fI%3aP%2fA%3aP)">AV:L/AC:L/Au:N/C:P/I:P/A:P</a></td>
 </tr>
 
+<tr>
+<td><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2023-100">CVE-2023-100</a></td>
+<td>Low</td>
+<td>
+
+<em class="silver">indefinitely</em>
+
+</td>
+<td>100-package 100-version</td>
+<td>4.0</td>
+<td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=(AV%3aL%2fAC%3aL%2fAu%3aN%2fC%3aP%2fI%3aP%2fA%3aP)">AV:L/AC:L/Au:N/C:P/I:P/A:P</a></td>
+</tr>
+
 </table>
+
 </div>
 </details>
 
