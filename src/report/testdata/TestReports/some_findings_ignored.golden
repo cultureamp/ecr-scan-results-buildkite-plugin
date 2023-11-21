@@ -32,8 +32,8 @@
 
 <div class="m1 p1 mr3">
 <dt>Aa-Bogus-Severity</dt>
-<dd><h1 class="m0">1</h1>
-
+<dd><h1 class="m0">0</h1>
+<em>+ 1 ignored</em>
 </dd>
 </div>
 
@@ -75,7 +75,7 @@
 
 
 <tr>
-<td><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5300">CVE-2019-5300</a></td>
+<td><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5300">CVE-2019-5300</a> (ignored)</td>
 <td>Aa-Bogus-Severity</td>
 <td>5300-package 5300-version</td>
 <td>10.0</td>

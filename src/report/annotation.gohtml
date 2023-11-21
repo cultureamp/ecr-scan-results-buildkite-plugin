@@ -8,6 +8,7 @@ there is no indentation: indented output can be rendered differently.
 */}}
 {{ $criticalThreshold := .CriticalSeverityThreshold }}
 {{ $highThreshold := .HighSeverityThreshold }}
+{{ $summary := .FindingSummary }}
 {{ if .ImageLabel }}
 <h4>Vulnerability summary for "{{ .ImageLabel }}"</h4>
 <p class="h6 regular italic">{{ .Image.Name }}:{{ .Image.Tag }}</p>
@@ -26,6 +27,7 @@ there is no indentation: indented output can be rendered differently.
 <div class="m1 p1 mr3">
 <dt>{{ $severity | string | lowerCase | titleCase }}</dt>
 <dd><h1 class="m0{{ if $exceedsThreshold }} red{{ end }}">{{ $severityCount.Included }}</h1>
+{{ if $severityCount.Ignored }}<em>+ {{ $severityCount.Ignored }} ignored</em>{{ end }}
 </dd>
 </div>
 {{ end }}
@@ -47,8 +49,9 @@ there is no indentation: indented output can be rendered differently.
 </tr>
 {{ range $f := .ScanFindings.Findings | sortFindings }}
 {{ $vector := $f | findingAttribute "CVSS2_VECTOR"}}
+{{ $ignored := ($summary.IsIgnored $f.Name) }}
 <tr>
-<td>{{ if $f.Uri }}<a href="{{ $f.Uri }}">{{ $f.Name }}</a>{{ else }}{{ $f.Name }}{{ end }}</td>
+<td>{{ if $f.Uri }}<a href="{{ $f.Uri }}">{{ $f.Name }}</a>{{ else }}{{ $f.Name }}{{ end }}{{ if $ignored }} (ignored){{ end }}</td>
 <td>{{ $f.Severity | string | lowerCase | titleCase }}</td>
 <td>{{ $f | findingAttribute "package_name" | nbsp }} {{ $f | findingAttribute "package_version" | nbsp }}</td>
 <td>{{ $f | findingAttribute "CVSS2_SCORE" | nbsp}}</td>
