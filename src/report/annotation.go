@@ -94,7 +94,7 @@ func sortFindings(findings []types.ImageScanFinding) []types.ImageScanFinding {
 
 	// sort by severity rank, then CVE _descending_
 	slices.SortFunc(sorted, func(a, b types.ImageScanFinding) int {
-		sevRank := compareSeverities(string(a.Severity), string(b.Severity))
+		sevRank := compareSeverities(a.Severity, b.Severity)
 		if sevRank != 0 {
 			return sevRank
 		}
@@ -107,7 +107,7 @@ func sortFindings(findings []types.ImageScanFinding) []types.ImageScanFinding {
 	return sorted
 }
 
-func sortSeverities(severityCounts map[string]int32) []string {
+func sortSeverities(severityCounts map[types.FindingSeverity]finding.SeverityCount) []types.FindingSeverity {
 	// severities are the map key in the incoming data structure
 	severities := maps.Keys(severityCounts)
 
@@ -117,15 +117,15 @@ func sortSeverities(severityCounts map[string]int32) []string {
 }
 
 // sort severity strings by rank, then alphabetically
-func compareSeverities(a, b string) int {
-	rank := rankSeverity(a) - rankSeverity(b)
+func compareSeverities(a, b types.FindingSeverity) int {
+	rank := rankSeverity(string(a)) - rankSeverity(string(b))
 
 	if rank != 0 {
 		return rank
 	}
 
 	// for unknown severities, sort alphabetically
-	return strings.Compare(a, b)
+	return strings.Compare(string(a), string(b))
 }
 
 func rankSeverity(s string) int {
