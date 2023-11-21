@@ -35,7 +35,7 @@ there is no indentation: indented output can be rendered differently.
 {{ else }}
 <p>No vulnerabilities reported.</p>
 {{ end }}
-{{ if .ScanFindings.Findings }}
+{{ if .FindingSummary.Details }}
 <details>
 <summary>Vulnerability details</summary>
 <div>
@@ -47,15 +47,13 @@ there is no indentation: indented output can be rendered differently.
 <th>CVSS score</th>
 <th>Vector</th>
 </tr>
-{{ range $f := .ScanFindings.Findings | sortFindings }}
-{{ $vector := $f | findingAttribute "CVSS2_VECTOR"}}
-{{ $ignored := ($summary.IsIgnored $f.Name) }}
+{{ range $f := .FindingSummary.Details | sortFindings }}
 <tr>
-<td>{{ if $f.Uri }}<a href="{{ $f.Uri }}">{{ $f.Name }}</a>{{ else }}{{ $f.Name }}{{ end }}{{ if $ignored }} (ignored){{ end }}</td>
+<td>{{ if $f.Uri }}<a href="{{ $f.Uri }}">{{ $f.Name }}</a>{{ else }}{{ $f.Name }}{{ end }}{{ if $f.Ignore }} (ignored){{ end }}</td>
 <td>{{ $f.Severity | string | lowerCase | titleCase }}</td>
-<td>{{ $f | findingAttribute "package_name" | nbsp }} {{ $f | findingAttribute "package_version" | nbsp }}</td>
-<td>{{ $f | findingAttribute "CVSS2_SCORE" | nbsp}}</td>
-<td>{{ if $vector }}<a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=({{ $vector }})">{{ $vector }}</a>{{ else }}&nbsp;{{ end }}</td>
+<td>{{ $f.PackageName | nbsp }} {{ $f.PackageVersion | nbsp }}</td>
+<td>{{ $f.CVSS2Score | nbsp}}</td>
+<td>{{ if $f.CVSS2Vector }}<a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=({{ $f.CVSS2Vector }})">{{ $f.CVSS2Vector }}</a>{{ else }}&nbsp;{{ end }}</td>
 </tr>
 {{ end }}
 </table>
@@ -63,6 +61,6 @@ there is no indentation: indented output can be rendered differently.
 </details>
 {{ end }}
 <p class="p1">
-<i>scan completed: <span title="{{ .ScanFindings.ImageScanCompletedAt }}">{{ .ScanFindings.ImageScanCompletedAt | timeAgo }}</span></i> |
-<i>source updated: <span title="{{ .ScanFindings.VulnerabilitySourceUpdatedAt }}">{{ .ScanFindings.VulnerabilitySourceUpdatedAt | timeAgo }}</span></i>
+<i>scan completed: <span title="{{ .FindingSummary.ImageScanCompletedAt }}">{{ .FindingSummary.ImageScanCompletedAt | timeAgo }}</span></i> |
+<i>source updated: <span title="{{ .FindingSummary.VulnerabilitySourceUpdatedAt }}">{{ .FindingSummary.VulnerabilitySourceUpdatedAt | timeAgo }}</span></i>
 </p>
