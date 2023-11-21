@@ -14,18 +14,18 @@ there is no indentation: indented output can be rendered differently.
 {{ else }}
 <h4>Vulnerability summary for "{{ .Image.Name }}:{{ .Image.Tag }}"</h4>
 {{ end }}
-{{ if .ScanFindings.FindingSeverityCounts }}
+{{ if .FindingSummary.Counts }}
 <dl class="flex flex-wrap mxn1">
-{{ $counts := .ScanFindings.FindingSeverityCounts}}
+{{ $counts := .FindingSummary.Counts }}
 {{ range $severity := $counts | sortSeverities }}
 {{ $severityCount := index $counts . }}
 {{ $exceedsThreshold := (or
-    (and (eq $severity "CRITICAL") (gt $severityCount $criticalThreshold))
-    (and (eq $severity "HIGH") (gt $severityCount $highThreshold))
+    (and (eq $severity "CRITICAL") (gt $severityCount.Included $criticalThreshold))
+    (and (eq $severity "HIGH") (gt $severityCount.Included $highThreshold))
 ) }}
 <div class="m1 p1 mr3">
-<dt>{{ $severity | lowerCase | titleCase }}</dt>
-<dd><h1 class="m0{{ if $exceedsThreshold }} red{{ end }}">{{ $severityCount }}</h1>
+<dt>{{ $severity | string | lowerCase | titleCase }}</dt>
+<dd><h1 class="m0{{ if $exceedsThreshold }} red{{ end }}">{{ $severityCount.Included }}</h1>
 </dd>
 </div>
 {{ end }}

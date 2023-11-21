@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/cultureamp/ecrscanresults/finding"
 	"github.com/cultureamp/ecrscanresults/registry"
 	"github.com/cultureamp/ecrscanresults/report"
 	"github.com/hexops/autogold/v2"
@@ -57,12 +58,14 @@ func TestReports(t *testing.T) {
 					Tag:        "digest-value",
 				},
 				ImageLabel: "label of image",
-				ScanFindings: types.ImageScanFindings{
-					FindingSeverityCounts: map[string]int32{
-						"HIGH":              1,
-						"AA-BOGUS-SEVERITY": 1,
-						"CRITICAL":          1,
+				FindingSummary: finding.Summary{
+					Counts: map[types.FindingSeverity]finding.SeverityCount{
+						"HIGH":              {Included: 1},
+						"AA-BOGUS-SEVERITY": {Included: 1},
+						"CRITICAL":          {Included: 1},
 					},
+				},
+				ScanFindings: types.ImageScanFindings{
 					Findings: []types.ImageScanFinding{
 						{
 							Name:        aws.String("CVE-2019-5300"),
