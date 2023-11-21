@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/cultureamp/ecrscanresults/finding"
 	"github.com/cultureamp/ecrscanresults/registry"
 	"github.com/justincampbell/timeago"
 	"golang.org/x/exp/maps"
@@ -25,6 +26,7 @@ type AnnotationContext struct {
 	Image                     registry.RegistryInfo
 	ImageLabel                string
 	ScanFindings              types.ImageScanFindings
+	FindingSummary            finding.Summary
 	CriticalSeverityThreshold int32
 	HighSeverityThreshold     int32
 }
