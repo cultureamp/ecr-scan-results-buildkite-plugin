@@ -3,6 +3,7 @@ package finding_test
 import (
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/cultureamp/ecrscanresults/finding"
 	"github.com/cultureamp/ecrscanresults/findingconfig"
@@ -56,6 +57,42 @@ func TestSummarize(t *testing.T) {
 					{
 						Name:     "CVE-2019-5189",
 						URI:      "https://notamitre.org.site/search?name=CVE-2019-5189",
+						Severity: types.FindingSeverity("HIGH"),
+					},
+				},
+				Ignored: []finding.Detail{},
+			}),
+		},
+		{
+			name: "findings with CVSS2 scores",
+			data: types.ImageScanFindings{
+				Findings: []types.ImageScanFinding{
+					fscore("CVE-2019-5188", "HIGH", "1.2", "AV:L/AC:L/Au:N/C:P/I:P/A:P"),
+					fscore("INVALID-CVE", "CRITICAL", "", ""),
+					fscore("CVE-2019-5189", "HIGH", "", ""),
+				},
+			},
+			expected: autogold.Expect(finding.Summary{
+				Counts: map[types.FindingSeverity]finding.SeverityCount{
+					types.FindingSeverity("CRITICAL"): {Included: 1},
+					types.FindingSeverity("HIGH"):     {Included: 2},
+				},
+				Details: []finding.Detail{
+					{
+						Name:     "CVE-2019-5188",
+						Severity: types.FindingSeverity("HIGH"),
+						CVSS2: finding.CVSSScore{
+							Score:     "1.2",
+							Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
+						},
+					},
+					{
+						Name:     "INVALID-CVE",
+						Severity: types.FindingSeverity("CRITICAL"),
+					},
+					{
+						Name:     "CVE-2019-5189",
 						Severity: types.FindingSeverity("HIGH"),
 					},
 				},
@@ -157,6 +194,17 @@ func fu(name string, severity types.FindingSeverity, uri string) types.ImageScan
 		Name:     &name,
 		Uri:      &uri,
 		Severity: severity,
+	}
+}
+
+func fscore(name string, severity types.FindingSeverity, cvss2 string, vector string) types.ImageScanFinding {
+	return types.ImageScanFinding{
+		Name:     &name,
+		Severity: severity,
+		Attributes: []types.Attribute{
+			{Key: aws.String("CVSS2_SCORE"), Value: &cvss2},
+			{Key: aws.String("CVSS2_VECTOR"), Value: &vector},
+		},
 	}
 }
 
