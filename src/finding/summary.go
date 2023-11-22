@@ -20,10 +20,14 @@ type Detail struct {
 
 	PackageName    string
 	PackageVersion string
-	CVSS2Score     string
-	CVSS2Vector    string
+	CVSS2          CVSSScore
 
 	Ignore *findingconfig.Ignore
+}
+
+type CVSSScore struct {
+	Score  string
+	Vector string
 }
 
 type SeverityCount struct {
@@ -117,8 +121,10 @@ func findingToDetail(finding types.ImageScanFinding) Detail {
 		Severity:       finding.Severity,
 		PackageName:    findingAttributeValue(finding, "package_name"),
 		PackageVersion: findingAttributeValue(finding, "package_version"),
-		CVSS2Score:     findingAttributeValue(finding, "CVSS2_SCORE"),
-		CVSS2Vector:    findingAttributeValue(finding, "CVSS2_VECTOR"),
+		CVSS2: CVSSScore{
+			Score:  findingAttributeValue(finding, "CVSS2_SCORE"),
+			Vector: findingAttributeValue(finding, "CVSS2_VECTOR"),
+		},
 	}
 }
 

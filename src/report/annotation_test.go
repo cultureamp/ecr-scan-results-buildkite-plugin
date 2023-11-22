@@ -70,8 +70,10 @@ func TestReports(t *testing.T) {
 							Severity:       "AA-BOGUS-SEVERITY",
 							PackageName:    "5300-package",
 							PackageVersion: "5300-version",
-							CVSS2Score:     "10.0",
-							CVSS2Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							CVSS2: finding.CVSSScore{
+								Score:  "10.0",
+								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							},
 						},
 						{
 							Name:           "CVE-2019-5188",
@@ -80,8 +82,10 @@ func TestReports(t *testing.T) {
 							Severity:       "HIGH",
 							PackageName:    "e2fsprogs",
 							PackageVersion: "1.44.1-1ubuntu1.1",
-							CVSS2Score:     "4.6",
-							CVSS2Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							CVSS2: finding.CVSSScore{
+								Score:  "4.6",
+								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							},
 						},
 						{
 							Name:           "CVE-2019-5200",
@@ -90,8 +94,10 @@ func TestReports(t *testing.T) {
 							Severity:       "CRITICAL",
 							PackageName:    "5200-package",
 							PackageVersion: "5200-version",
-							CVSS2Score:     "10.0",
-							CVSS2Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							CVSS2: finding.CVSSScore{
+								Score:  "10.0",
+								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							},
 						},
 					},
 				},
@@ -123,8 +129,10 @@ func TestReports(t *testing.T) {
 							Severity:       "HIGH",
 							PackageName:    "e2fsprogs",
 							PackageVersion: "1.44.1-1ubuntu1.1",
-							CVSS2Score:     "4.6",
-							CVSS2Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							CVSS2: finding.CVSSScore{
+								Score:  "4.6",
+								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							},
 						},
 						{
 							Name:           "CVE-2019-5200",
@@ -133,8 +141,10 @@ func TestReports(t *testing.T) {
 							Severity:       "CRITICAL",
 							PackageName:    "5200-package",
 							PackageVersion: "5200-version",
-							CVSS2Score:     "10.0",
-							CVSS2Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							CVSS2: finding.CVSSScore{
+								Score:  "10.0",
+								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							},
 						},
 					},
 					Ignored: []finding.Detail{
@@ -145,8 +155,10 @@ func TestReports(t *testing.T) {
 							Severity:       "LOW",
 							PackageName:    "100-package",
 							PackageVersion: "100-version",
-							CVSS2Score:     "4.0",
-							CVSS2Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							CVSS2: finding.CVSSScore{
+								Score:  "4.0",
+								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							},
 							Ignore: &findingconfig.Ignore{
 								ID: "CVE-2023-100",
 							},
@@ -158,8 +170,10 @@ func TestReports(t *testing.T) {
 							Severity:       "CRITICAL",
 							PackageName:    "5300-package",
 							PackageVersion: "5300-version",
-							CVSS2Score:     "10.0",
-							CVSS2Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							CVSS2: finding.CVSSScore{
+								Score:  "10.0",
+								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							},
 							Ignore: &findingconfig.Ignore{
 								ID:     "CVE-2019-5300",
 								Until:  findingconfig.MustParseUntil("2023-12-31"),
