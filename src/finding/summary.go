@@ -1,7 +1,9 @@
 package finding
 
 import (
+	"net/url"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -117,9 +119,14 @@ func Summarize(findings *types.ImageScanFindings, ignoreConfig []findingconfig.I
 }
 
 func findingToDetail(finding types.ImageScanFinding) Detail {
+	name := aws.ToString(finding.Name)
+	uri := aws.ToString(finding.Uri)
+
+	uri = fixFindingURI(name, uri)
+
 	return Detail{
-		Name:           aws.ToString(finding.Name),
-		URI:            aws.ToString(finding.Uri),
+		Name:           name,
+		URI:            uri,
 		Description:    aws.ToString(finding.Description),
 		Severity:       finding.Severity,
 		PackageName:    findingAttributeValue(finding, "package_name"),
@@ -136,4 +143,24 @@ func findingAttributeValue(finding types.ImageScanFinding, name string) string {
 		}
 	}
 	return ""
+}
+
+const legacyCVEURL = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
+const updatedCVEURL = "https://www.cve.org/CVERecord?id="
+
+func fixFindingURI(name string, uri string) string {
+	correctedURI := uri
+
+	// transition from the old CVE site that is deprecated
+	if strings.HasPrefix(correctedURI, legacyCVEURL) {
+		correctedURI = strings.Replace(correctedURI, legacyCVEURL, updatedCVEURL, 1)
+	}
+
+	// sometimes links are published that are not valid: in this case point to a
+	// GH vuln search as a way to provide some value
+	if strings.HasPrefix(correctedURI, updatedCVEURL) && !strings.HasPrefix(name, "CVE-") {
+		correctedURI = "https://github.com/advisories?query=" + url.QueryEscape(name)
+	}
+
+	return correctedURI
 }
