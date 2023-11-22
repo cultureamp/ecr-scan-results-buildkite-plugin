@@ -10,49 +10,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// detailedIgnore represents the detailed encoding of Ignore, used
-// for deserialization. Fields must match Ignore.
-type detailedIgnore struct {
+// An entry in an ignore file used by the plugin.
+type Ignore struct {
 	ID     string `yaml:"id"`
 	Until  UntilTime
 	Reason string
-}
-
-// An entry in an ignore file used by the plugin.
-type Ignore struct {
-	ID     string
-	Until  UntilTime
-	Reason string
-}
-
-// UnmarshalYAML is a custom YAML unmarshaller that supports a simple string
-// encoding and full encoding that specifies all fields. The simple encoding is
-// the string ID, the complex version allows the full ID, Until and Reason
-// triple.
-func (f *Ignore) UnmarshalYAML(value *yaml.Node) error {
-	var deserialized Ignore
-	switch value.Kind {
-	case yaml.ScalarNode:
-		// simple string value, interpret as ID
-		deserialized.ID = value.Value
-
-	case yaml.MappingNode:
-		// interpret mapping as the full version with all fields
-		var fields detailedIgnore
-		err := value.Decode(&fields)
-		if err != nil {
-			return err
-		}
-
-		deserialized = Ignore(fields)
-
-	default:
-		return fmt.Errorf("unknown type for ignore entry (%d) at line %d:%d", value.Kind, value.Line, value.Column)
-	}
-
-	*f = deserialized
-
-	return nil
 }
 
 type Ignores struct {
