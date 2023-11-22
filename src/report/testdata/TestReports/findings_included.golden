@@ -58,11 +58,7 @@
 </tr>
 
 <tr>
-<td>
-<details><summary>
-<a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5200">CVE-2019-5200</a>
-</summary><div>Another vulnerability.</div></details>
-</td>
+<td><details><summary><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5200">CVE-2019-5200</a></summary><div>Another vulnerability.</div></details></td>
 <td>Critical</td>
 <td>5200-package 5200-version</td>
 <td>10.0</td>
@@ -70,11 +66,7 @@
 </tr>
 
 <tr>
-<td>
-<details><summary>
-<a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5188">CVE-2019-5188</a>
-</summary><div>A code execution vulnerability exists in the directory rehashing functionality of E2fsprogs e2fsck 1.45.4. A specially crafted ext4 directory can cause an out-of-bounds write on the stack, resulting in code execution. An attacker can corrupt a partition to trigger this vulnerability.</div></details>
-</td>
+<td><details><summary><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5188">CVE-2019-5188</a></summary><div>A code execution vulnerability exists in the directory rehashing functionality of E2fsprogs e2fsck 1.45.4. A specially crafted ext4 directory can cause an out-of-bounds write on the stack, resulting in code execution. An attacker can corrupt a partition to trigger this vulnerability.</div></details></td>
 <td>High</td>
 <td>e2fsprogs 1.44.1-1ubuntu1.1</td>
 <td>4.6</td>
@@ -82,11 +74,7 @@
 </tr>
 
 <tr>
-<td>
-<details><summary>
-<a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5300">CVE-2019-5300</a>
-</summary><div>Another vulnerability.</div></details>
-</td>
+<td><details><summary><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5300">CVE-2019-5300</a></summary><div>Another vulnerability.</div></details></td>
 <td>Aa-Bogus-Severity</td>
 <td>5300-package 5300-version</td>
 <td>10.0</td>
