@@ -64,18 +64,19 @@ func TestSummarize(t *testing.T) {
 			}),
 		},
 		{
-			name: "findings with CVSS2 scores",
+			name: "findings with CVSS2 and CVSS3 scores",
 			data: types.ImageScanFindings{
 				Findings: []types.ImageScanFinding{
 					fscore("CVE-2019-5188", "HIGH", "1.2", "AV:L/AC:L/Au:N/C:P/I:P/A:P"),
 					fscore("INVALID-CVE", "CRITICAL", "", ""),
-					fscore("CVE-2019-5189", "HIGH", "", ""),
+					fscore("CVE-2019-5189", "HIGH", "6", ""),
+					fscore3("CVE-2019-5189", "HIGH", "9", "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"),
 				},
 			},
 			expected: autogold.Expect(finding.Summary{
 				Counts: map[types.FindingSeverity]finding.SeverityCount{
 					types.FindingSeverity("CRITICAL"): {Included: 1},
-					types.FindingSeverity("HIGH"):     {Included: 2},
+					types.FindingSeverity("HIGH"):     {Included: 3},
 				},
 				Details: []finding.Detail{
 					{
@@ -94,6 +95,16 @@ func TestSummarize(t *testing.T) {
 					{
 						Name:     "CVE-2019-5189",
 						Severity: types.FindingSeverity("HIGH"),
+						CVSS2:    finding.CVSSScore{Score: "6"},
+					},
+					{
+						Name:     "CVE-2019-5189",
+						Severity: types.FindingSeverity("HIGH"),
+						CVSS3: finding.CVSSScore{
+							Score:     "9",
+							Vector:    "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+							VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator?vector=AV%3AN%2FAC%3AL%2FPR%3AN%2FUI%3AN%2FS%3AU%2FC%3AH%2FI%3AH%2FA%3AN&version=3.1",
+						},
 					},
 				},
 				Ignored: []finding.Detail{},
@@ -204,6 +215,17 @@ func fscore(name string, severity types.FindingSeverity, cvss2 string, vector st
 		Attributes: []types.Attribute{
 			{Key: aws.String("CVSS2_SCORE"), Value: &cvss2},
 			{Key: aws.String("CVSS2_VECTOR"), Value: &vector},
+		},
+	}
+}
+
+func fscore3(name string, severity types.FindingSeverity, score string, vector string) types.ImageScanFinding {
+	return types.ImageScanFinding{
+		Name:     &name,
+		Severity: severity,
+		Attributes: []types.Attribute{
+			{Key: aws.String("CVSS3_SCORE"), Value: &score},
+			{Key: aws.String("CVSS3_VECTOR"), Value: &vector},
 		},
 	}
 }
