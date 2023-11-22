@@ -35,18 +35,10 @@ there is no indentation: indented output can be rendered differently.
 {{ else }}
 <p>No vulnerabilities reported.</p>
 {{ end }}
-{{ define "findingNameLink"}}
-{{ if .URI }}<a href="{{ .URI }}">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}
-{{ end }}
-{{ define "findingName"}}
-{{ if .Description }}<details><summary>{{ template "findingNameLink" . }}</summary><div>{{ .Description }}</div></details>{{ else }}{{ template "findingNameLink" . }}{{ end }}
-{{ end }}
-{{ define "findingIgnoreUntil" }}
-{{ if .Until | hasUntilValue }}{{ .Until }}{{ else }}<div class="italic">(indefinitely)</div>{{ end }}
-{{ end }}
-{{ define "findingIgnore"}}
-{{ if .Reason }}<details><summary>{{ template "findingIgnoreUntil" . }}</summary><div>{{ .Reason }}</div></details>{{ else }}{{ template "findingIgnoreUntil" . }}{{ end }}
-{{ end }}
+{{ define "findingNameLink" }}{{ if .URI }}<a href="{{ .URI }}">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}{{ end }}
+{{ define "findingName" }}{{ if .Description }}<details><summary>{{ template "findingNameLink" . }}</summary><div>{{ .Description }}</div></details>{{ else }}{{ template "findingNameLink" . }}{{ end }}{{ end }}
+{{ define "findingIgnoreUntil" }}{{ if .Until | hasUntilValue }}{{ .Until }}{{ else }}<div class="italic">(indefinitely)</div>{{ end }}{{ end }}
+{{ define "findingIgnore"}}{{ if .Reason }}<details><summary>{{ template "findingIgnoreUntil" . }}</summary><div>{{ .Reason }}</div></details>{{ else }}{{ template "findingIgnoreUntil" . }}{{ end }}{{ end }}
 {{ if (or .FindingSummary.Details .FindingSummary.Ignored) }}
 <details>
 <summary>Vulnerability details</summary>
