@@ -122,7 +122,7 @@ for more information.
 
 Refer to how to set your [max-criticals](https://github.com/cultureamp/ecr-scan-results-buildkite-plugin#max-criticals-optional-string), and [max-highs](https://github.com/cultureamp/ecr-scan-results-buildkite-plugin#max-highs-optional-string).
 
-### Are there guidelines on using up?
+### Are there guidelines on using thresholds?
 
 Yes. Changing the `max-criticals` and `max-high` settings should not be taken lightly.
 
