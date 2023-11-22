@@ -35,11 +35,17 @@ there is no indentation: indented output can be rendered differently.
 {{ else }}
 <p>No vulnerabilities reported.</p>
 {{ end }}
+{{ define "findingNameLink"}}
+{{ if .Uri }}<a href="{{ .Uri }}">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}
+{{ end }}
+{{ define "findingName"}}
+{{ if .Description }}<details><summary>{{ template "findingNameLink" . }}</summary><div>{{ .Description }}</div></details>{{ else }}{{ template "findingNameLink" . }}{{ end }}
+{{ end }}
 {{ define "findingIgnoreUntil" }}
-{{ if .Until }}{{ .Until }}{{ else }}<em class="silver">indefinitely</em>{{ end }}
+{{ if .Until | hasUntilValue }}{{ .Until }}{{ else }}<div class="italic">(indefinitely)</div>{{ end }}
 {{ end }}
 {{ define "findingIgnore"}}
-{{ if .Reason }}<details><summary>{{ template "findingIgnoreUntil" . }}</summary><div>{{ .Reason }}</div></details>{{ else }}{{ template "findingIgnoreUntil" }}{{ end }}
+{{ if .Reason }}<details><summary>{{ template "findingIgnoreUntil" . }}</summary><div>{{ .Reason }}</div></details>{{ else }}{{ template "findingIgnoreUntil" . }}{{ end }}
 {{ end }}
 {{ if (or .FindingSummary.Details .FindingSummary.Ignored) }}
 <details>
@@ -56,7 +62,7 @@ there is no indentation: indented output can be rendered differently.
 </tr>
 {{ range $f := .FindingSummary.Details | sortFindings }}
 <tr>
-<td>{{ if $f.Uri }}<a href="{{ $f.Uri }}">{{ $f.Name }}</a>{{ else }}{{ $f.Name }}{{ end }}{{ if $f.Ignore }}{{ if $f.Ignore.Until }} (ignored until {{ $f.Ignore.Until }}){{ end }}{{ end }}</td>
+<td>{{ template "findingName" . }}</td>
 <td>{{ $f.Severity | string | lowerCase | titleCase }}</td>
 <td>{{ $f.PackageName | nbsp }} {{ $f.PackageVersion | nbsp }}</td>
 <td>{{ $f.CVSS2Score | nbsp}}</td>
@@ -68,19 +74,19 @@ there is no indentation: indented output can be rendered differently.
 {{ if .FindingSummary.Ignored }}
 
 <h5>Ignored vulnerabilities</h5>
-<p>The below findings have been ignored for the purposes of threshold calculations. See the table for details, and adjust the plugin configuration if this is incorrect.</p>
+<p class="italic">The below findings have been ignored for the purposes of threshold calculations. See the table for details, and adjust the plugin configuration if this is incorrect.</p>
 <table>
 <tr>
 <th>CVE</th>
 <th>Severity</th>
-<th>Ignored until<th>
+<th>Ignored until</th>
 <th>Affects</th>
 <th>CVSS score</th>
 <th>Vector</th>
 </tr>
 {{ range $f := .FindingSummary.Ignored | sortFindings }}
 <tr>
-<td>{{ if $f.Uri }}<a href="{{ $f.Uri }}">{{ $f.Name }}</a>{{ else }}{{ $f.Name }}{{ end }}</td>
+<td>{{ template "findingName" . }}</td>
 <td>{{ $f.Severity | string | lowerCase | titleCase }}</td>
 <td>{{ template "findingIgnore" $f.Ignore }}</td>
 <td>{{ $f.PackageName | nbsp }} {{ $f.PackageVersion | nbsp }}</td>
