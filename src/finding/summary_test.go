@@ -29,6 +29,40 @@ func TestSummarize(t *testing.T) {
 			}),
 		},
 		{
+			name: "findings with links",
+			data: types.ImageScanFindings{
+				Findings: []types.ImageScanFinding{
+					fu("CVE-2019-5188", "HIGH", "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-5188"),
+					fu("INVALID-CVE", "CRITICAL", "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-1234"),
+					fu("CVE-2019-5189", "HIGH", "https://notamitre.org.site/search?name=CVE-2019-5189"),
+				},
+			},
+			expected: autogold.Expect(finding.Summary{
+				Counts: map[types.FindingSeverity]finding.SeverityCount{
+					types.FindingSeverity("CRITICAL"): {Included: 1},
+					types.FindingSeverity("HIGH"):     {Included: 2},
+				},
+				Details: []finding.Detail{
+					{
+						Name:     "CVE-2019-5188",
+						URI:      "https://www.cve.org/CVERecord?id=CVE-2019-5188",
+						Severity: types.FindingSeverity("HIGH"),
+					},
+					{
+						Name:     "INVALID-CVE",
+						URI:      "https://github.com/advisories?query=INVALID-CVE",
+						Severity: types.FindingSeverity("CRITICAL"),
+					},
+					{
+						Name:     "CVE-2019-5189",
+						URI:      "https://notamitre.org.site/search?name=CVE-2019-5189",
+						Severity: types.FindingSeverity("HIGH"),
+					},
+				},
+				Ignored: []finding.Detail{},
+			}),
+		},
+		{
 			name: "findings with no ignores",
 			data: types.ImageScanFindings{
 				Findings: []types.ImageScanFinding{
@@ -114,6 +148,14 @@ func TestSummarize(t *testing.T) {
 func f(name string, severity types.FindingSeverity) types.ImageScanFinding {
 	return types.ImageScanFinding{
 		Name:     &name,
+		Severity: severity,
+	}
+}
+
+func fu(name string, severity types.FindingSeverity, uri string) types.ImageScanFinding {
+	return types.ImageScanFinding{
+		Name:     &name,
+		Uri:      &uri,
 		Severity: severity,
 	}
 }
