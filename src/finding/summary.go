@@ -2,6 +2,7 @@ package finding
 
 import (
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -21,6 +22,7 @@ type Detail struct {
 	PackageName    string
 	PackageVersion string
 	CVSS2          CVSSScore
+	CVSS3          CVSSScore
 
 	Ignore *findingconfig.Ignore
 }
@@ -118,6 +120,9 @@ func findingToDetail(finding types.ImageScanFinding) Detail {
 	cvss2Vector := findingAttributeValue(finding, "CVSS2_VECTOR")
 	cvss2VectorURL := cvss2VectorURL(cvss2Vector)
 
+	cvss3Vector := findingAttributeValue(finding, "CVSS3_VECTOR")
+	cvss3Vector, cvss3VectorURL := cvss3VectorURL(cvss3Vector)
+
 	return Detail{
 		Name:           name,
 		URI:            uri,
@@ -130,7 +135,11 @@ func findingToDetail(finding types.ImageScanFinding) Detail {
 			Vector:    cvss2Vector,
 			VectorURL: cvss2VectorURL,
 		},
-	}
+		CVSS3: CVSSScore{
+			Score:     findingAttributeValue(finding, "CVSS3_SCORE"),
+			Vector:    cvss3Vector,
+			VectorURL: cvss3VectorURL,
+		}}
 }
 
 func findingAttributeValue(finding types.ImageScanFinding, name string) string {
@@ -169,4 +178,28 @@ func cvss2VectorURL(cvss2Vector string) string {
 			url.QueryEscape("("+cvss2Vector+")")
 	}
 	return cvss2VectorURL
+}
+
+// CVSS3 vector have their version at the front: we need to split this out to
+// pass to the calculator URL
+var cvss3VectorPattern = regexp.MustCompile(`^CVSS:([\d.]+)/(.+)$`)
+
+func cvss3VectorURL(versionedVector string) (string, string) {
+	vector := versionedVector
+	vectorURL := ""
+
+	if versionedVector != "" {
+		version := "3.1"
+
+		if matches := cvss3VectorPattern.FindStringSubmatch(versionedVector); matches != nil {
+			version = matches[1]
+			vector = matches[2]
+		}
+
+		vectorURL = "https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator" +
+			"?vector=" + url.QueryEscape(vector) +
+			"&version=" + url.QueryEscape(version)
+	}
+
+	return vector, vectorURL
 }

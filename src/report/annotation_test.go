@@ -88,6 +88,11 @@ func TestReports(t *testing.T) {
 								Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
 								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
 							},
+							CVSS3: finding.CVSSScore{
+								Score:     "9",
+								Vector:    "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator?vector=AV%3AN%2FAC%3AL%2FPR%3AN%2FUI%3AN%2FS%3AU%2FC%3AH%2FI%3AH%2FA%3AN&version=3.1",
+							},
 						},
 						{
 							Name:           "CVE-2019-5200",
@@ -179,6 +184,11 @@ func TestReports(t *testing.T) {
 							CVSS2: finding.CVSSScore{
 								Score:  "10.0",
 								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							},
+							CVSS3: finding.CVSSScore{
+								Score:     "9",
+								Vector:    "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator?vector=AV%3AN%2FAC%3AL%2FPR%3AN%2FUI%3AN%2FS%3AU%2FC%3AH%2FI%3AH%2FA%3AN&version=3.1",
 							},
 							Ignore: &findingconfig.Ignore{
 								ID:     "CVE-2019-5300",
