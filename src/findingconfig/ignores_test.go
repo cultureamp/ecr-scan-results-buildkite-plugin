@@ -16,7 +16,7 @@ ignores:
   - id: CVE-2023-1234
     until: 2015-02-15
     reason: We don't talk about CVE-2023-1234
-  - CVE-2023-9876
+  - id: CVE-2023-9876
 `
 
 	f := createIgnoreFile(t, in)
@@ -40,7 +40,7 @@ func TestLoadIgnores_Fails(t *testing.T) {
 ignores:
   - ["nested array"]
 `,
-			expectedError: "unknown type for ignore entry",
+			expectedError: "cannot unmarshal !!seq",
 		},
 		{
 			in: `
@@ -55,6 +55,13 @@ ignores:
     until: 15-Jan-05
 `,
 			expectedError: "did not match the expected YYYY-MM-dd format",
+		},
+		{
+			in: `
+ignores:
+  - idd: CVE-123
+`,
+			expectedError: "field idd not found in type",
 		},
 	}
 
@@ -78,7 +85,7 @@ ignores:
 ignores: ~`,
 		`
 ignores:
-  - first-issue
+  - id: first-issue
   - id: second-issue
     reason: second issue earliest definition
 `,
@@ -86,7 +93,7 @@ ignores:
 ignores:
 - id: second-issue
   reason: second issue this reason should override earlier ones
-- third-issue
+- id: third-issue
 `,
 	}
 
