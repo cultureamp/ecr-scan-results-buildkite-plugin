@@ -31,8 +31,9 @@ type Detail struct {
 }
 
 type CVSSScore struct {
-	Score  string
-	Vector string
+	Score     string
+	Vector    string
+	VectorURL string
 }
 
 type SeverityCount struct {
@@ -128,6 +129,9 @@ func findingToDetail(finding types.ImageScanFinding) Detail {
 
 	uri = fixFindingURI(name, uri)
 
+	cvss2Vector := findingAttributeValue(finding, "CVSS2_VECTOR")
+	cvss2VectorURL := cvss2VectorURL(cvss2Vector)
+
 	return Detail{
 		Name:           name,
 		URI:            uri,
@@ -136,8 +140,9 @@ func findingToDetail(finding types.ImageScanFinding) Detail {
 		PackageName:    findingAttributeValue(finding, "package_name"),
 		PackageVersion: findingAttributeValue(finding, "package_version"),
 		CVSS2: CVSSScore{
-			Score:  findingAttributeValue(finding, "CVSS2_SCORE"),
-			Vector: findingAttributeValue(finding, "CVSS2_VECTOR"),
+			Score:     findingAttributeValue(finding, "CVSS2_SCORE"),
+			Vector:    cvss2Vector,
+			VectorURL: cvss2VectorURL,
 		},
 	}
 }
@@ -169,4 +174,13 @@ func fixFindingURI(name string, uri string) string {
 	}
 
 	return correctedURI
+}
+
+func cvss2VectorURL(cvss2Vector string) string {
+	cvss2VectorURL := ""
+	if cvss2Vector != "" {
+		cvss2VectorURL = "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=" +
+			url.QueryEscape("("+cvss2Vector+")")
+	}
+	return cvss2VectorURL
 }

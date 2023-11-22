@@ -42,6 +42,9 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 {{ define "findingName" }}{{ if .Description }}<details><summary>{{ template "findingNameLink" . }}</summary><div>{{ .Description }}</div></details>{{ else }}{{ template "findingNameLink" . }}{{ end }}{{ end }}
 {{ define "findingIgnoreUntil" }}{{ if .Until | hasUntilValue }}{{ .Until }}{{ else }}<div class="italic">(indefinitely)</div>{{ end }}{{ end }}
 {{ define "findingIgnore"}}{{ if .Reason }}<details><summary>{{ template "findingIgnoreUntil" . }}</summary><div>{{ .Reason }}</div></details>{{ else }}{{ template "findingIgnoreUntil" . }}{{ end }}{{ end }}
+{{ define "cvssScore"
+}}{{ .Score | nbsp}}{{ if .Vector }} (<a href="{{ .VectorURL }}">{{ .Vector }}</a>){{ end
+}}{{ end }}
 {{ if (or .FindingSummary.Details .FindingSummary.Ignored) }}
 <details>
 <summary>Vulnerability details</summary>
@@ -52,16 +55,14 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 <th>CVE</th>
 <th>Severity</th>
 <th>Affects</th>
-<th>CVSS score</th>
-<th>Vector</th>
+<th>CVSS2 score (vector)</th>
 </tr>
 {{ range $f := .FindingSummary.Details | sortFindings }}
 <tr>
 <td>{{ template "findingName" . }}</td>
 <td>{{ $f.Severity | string | lowerCase | titleCase }}</td>
 <td>{{ $f.PackageName | nbsp }} {{ $f.PackageVersion | nbsp }}</td>
-<td>{{ $f.CVSS2.Score | nbsp}}</td>
-<td>{{ if $f.CVSS2.Vector }}<a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=({{ $f.CVSS2.Vector }})">{{ $f.CVSS2.Vector }}</a>{{ else }}&nbsp;{{ end }}</td>
+<td>{{ template "cvssScore" $f.CVSS2 }}</td>
 </tr>
 {{ end }}
 </table>
@@ -76,8 +77,7 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 <th>Severity</th>
 <th>Ignored until</th>
 <th>Affects</th>
-<th>CVSS score</th>
-<th>Vector</th>
+<th>CVSS2 score (vector)</th>
 </tr>
 {{ range $f := .FindingSummary.Ignored | sortFindings }}
 <tr>
@@ -85,8 +85,7 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 <td>{{ $f.Severity | string | lowerCase | titleCase }}</td>
 <td>{{ template "findingIgnore" $f.Ignore }}</td>
 <td>{{ $f.PackageName | nbsp }} {{ $f.PackageVersion | nbsp }}</td>
-<td>{{ $f.CVSS2.Score | nbsp}}</td>
-<td>{{ if $f.CVSS2.Vector }}<a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=({{ $f.CVSS2.Vector }})">{{ $f.CVSS2.Vector }}</a>{{ else }}&nbsp;{{ end }}</td>
+<td>{{ template "cvssScore" $f.CVSS2 }}</td>
 </tr>
 {{ end }}
 </table>

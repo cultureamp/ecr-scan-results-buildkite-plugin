@@ -71,8 +71,9 @@ func TestReports(t *testing.T) {
 							PackageName:    "5300-package",
 							PackageVersion: "5300-version",
 							CVSS2: finding.CVSSScore{
-								Score:  "10.0",
-								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+								Score:     "10.0",
+								Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
 							},
 						},
 						{
@@ -83,8 +84,9 @@ func TestReports(t *testing.T) {
 							PackageName:    "e2fsprogs",
 							PackageVersion: "1.44.1-1ubuntu1.1",
 							CVSS2: finding.CVSSScore{
-								Score:  "4.6",
-								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+								Score:     "4.6",
+								Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
 							},
 						},
 						{
@@ -95,8 +97,9 @@ func TestReports(t *testing.T) {
 							PackageName:    "5200-package",
 							PackageVersion: "5200-version",
 							CVSS2: finding.CVSSScore{
-								Score:  "10.0",
-								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+								Score:     "10.0",
+								Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
 							},
 						},
 					},
@@ -130,8 +133,9 @@ func TestReports(t *testing.T) {
 							PackageName:    "e2fsprogs",
 							PackageVersion: "1.44.1-1ubuntu1.1",
 							CVSS2: finding.CVSSScore{
-								Score:  "4.6",
-								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+								Score:     "4.6",
+								Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
 							},
 						},
 						{
@@ -142,8 +146,9 @@ func TestReports(t *testing.T) {
 							PackageName:    "5200-package",
 							PackageVersion: "5200-version",
 							CVSS2: finding.CVSSScore{
-								Score:  "10.0",
-								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+								Score:     "10.0",
+								Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
 							},
 						},
 					},
@@ -156,8 +161,9 @@ func TestReports(t *testing.T) {
 							PackageName:    "100-package",
 							PackageVersion: "100-version",
 							CVSS2: finding.CVSSScore{
-								Score:  "4.0",
-								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+								Score:     "4.0",
+								Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
 							},
 							Ignore: &findingconfig.Ignore{
 								ID: "CVE-2023-100",
