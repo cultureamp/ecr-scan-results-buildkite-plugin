@@ -36,7 +36,7 @@ there is no indentation: indented output can be rendered differently.
 <p>No vulnerabilities reported.</p>
 {{ end }}
 {{ define "findingNameLink"}}
-{{ if .Uri }}<a href="{{ .Uri }}">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}
+{{ if .URI }}<a href="{{ .URI }}">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}
 {{ end }}
 {{ define "findingName"}}
 {{ if .Description }}<details><summary>{{ template "findingNameLink" . }}</summary><div>{{ .Description }}</div></details>{{ else }}{{ template "findingNameLink" . }}{{ end }}

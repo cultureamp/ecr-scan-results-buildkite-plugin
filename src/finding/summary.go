@@ -13,7 +13,7 @@ type Detail struct {
 	// The name associated with the finding, usually a CVE number.
 	Name string
 
-	Uri string
+	URI string
 
 	// The description of the finding.
 	Description string
@@ -119,7 +119,7 @@ func Summarize(findings *types.ImageScanFindings, ignoreConfig []findingconfig.I
 func findingToDetail(finding types.ImageScanFinding) Detail {
 	return Detail{
 		Name:           aws.ToString(finding.Name),
-		Uri:            aws.ToString(finding.Uri),
+		URI:            aws.ToString(finding.Uri),
 		Description:    aws.ToString(finding.Description),
 		Severity:       finding.Severity,
 		PackageName:    findingAttributeValue(finding, "package_name"),
