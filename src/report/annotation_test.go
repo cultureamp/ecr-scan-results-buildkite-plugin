@@ -66,7 +66,7 @@ func TestReports(t *testing.T) {
 						{
 							Name:           "CVE-2019-5300",
 							Description:    "Another vulnerability.",
-							Uri:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5300",
+							URI:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5300",
 							Severity:       "AA-BOGUS-SEVERITY",
 							PackageName:    "5300-package",
 							PackageVersion: "5300-version",
@@ -76,7 +76,7 @@ func TestReports(t *testing.T) {
 						{
 							Name:           "CVE-2019-5188",
 							Description:    "A code execution vulnerability exists in the directory rehashing functionality of E2fsprogs e2fsck 1.45.4. A specially crafted ext4 directory can cause an out-of-bounds write on the stack, resulting in code execution. An attacker can corrupt a partition to trigger this vulnerability.",
-							Uri:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5188",
+							URI:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5188",
 							Severity:       "HIGH",
 							PackageName:    "e2fsprogs",
 							PackageVersion: "1.44.1-1ubuntu1.1",
@@ -86,7 +86,7 @@ func TestReports(t *testing.T) {
 						{
 							Name:           "CVE-2019-5200",
 							Description:    "Another vulnerability.",
-							Uri:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5200",
+							URI:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5200",
 							Severity:       "CRITICAL",
 							PackageName:    "5200-package",
 							PackageVersion: "5200-version",
@@ -119,7 +119,7 @@ func TestReports(t *testing.T) {
 						{
 							Name:           "CVE-2019-5188",
 							Description:    "A code execution vulnerability exists in the directory rehashing functionality of E2fsprogs e2fsck 1.45.4. A specially crafted ext4 directory can cause an out-of-bounds write on the stack, resulting in code execution. An attacker can corrupt a partition to trigger this vulnerability.",
-							Uri:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5188",
+							URI:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5188",
 							Severity:       "HIGH",
 							PackageName:    "e2fsprogs",
 							PackageVersion: "1.44.1-1ubuntu1.1",
@@ -129,7 +129,7 @@ func TestReports(t *testing.T) {
 						{
 							Name:           "CVE-2019-5200",
 							Description:    "Another vulnerability.",
-							Uri:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5200",
+							URI:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5200",
 							Severity:       "CRITICAL",
 							PackageName:    "5200-package",
 							PackageVersion: "5200-version",
@@ -141,7 +141,7 @@ func TestReports(t *testing.T) {
 						{
 							Name:           "CVE-2023-100",
 							Description:    "A vulnerability present in some software but isn't that bad.",
-							Uri:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2023-100",
+							URI:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2023-100",
 							Severity:       "LOW",
 							PackageName:    "100-package",
 							PackageVersion: "100-version",
@@ -154,7 +154,7 @@ func TestReports(t *testing.T) {
 						{
 							Name:           "CVE-2019-5300",
 							Description:    "Another vulnerability.",
-							Uri:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5300",
+							URI:            "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5300",
 							Severity:       "CRITICAL",
 							PackageName:    "5300-package",
 							PackageVersion: "5300-version",
