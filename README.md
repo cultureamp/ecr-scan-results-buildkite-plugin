@@ -5,12 +5,12 @@ service. By default the plugin will cause the step to fail if there are critical
 or high vulnerabilities reported, but there are configurable thresholds on this
 behaviour.
 
-> ℹ️ TIP: if you want the build to continue when vulnerabilities are found, be
+> ℹ️ **TIP**: if you want the build to continue when vulnerabilities are found, be
 > sure to supply values for `max-criticals` and `max-highs` parameters. If these
 > are set to high values your build will never fail, but details will be
 > supplied in the annotation.
 >
-> Check out the FAQs below for more information
+> If a finding is irrelevant, or you're waiting on an upstream fix, use an "ignore" configuration file instead: see the [ignore findings](./docs/ignore-findings.md) documentation.
 
 ## Example
 
@@ -76,11 +76,17 @@ If the number of critical vulnerabilities in the image exceeds this threshold
 the build is failed. Defaults to 0. Use a sufficiently large number (e.g. 999)
 to allow the build to always pass.
 
+> [!IMPORTANT]
+> Prefer an [ignore file](./docs/ignore-findings.md) over setting thresholds if a finding is irrelevant or time to respond is required.
+
 ### `max-highs` (Optional, string)
 
 If the number of high vulnerabilities in the image exceeds this threshold the
 build is failed. Defaults to 0. Use a sufficiently large number (e.g. 999) to
 allow the build to always pass.
+
+> [!IMPORTANT]
+> Prefer an [ignore file](./docs/ignore-findings.md) over setting thresholds if a finding is irrelevant or time to respond is required.
 
 ### `image-label` (Optional, string)
 
