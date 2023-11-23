@@ -4,27 +4,31 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/cultureamp/ecrscanresults/findingconfig"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+var defaultTime = "2023-12-01"
+var defaultTestClock = testClock(defaultTime)
+
 func TestLoadIgnores_Succeeds(t *testing.T) {
 	in := `
 ignores:
   - id: CVE-2023-1234
-    until: 2015-02-15
+    until: 2024-02-15
     reason: We don't talk about CVE-2023-1234
   - id: CVE-2023-9876
 `
 
 	f := createIgnoreFile(t, in)
-	i, err := findingconfig.LoadIgnores(f)
+	i, err := findingconfig.LoadIgnores(f, defaultTestClock)
 	require.NoError(t, err)
 
 	assert.Equal(t, []findingconfig.Ignore{
-		{ID: "CVE-2023-1234", Until: findingconfig.MustParseUntil("2015-02-15"), Reason: "We don't talk about CVE-2023-1234"},
+		{ID: "CVE-2023-1234", Until: findingconfig.MustParseUntil("2024-02-15"), Reason: "We don't talk about CVE-2023-1234"},
 		{ID: "CVE-2023-9876", Until: findingconfig.UntilTime{}, Reason: ""},
 	}, i)
 }
@@ -69,7 +73,7 @@ ignores:
 		t.Run(fmt.Sprintf("cases[%d]", i), func(t *testing.T) {
 			f := createIgnoreFile(t, c.in)
 
-			_, err := findingconfig.LoadIgnores(f)
+			_, err := findingconfig.LoadIgnores(f, defaultTestClock)
 			require.ErrorContains(t, err, c.expectedError)
 		})
 	}
@@ -88,22 +92,29 @@ ignores:
   - id: first-issue
   - id: second-issue
     reason: second issue earliest definition
+  - id: fourth-issue
+    reason: still valid, should take precedence
+    until: 2023-12-31
 `,
 		`
 ignores:
 - id: second-issue
   reason: second issue this reason should override earlier ones
 - id: third-issue
+- id: fourth-issue
+  reason: expired should not override other 'forth-issue'
+  until: 2023-11-30
 `,
 	}
 
 	files := createIgnoreFiles(t, contents)
 
-	actual, err := findingconfig.LoadExistingIgnores(files)
+	actual, err := findingconfig.LoadExistingIgnores(files, defaultTestClock)
 	require.NoError(t, err)
 
 	assert.Equal(t, []findingconfig.Ignore{
 		{ID: "first-issue", Until: findingconfig.UntilTime{}, Reason: ""},
+		{ID: "fourth-issue", Until: findingconfig.MustParseUntil("2023-12-31"), Reason: "still valid, should take precedence"},
 		{ID: "second-issue", Until: findingconfig.UntilTime{}, Reason: "second issue this reason should override earlier ones"},
 		{ID: "third-issue", Until: findingconfig.UntilTime{}, Reason: ""},
 	}, actual)
@@ -136,4 +147,10 @@ func createIgnoreFile(t *testing.T, contents string) string {
 	require.NoError(t, err)
 
 	return f.Name()
+}
+
+func testClock(yyyMMdd string) findingconfig.SystemClock {
+	now := time.Time(findingconfig.MustParseUntil(yyyMMdd))
+
+	return findingconfig.SystemClock(func() time.Time { return now })
 }
