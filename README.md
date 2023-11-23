@@ -14,6 +14,33 @@ behaviour.
 > "ignore" configuration file instead: see the [ignore
 > findings](./docs/ignore-findings.md) documentation.
 
+## Rendering
+
+The plugin shows a detailed summary of the vulnerability findings in the scanned image using data pulled from AWS ECR. The summary is rendered as a Buildkite [build annotation](https://buildkite.com/docs/agent/v3/cli-annotate).
+
+<figure>
+<figcaption>
+The default view summarizes the number of findings in the scan, hiding details behind an expanding element.
+</figcaption>
+<img src="docs/img/eg-success-collapsed.png" alt="example of successful check annotation with collapsed results table">
+</figure>
+
+<figure>
+<figcaption>
+When a threshold is exceeded, the annotation is rendered as an error.
+</figcaption>
+<img src="docs/img/eg-failed-collapsed.png" alt="example of failed check annotation with collapsed results table" width="80%" align="center">
+</figure>
+
+<figure>
+<figcaption>
+The details view can be expanded, showing a table of the vulnerability findings from the scan. Findings link to the CVE database in most cases. The CVSS vector links to the [CVSS calculator][calculator], allowing for exploration of the potential impact and enabling environmental scoring.
+</figcaption>
+<img src="docs/img/eg-success-expanded.png" alt="example of successful check annotation with collapsed results table" width="80%" align="center">
+</figure>
+
+[calculator]: https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator
+
 ## Example
 
 Add the following lines to your `pipeline.yml`:
