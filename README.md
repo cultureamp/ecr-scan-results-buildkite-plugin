@@ -10,7 +10,9 @@ behaviour.
 > are set to high values your build will never fail, but details will be
 > supplied in the annotation.
 >
-> If a finding is irrelevant, or you're waiting on an upstream fix, use an "ignore" configuration file instead: see the [ignore findings](./docs/ignore-findings.md) documentation.
+> If a finding is irrelevant, or you're waiting on an upstream fix, use an
+> "ignore" configuration file instead: see the [ignore
+> findings](./docs/ignore-findings.md) documentation.
 
 ## Example
 
@@ -77,7 +79,8 @@ the build is failed. Defaults to 0. Use a sufficiently large number (e.g. 999)
 to allow the build to always pass.
 
 > [!IMPORTANT]
-> Prefer an [ignore file](./docs/ignore-findings.md) over setting thresholds if a finding is irrelevant or time to respond is required.
+> Prefer an [ignore file](./docs/ignore-findings.md) over setting thresholds if
+> a finding is irrelevant or time to respond is required.
 
 ### `max-highs` (Optional, string)
 
@@ -86,7 +89,8 @@ build is failed. Defaults to 0. Use a sufficiently large number (e.g. 999) to
 allow the build to always pass.
 
 > [!IMPORTANT]
-> Prefer an [ignore file](./docs/ignore-findings.md) over setting thresholds if a finding is irrelevant or time to respond is required.
+> Prefer an [ignore file](./docs/ignore-findings.md) over setting thresholds if
+> a finding is irrelevant or time to respond is required.
 
 ### `image-label` (Optional, string)
 
@@ -124,18 +128,67 @@ for more information.
 
 ## FAQ
 
-### I have a vulnerability that isn't resolved yet, but I can wait on fixing. How do I do configure this plugin so I can unblock my builds?
+### The build is failing for an unresolved vulnerability. How do I do configure this plugin so I can unblock my builds?
 
-Refer to how to set your [max-criticals](https://github.com/cultureamp/ecr-scan-results-buildkite-plugin#max-criticals-optional-string), and [max-highs](https://github.com/cultureamp/ecr-scan-results-buildkite-plugin#max-highs-optional-string).
+There are two options here:
 
-### Are there guidelines on using thresholds?
+1. configure an [ignore file](docs/ignore-findings.md) to tell the plugin to
+  skip this vulnerability. Set an `until` date to ensure that it is dealt with
+  in the future.
+2. refer to how to set your [max-criticals](#max-criticals-optional-string), and
+  [max-highs](#max-highs-optional-string) thresholds.
 
-Yes. Changing the `max-criticals` and `max-high` settings should not be taken lightly.
+Out of the two options, the first is far more preferable as it targets the
+finding that is causing the problem. Altering a threshold is unlikely to be
+rolled back and is indiscriminate about the findings that it will ignore.
 
-This option is effectively a deferral of fixing the vulnerability. **Assess the situation first**. If the CVE describes a scenario that aligns with how your project is used, then you should be working to fix it rather than defer it. For help on this, check out the following the steps outlined [here](https://cultureamp.atlassian.net/wiki/spaces/PST/pages/2960916852/Central+SRE+Support+FAQs#I-have-high%2Fcritical-vulnerabilities-for-my-ECR-image%2C-and-its-blocking-my-builds.-What%E2%80%99s-going-on%3F).
+### How do I set my thresholds? _OR_ My build often breaks because of this plugin. Should I change the thresholds?
 
-Below are some recommendations if you choose to exercise this option:
+Setting the `max-criticals` and `max-high` thresholds requires some thought, and
+needs to take into account the risk profile of the company and the service
+itself.
 
-1. Set the thresholds to the number of identified high or critical vulnerabilities. This is so you’re not permitting more vulnerabilities than you should. Especially for those you can fix by updating dependencies or packages.
+Allowing a container with a critical or high vulnerability to be deployed is not
+necessarily wrong, it really depends on the environment of the deployed
+application and the nature of the vulnerabilities themselves.
 
-2. Set a scheduled reminder for your team to check if a fix is available for the CVE. If a fix is available, address it, and then lower your threshold for the respective vulnerability severity.
+Consult with your company's internal security teams about the acceptable risk
+level for a service if a non-zero threshold is desired, and consider making use
+of the [ignore file](docs/ignore-findings.md) configuration to avoid temporary
+blockages. Using an ignore entry with an expiry is strongly recommended over
+increasing the threshold.
+
+### What should I think about when ignoring a finding for a period of time?
+
+Consider the following:
+
+- Follow the link to read the details of the CVE. Does it impact a component
+  that is directly (or indirectly) used by your application?
+- Reference the CVSS score associated with the vulnerability and look carefully
+  at the vector via the link. The vector will help inform about how this
+  vulnerability can affect your system.
+- Consider using the CVSS calculator (reached via the vector link) to fill out
+  the "Environmental" part of the score. The environmental score helps judge the
+  risks posed in the context of your application deployment environment. This is
+  likely adjust the base score and assist in your decision making.
+- Is a patch or update already available?
+- Is this update likely to be made available in an update to the current base
+  image, or does it exist in a later version of the base image?
+
+Possible actions:
+
+1. Update the base image that incorporates the fix. This may be the simplest
+   option.
+2. Remove the dependency from the image, or choose a different base image
+   without the issue.
+3. Add an ignore with an expiry to allow for an update to be published within a
+   period of time. This is only valid if your corporate standards allow it, and
+   there is a plan to follow up on this issue in the given time frame.
+4. Update the image definition to update the package with the vulnerability.
+   This can negatively impact image size, and create a future maintenance issue
+   if not done carefully. Take care to keep the number of packages updated
+   small, and avoid adding hard-coded versions unless a process exists to keep
+   them up-to-date.
+5. Ignore the finding indefinitely. This will generally only be valid if
+   dependency both cannot be removed and is not used in a vulnerable fashion.
+   Your working environment may require special exceptions for this.
