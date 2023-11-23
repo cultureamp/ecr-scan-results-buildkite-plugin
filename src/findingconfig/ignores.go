@@ -6,6 +6,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -24,7 +25,7 @@ type Ignores struct {
 // LoadExistingIgnores uses LoadIgnores to read any of the given set of files
 // that exist. Repeated definitions for the same "Name" will overwrite each
 // other. The later definition will take precedence.
-func LoadExistingIgnores(filenames []string) ([]Ignore, error) {
+func LoadExistingIgnores(filenames []string, clock SystemClock) ([]Ignore, error) {
 	ignores := []Ignore{}
 
 	for _, name := range filenames {
@@ -40,7 +41,7 @@ func LoadExistingIgnores(filenames []string) ([]Ignore, error) {
 			continue
 		}
 
-		partial, err := LoadIgnores(name)
+		partial, err := LoadIgnores(name, clock)
 		if err != nil {
 			return nil, fmt.Errorf("loading ignore file '%s' failed: %w", name, err)
 		}
@@ -64,7 +65,7 @@ func LoadExistingIgnores(filenames []string) ([]Ignore, error) {
 }
 
 // LoadIgnores parses a YAML ignore file from the given location.
-func LoadIgnores(filename string) ([]Ignore, error) {
+func LoadIgnores(filename string, clock SystemClock) ([]Ignore, error) {
 	content, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -76,7 +77,15 @@ func LoadIgnores(filename string) ([]Ignore, error) {
 		return nil, err
 	}
 
-	return i.Ignores, nil
+	filtered := slices.DeleteFunc(i.Ignores, func(ignore Ignore) bool {
+		u := time.Time(ignore.Until)
+		z := u.IsZero()
+		d := !z && clock.UtcNow().After(u)
+
+		return d
+	})
+
+	return filtered, nil
 }
 
 // unmarshalYAML decodes a YAML encoded byte stream into the supplied pointer
