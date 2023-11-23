@@ -5,6 +5,9 @@ Expects an instance of AnnotationContext as its context.
 This template renders _MARKDOWN_, even though it's mostly HTML. This is why
 there is no indentation: indented output can be rendered differently.
 
+Be careful of whitespace: when newlines surround an inline HTML element, it may
+be wrapped in <p> tag by the Markdown renderer in Buildkite.
+
 */}}
 {{ $criticalThreshold := .CriticalSeverityThreshold }}
 {{ $highThreshold := .HighSeverityThreshold }}
