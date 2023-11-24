@@ -172,12 +172,12 @@ func fixFindingURI(name string, uri string) string {
 }
 
 func cvss2VectorURL(cvss2Vector string) string {
-	cvss2VectorURL := ""
-	if cvss2Vector != "" {
-		cvss2VectorURL = "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=" +
-			url.QueryEscape("("+cvss2Vector+")")
+	if cvss2Vector == "" {
+		return ""
 	}
-	return cvss2VectorURL
+
+	return "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=" +
+		url.QueryEscape("("+cvss2Vector+")")
 }
 
 // CVSS3 vector have their version at the front: we need to split this out to
