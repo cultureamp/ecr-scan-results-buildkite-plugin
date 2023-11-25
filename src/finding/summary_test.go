@@ -12,22 +12,13 @@ import (
 
 func TestSummarize(t *testing.T) {
 	cases := []struct {
-		name     string
-		ignores  []findingconfig.Ignore
-		data     types.ImageScanFindings
-		expected autogold.Value
+		name    string
+		ignores []findingconfig.Ignore
+		data    types.ImageScanFindings
 	}{
 		{
 			name: "no vulnerabilities",
 			data: types.ImageScanFindings{},
-			expected: autogold.Expect(finding.Summary{
-				Counts: map[types.FindingSeverity]finding.SeverityCount{
-					types.FindingSeverity("CRITICAL"): {},
-					types.FindingSeverity("HIGH"):     {},
-				},
-				Details: []finding.Detail{},
-				Ignored: []finding.Detail{},
-			}),
 		},
 		{
 			name: "findings with links",
@@ -38,30 +29,6 @@ func TestSummarize(t *testing.T) {
 					fu("CVE-2019-5189", "HIGH", "https://notamitre.org.site/search?name=CVE-2019-5189"),
 				},
 			},
-			expected: autogold.Expect(finding.Summary{
-				Counts: map[types.FindingSeverity]finding.SeverityCount{
-					types.FindingSeverity("CRITICAL"): {Included: 1},
-					types.FindingSeverity("HIGH"):     {Included: 2},
-				},
-				Details: []finding.Detail{
-					{
-						Name:     "CVE-2019-5188",
-						URI:      "https://www.cve.org/CVERecord?id=CVE-2019-5188",
-						Severity: types.FindingSeverity("HIGH"),
-					},
-					{
-						Name:     "INVALID-CVE",
-						URI:      "https://github.com/advisories?query=INVALID-CVE",
-						Severity: types.FindingSeverity("CRITICAL"),
-					},
-					{
-						Name:     "CVE-2019-5189",
-						URI:      "https://notamitre.org.site/search?name=CVE-2019-5189",
-						Severity: types.FindingSeverity("HIGH"),
-					},
-				},
-				Ignored: []finding.Detail{},
-			}),
 		},
 		{
 			name: "findings with CVSS2 and CVSS3 scores",
@@ -73,42 +40,6 @@ func TestSummarize(t *testing.T) {
 					fscore3("CVE-2019-5189", "HIGH", "9", "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"),
 				},
 			},
-			expected: autogold.Expect(finding.Summary{
-				Counts: map[types.FindingSeverity]finding.SeverityCount{
-					types.FindingSeverity("CRITICAL"): {Included: 1},
-					types.FindingSeverity("HIGH"):     {Included: 3},
-				},
-				Details: []finding.Detail{
-					{
-						Name:     "CVE-2019-5188",
-						Severity: types.FindingSeverity("HIGH"),
-						CVSS2: finding.CVSSScore{
-							Score:     "1.2",
-							Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
-							VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
-						},
-					},
-					{
-						Name:     "INVALID-CVE",
-						Severity: types.FindingSeverity("CRITICAL"),
-					},
-					{
-						Name:     "CVE-2019-5189",
-						Severity: types.FindingSeverity("HIGH"),
-						CVSS2:    finding.CVSSScore{Score: "6"},
-					},
-					{
-						Name:     "CVE-2019-5189",
-						Severity: types.FindingSeverity("HIGH"),
-						CVSS3: finding.CVSSScore{
-							Score:     "9",
-							Vector:    "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
-							VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator?vector=AV%3AN%2FAC%3AL%2FPR%3AN%2FUI%3AN%2FS%3AU%2FC%3AH%2FI%3AH%2FA%3AN&version=3.1",
-						},
-					},
-				},
-				Ignored: []finding.Detail{},
-			}),
 		},
 		{
 			name: "findings with no ignores",
@@ -119,27 +50,6 @@ func TestSummarize(t *testing.T) {
 					f("CVE-2019-5189", "HIGH"),
 				},
 			},
-			expected: autogold.Expect(finding.Summary{
-				Counts: map[types.FindingSeverity]finding.SeverityCount{
-					types.FindingSeverity("CRITICAL"): {Included: 1},
-					types.FindingSeverity("HIGH"):     {Included: 2},
-				},
-				Details: []finding.Detail{
-					{
-						Name:     "CVE-2019-5188",
-						Severity: types.FindingSeverity("HIGH"),
-					},
-					{
-						Name:     "CVE-2019-5200",
-						Severity: types.FindingSeverity("CRITICAL"),
-					},
-					{
-						Name:     "CVE-2019-5189",
-						Severity: types.FindingSeverity("HIGH"),
-					},
-				},
-				Ignored: []finding.Detail{},
-			}),
 		},
 		{
 			name: "ignores affect counts",
@@ -154,32 +64,6 @@ func TestSummarize(t *testing.T) {
 				i("CVE-2019-5189"), // part of the summary
 				i("CVE-2019-6000"), // not part of it
 			},
-			expected: autogold.Expect(finding.Summary{
-				Counts: map[types.FindingSeverity]finding.SeverityCount{
-					types.FindingSeverity("CRITICAL"): {Included: 1},
-					types.FindingSeverity("HIGH"): {
-						Included: 1,
-						Ignored:  1,
-					},
-				},
-				Details: []finding.Detail{
-					{
-						Name:     "CVE-2019-5188",
-						Severity: types.FindingSeverity("HIGH"),
-					},
-					{
-						Name:     "CVE-2019-5200",
-						Severity: types.FindingSeverity("CRITICAL"),
-					},
-				},
-				Ignored: []finding.Detail{{
-					Name:     "CVE-2019-5189",
-					Severity: types.FindingSeverity("HIGH"),
-					Ignore: &findingconfig.Ignore{
-						ID: "CVE-2019-5189",
-					},
-				}},
-			}),
 		},
 	}
 
@@ -188,7 +72,7 @@ func TestSummarize(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			summary := finding.Summarize(&c.data, c.ignores)
 
-			c.expected.Equal(t, summary)
+			autogold.ExpectFile(t, summary)
 		})
 	}
 }

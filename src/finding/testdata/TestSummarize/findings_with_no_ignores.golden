@@ -1,0 +1,21 @@
+finding.Summary{
+	Counts: map[types.FindingSeverity]finding.SeverityCount{
+		types.FindingSeverity("CRITICAL"): {Included: 1},
+		types.FindingSeverity("HIGH"):     {Included: 2},
+	},
+	Details: []finding.Detail{
+		{
+			Name:     "CVE-2019-5188",
+			Severity: types.FindingSeverity("HIGH"),
+		},
+		{
+			Name:     "CVE-2019-5200",
+			Severity: types.FindingSeverity("CRITICAL"),
+		},
+		{
+			Name:     "CVE-2019-5189",
+			Severity: types.FindingSeverity("HIGH"),
+		},
+	},
+	Ignored: []finding.Detail{},
+}
