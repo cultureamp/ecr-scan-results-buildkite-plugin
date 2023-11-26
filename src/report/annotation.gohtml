@@ -47,7 +47,7 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 {{ define "cvssCells" }}
 {{ if .CVSS3.Score }}<td>{{ template "cvssScore" .CVSS3 }}</td><td>{{ template "cvssVector" .CVSS3 }}</td>{{
    else
-}}<td>{{ if .CVSS2.Score }}{{ template "cvssScore" .CVSS2 }} <em>(*CVSS2)</em>{{ end }}</td><td>{{ template "cvssVector" .CVSS2 }}</td>{{ end }}
+}}<td>{{ if .CVSS2.Score }}{{ template "cvssScore" .CVSS2 }} <em>(*CVSS2)</em>{{ else }}&nbsp;{{ end }}</td><td>{{ template "cvssVector" .CVSS2 }}</td>{{ end }}
 {{ end }}
 {{ if (or .FindingSummary.Details .FindingSummary.Ignored) }}
 <details>

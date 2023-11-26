@@ -78,15 +78,28 @@ func (c AnnotationContext) Render() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// sortFindings sorts by severity rank, then CVSS3/CVSS2 score _descending_, then by CVE descending
 func sortFindings(findings []finding.Detail) []finding.Detail {
 	// shallow clone, don't affect source array
 	sorted := slices.Clone(findings)
 
-	// sort by severity rank, then CVE _descending_
 	slices.SortFunc(sorted, func(a, b finding.Detail) int {
+		// first by severity rank
 		sevRank := compareSeverities(a.Severity, b.Severity)
 		if sevRank != 0 {
 			return sevRank
+		}
+
+		// then by CVSS3 score
+		cvss3 := compareCVSSScore(a.CVSS3, b.CVSS3)
+		if cvss3 != 0 {
+			return cvss3 * -1 // descending
+		}
+
+		// then by CVSS2 score
+		cvss2 := compareCVSSScore(a.CVSS2, b.CVSS2)
+		if cvss2 != 0 {
+			return cvss2 * -1 // descending
 		}
 
 		// descending order of CVE, in general this means that newer CVEs will be at
@@ -135,6 +148,19 @@ func rankSeverity(f types.FindingSeverity) int {
 	}
 
 	return 100
+}
+
+func compareCVSSScore(a, b finding.CVSSScore) int {
+	switch {
+	case a.Score == nil && b.Score == nil:
+		return 0
+	case a.Score == nil:
+		return -1
+	case b.Score == nil:
+		return 1
+	default:
+		return a.Score.Cmp(*b.Score)
+	}
 }
 
 func hasUntilValue(until findingconfig.UntilTime) bool {

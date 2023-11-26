@@ -193,7 +193,66 @@ func TestReports(t *testing.T) {
 				CriticalSeverityThreshold: 0,
 				HighSeverityThreshold:     0,
 			},
-		}}
+		},
+		{
+			name: "sorted findings",
+			data: report.AnnotationContext{
+				Image: registry.RegistryInfo{
+					RegistryID: "0123456789",
+					Region:     "us-west-2",
+					Name:       "test-repo",
+					Tag:        "digest-value",
+				},
+				ImageLabel: "label of image",
+				FindingSummary: finding.Summary{
+					Counts: map[types.FindingSeverity]finding.SeverityCount{
+						"HIGH":     {Included: 1},
+						"CRITICAL": {Included: 1, Ignored: 1},
+						"LOW":      {Included: 0, Ignored: 1},
+					},
+					Details: []finding.Detail{
+						{
+							Name:     "CVE-a",
+							Severity: "HIGH",
+							CVSS3:    finding.NewCVSS3Score("5.0", ""),
+							CVSS2:    finding.NewCVSS2Score("5.0", ""),
+						},
+						{
+							Name:     "CVE-b",
+							Severity: "HIGH",
+						},
+						{
+							Name:     "CVE-c",
+							Severity: "HIGH",
+						},
+						{
+							Name:     "CVE-d",
+							Severity: "HIGH",
+							CVSS2:    finding.NewCVSS2Score("6.0", ""),
+						},
+						{
+							Name:     "CVE-f",
+							Severity: "HIGH",
+							CVSS3:    finding.NewCVSS3Score("6.0", ""),
+							CVSS2:    finding.NewCVSS2Score("4.0", ""),
+						},
+						{
+							Name:     "CVE-g",
+							Severity: "HIGH",
+							CVSS2:    finding.NewCVSS3Score("8.0", ""),
+						},
+						{
+							Name:     "CVE-h",
+							Severity: "HIGH",
+							CVSS3:    finding.NewCVSS2Score("9.0", ""),
+						},
+					},
+				},
+				CriticalSeverityThreshold: 0,
+				HighSeverityThreshold:     0,
+			},
+		},
+	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

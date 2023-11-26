@@ -1,0 +1,137 @@
+`
+
+
+
+
+<h4>Vulnerability summary for "label of image"</h4>
+<p class="h6 regular italic">test-repo:digest-value</p>
+
+
+<dl class="flex flex-wrap mxn1">
+
+
+
+
+<div class="m1 p1 mr3">
+<dt>Critical</dt>
+<dd><h1 class="m0 red">1</h1>
+<em>+ 1 ignored</em>
+</dd>
+</div>
+
+
+
+<div class="m1 p1 mr3">
+<dt>High</dt>
+<dd><h1 class="m0 red">1</h1>
+
+</dd>
+</div>
+
+
+
+<div class="m1 p1 mr3">
+<dt>Low</dt>
+<dd><h1 class="m0">0</h1>
+<em>+ 1 ignored</em>
+</dd>
+</div>
+
+</dl>
+
+
+
+
+
+
+
+
+
+<details>
+<summary>Vulnerability details</summary>
+<div>
+<p>All listed scores are CVSS3 unless otherwise noted.</p>
+
+<table>
+<tr>
+<th>CVE</th>
+<th>Severity</th>
+<th>Affects</th>
+<th>CVSS score</th>
+<th>CVSS vector</th>
+</tr>
+
+<tr>
+<td>CVE-h</td>
+<td>High</td>
+<td>&nbsp; &nbsp;</td>
+
+<td>9.0</td><td>&nbsp;</td>
+
+</tr>
+
+<tr>
+<td>CVE-f</td>
+<td>High</td>
+<td>&nbsp; &nbsp;</td>
+
+<td>6.0</td><td>&nbsp;</td>
+
+</tr>
+
+<tr>
+<td>CVE-a</td>
+<td>High</td>
+<td>&nbsp; &nbsp;</td>
+
+<td>5.0</td><td>&nbsp;</td>
+
+</tr>
+
+<tr>
+<td>CVE-g</td>
+<td>High</td>
+<td>&nbsp; &nbsp;</td>
+
+<td>8.0 <em>(*CVSS2)</em></td><td>&nbsp;</td>
+
+</tr>
+
+<tr>
+<td>CVE-d</td>
+<td>High</td>
+<td>&nbsp; &nbsp;</td>
+
+<td>6.0 <em>(*CVSS2)</em></td><td>&nbsp;</td>
+
+</tr>
+
+<tr>
+<td>CVE-c</td>
+<td>High</td>
+<td>&nbsp; &nbsp;</td>
+
+<td>&nbsp;</td><td>&nbsp;</td>
+
+</tr>
+
+<tr>
+<td>CVE-b</td>
+<td>High</td>
+<td>&nbsp; &nbsp;</td>
+
+<td>&nbsp;</td><td>&nbsp;</td>
+
+</tr>
+
+</table>
+
+
+</div>
+</details>
+
+<p class="p1">
+<i>scan completed: <span title="&lt;nil&gt;"></span></i> |
+<i>source updated: <span title="&lt;nil&gt;"></span></i>
+</p>
+`
