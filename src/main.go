@@ -117,8 +117,8 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 		".buildkite/ecr-scan-results-ignore.yml",
 		"buildkite/ecr-scan-results-ignore.yaml",
 		"buildkite/ecr-scan-results-ignore.yml",
-		"~/.ecr-scan-results-ignore.yaml",
-		"~/.ecr-scan-results-ignore.yml",
+		"/etc/ecr-scan-results-buildkite-plugin/ignore.yaml",
+		"/etc/ecr-scan-results-buildkite-plugin/ignore.yml",
 	}, findingconfig.DefaultSystemClock())
 	if err != nil {
 		return runtimeerrors.NonFatal("could not load finding ignore configuration", err)

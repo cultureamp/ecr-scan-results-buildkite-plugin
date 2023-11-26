@@ -29,14 +29,6 @@ func LoadExistingIgnores(filenames []string, clock SystemClock) ([]Ignore, error
 	ignores := []Ignore{}
 
 	for _, name := range filenames {
-		if strings.HasPrefix(name, "~/") {
-			home, err := os.UserHomeDir()
-			if err != nil {
-				return nil, fmt.Errorf("user home directory not available: %w", err)
-			}
-			name = home + name[1:]
-		}
-
 		if _, err := os.Stat(name); err != nil {
 			continue
 		}
