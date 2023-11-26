@@ -75,7 +75,7 @@
 <td>High</td>
 <td>e2fsprogs 1.44.1-1ubuntu1.1</td>
 
-<td>9</td><td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator?vector=AV%3AN%2FAC%3AL%2FPR%3AN%2FUI%3AN%2FS%3AU%2FC%3AH%2FI%3AH%2FA%3AN&amp;version=3.1">AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N</a></td>
+<td>9.0</td><td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator?vector=AV%3AN%2FAC%3AL%2FPR%3AN%2FUI%3AN%2FS%3AU%2FC%3AH%2FI%3AH%2FA%3AN&amp;version=3.1">AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N</a></td>
 
 </tr>
 

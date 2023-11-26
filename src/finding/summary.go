@@ -7,9 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cultureamp/ecrscanresults/findingconfig"
+	"github.com/shopspring/decimal"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
-	"github.com/cultureamp/ecrscanresults/findingconfig"
 )
 
 type Detail struct {
@@ -28,7 +30,7 @@ type Detail struct {
 }
 
 type CVSSScore struct {
-	Score     string
+	Score     *decimal.Decimal
 	Vector    string
 	VectorURL string
 }
@@ -87,6 +89,24 @@ func newSummary() Summary {
 	}
 }
 
+func NewCVSS2Score(score string, vector string) CVSSScore {
+	return CVSSScore{
+		Score:     convertScore(score),
+		Vector:    vector,
+		VectorURL: cvss2VectorURL(vector),
+	}
+}
+
+func NewCVSS3Score(score string, vector string) CVSSScore {
+	correctedVector, vectorURL := cvss3VectorURL(vector)
+
+	return CVSSScore{
+		Score:     convertScore(score),
+		Vector:    correctedVector,
+		VectorURL: vectorURL,
+	}
+}
+
 func Summarize(findings *types.ImageScanFindings, ignoreConfig []findingconfig.Ignore) Summary {
 	summary := newSummary()
 
@@ -117,12 +137,6 @@ func findingToDetail(finding types.ImageScanFinding) Detail {
 
 	uri = fixFindingURI(name, uri)
 
-	cvss2Vector := findingAttributeValue(finding, "CVSS2_VECTOR")
-	cvss2VectorURL := cvss2VectorURL(cvss2Vector)
-
-	cvss3Vector := findingAttributeValue(finding, "CVSS3_VECTOR")
-	cvss3Vector, cvss3VectorURL := cvss3VectorURL(cvss3Vector)
-
 	return Detail{
 		Name:           name,
 		URI:            uri,
@@ -130,16 +144,15 @@ func findingToDetail(finding types.ImageScanFinding) Detail {
 		Severity:       finding.Severity,
 		PackageName:    findingAttributeValue(finding, "package_name"),
 		PackageVersion: findingAttributeValue(finding, "package_version"),
-		CVSS2: CVSSScore{
-			Score:     findingAttributeValue(finding, "CVSS2_SCORE"),
-			Vector:    cvss2Vector,
-			VectorURL: cvss2VectorURL,
-		},
-		CVSS3: CVSSScore{
-			Score:     findingAttributeValue(finding, "CVSS3_SCORE"),
-			Vector:    cvss3Vector,
-			VectorURL: cvss3VectorURL,
-		}}
+		CVSS2: NewCVSS2Score(
+			findingAttributeValue(finding, "CVSS2_SCORE"),
+			findingAttributeValue(finding, "CVSS2_VECTOR"),
+		),
+		CVSS3: NewCVSS3Score(
+			findingAttributeValue(finding, "CVSS3_SCORE"),
+			findingAttributeValue(finding, "CVSS3_VECTOR"),
+		),
+	}
 }
 
 func findingAttributeValue(finding types.ImageScanFinding, name string) string {
@@ -202,4 +215,21 @@ func cvss3VectorURL(versionedVector string) (string, string) {
 		"&version=" + url.QueryEscape(version)
 
 	return vector, vectorURL
+}
+
+func convertScore(s string) *decimal.Decimal {
+	if s == "" {
+		return nil
+	}
+
+	d, err := decimal.NewFromString(s)
+	if err != nil {
+		return nil
+	}
+
+	if d.LessThanOrEqual(decimal.Decimal{}) {
+		return nil
+	}
+
+	return &d
 }
