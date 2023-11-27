@@ -11,15 +11,10 @@ import (
 
 type Detail struct {
 	// The name associated with the finding, usually a CVE number.
-	Name string
-
-	URI string
-
-	// The description of the finding.
+	Name        string
+	URI         string
 	Description string
-
-	// The finding severity.
-	Severity types.FindingSeverity
+	Severity    types.FindingSeverity
 
 	PackageName    string
 	PackageVersion string
