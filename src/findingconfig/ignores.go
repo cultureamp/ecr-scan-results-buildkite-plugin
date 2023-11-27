@@ -86,10 +86,7 @@ func readIgnores(filename string) ([]Ignore, error) {
 func filterExpiredEntries(ignores []Ignore, clock SystemClock) []Ignore {
 	filtered := slices.DeleteFunc(ignores, func(ignore Ignore) bool {
 		u := time.Time(ignore.Until)
-		z := u.IsZero()
-		d := !z && clock.UtcNow().After(u)
-
-		return d
+		return !u.IsZero() && clock.UtcNow().After(u)
 	})
 
 	return filtered
