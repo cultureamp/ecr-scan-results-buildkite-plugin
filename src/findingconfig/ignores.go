@@ -58,6 +58,17 @@ func LoadExistingIgnores(filenames []string, clock SystemClock) ([]Ignore, error
 
 // LoadIgnores parses a YAML ignore file from the given location.
 func LoadIgnores(filename string, clock SystemClock) ([]Ignore, error) {
+	i, err := readIgnores(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	filtered := filterExpiredEntries(i, clock)
+
+	return filtered, nil
+}
+
+func readIgnores(filename string) ([]Ignore, error) {
 	content, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -69,7 +80,11 @@ func LoadIgnores(filename string, clock SystemClock) ([]Ignore, error) {
 		return nil, err
 	}
 
-	filtered := slices.DeleteFunc(i.Ignores, func(ignore Ignore) bool {
+	return i.Ignores, nil
+}
+
+func filterExpiredEntries(ignores []Ignore, clock SystemClock) []Ignore {
+	filtered := slices.DeleteFunc(ignores, func(ignore Ignore) bool {
 		u := time.Time(ignore.Until)
 		z := u.IsZero()
 		d := !z && clock.UtcNow().After(u)
@@ -77,7 +92,7 @@ func LoadIgnores(filename string, clock SystemClock) ([]Ignore, error) {
 		return d
 	})
 
-	return filtered, nil
+	return filtered
 }
 
 // unmarshalYAML decodes a YAML encoded byte stream into the supplied pointer
