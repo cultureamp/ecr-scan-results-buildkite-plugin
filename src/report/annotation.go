@@ -108,7 +108,7 @@ func sortSeverities(severityCounts map[types.FindingSeverity]finding.SeverityCou
 
 // sort severity strings by rank, then alphabetically
 func compareSeverities(a, b types.FindingSeverity) int {
-	rank := rankSeverity(string(a)) - rankSeverity(string(b))
+	rank := rankSeverity(a) - rankSeverity(b)
 
 	if rank != 0 {
 		return rank
@@ -118,19 +118,19 @@ func compareSeverities(a, b types.FindingSeverity) int {
 	return strings.Compare(string(a), string(b))
 }
 
-func rankSeverity(s string) int {
-	switch s {
-	case "CRITICAL":
+func rankSeverity(f types.FindingSeverity) int {
+	switch f {
+	case types.FindingSeverityCritical:
 		return 0
-	case "HIGH":
+	case types.FindingSeverityHigh:
 		return 1
-	case "MEDIUM":
+	case types.FindingSeverityMedium:
 		return 2
-	case "LOW":
+	case types.FindingSeverityLow:
 		return 3
-	case "INFORMATIONAL":
+	case types.FindingSeverityInformational:
 		return 4
-	case "UNDEFINED":
+	case types.FindingSeverityUndefined:
 		return 5
 	}
 
