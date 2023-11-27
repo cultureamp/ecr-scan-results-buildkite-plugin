@@ -93,7 +93,6 @@ func Summarize(findings *types.ImageScanFindings, ignoreConfig []findingconfig.I
 	summary.VulnerabilitySourceUpdatedAt = findings.VulnerabilitySourceUpdatedAt
 
 	for _, f := range findings.Findings {
-		var ignore *findingconfig.Ignore
 		detail := findingToDetail(f)
 
 		index := slices.IndexFunc(ignoreConfig, func(ignore findingconfig.Ignore) bool {
@@ -101,15 +100,10 @@ func Summarize(findings *types.ImageScanFindings, ignoreConfig []findingconfig.I
 		})
 
 		if index >= 0 {
-			ignore = &ignoreConfig[index]
-		}
-
-		detail.Ignore = ignore
-
-		if ignore == nil {
-			summary.addDetail(detail)
-		} else {
+			detail.Ignore = &ignoreConfig[index]
 			summary.addIgnored(detail)
+		} else {
+			summary.addDetail(detail)
 		}
 	}
 
