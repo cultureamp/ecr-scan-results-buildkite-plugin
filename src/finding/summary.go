@@ -64,10 +64,7 @@ func (s *Summary) addIgnored(d Detail) {
 }
 
 func (s *Summary) updateCount(severity types.FindingSeverity, updateBy SeverityCount) {
-	counts := SeverityCount{}
-	if c, exists := s.Counts[severity]; exists {
-		counts = c
-	}
+	counts := s.Counts[severity]
 
 	counts.Ignored += updateBy.Ignored
 	counts.Included += updateBy.Included
