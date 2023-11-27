@@ -75,7 +75,7 @@ func (s *Summary) updateCount(severity types.FindingSeverity, updateBy SeverityC
 	s.Counts[severity] = counts
 }
 
-func NewSummary() Summary {
+func newSummary() Summary {
 	return Summary{
 		Counts: map[types.FindingSeverity]SeverityCount{
 			"CRITICAL": {},
@@ -87,7 +87,7 @@ func NewSummary() Summary {
 }
 
 func Summarize(findings *types.ImageScanFindings, ignoreConfig []findingconfig.Ignore) Summary {
-	summary := NewSummary()
+	summary := newSummary()
 
 	summary.ImageScanCompletedAt = findings.ImageScanCompletedAt
 	summary.VulnerabilitySourceUpdatedAt = findings.VulnerabilitySourceUpdatedAt
