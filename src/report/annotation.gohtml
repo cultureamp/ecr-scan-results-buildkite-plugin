@@ -5,27 +5,32 @@ Expects an instance of AnnotationContext as its context.
 This template renders _MARKDOWN_, even though it's mostly HTML. This is why
 there is no indentation: indented output can be rendered differently.
 
+Be careful of whitespace: when newlines surround an inline HTML element, it may
+be wrapped in <p> tag by the Markdown renderer in Buildkite.
+
 */}}
 {{ $criticalThreshold := .CriticalSeverityThreshold }}
 {{ $highThreshold := .HighSeverityThreshold }}
+{{ $summary := .FindingSummary }}
 {{ if .ImageLabel }}
 <h4>Vulnerability summary for "{{ .ImageLabel }}"</h4>
 <p class="h6 regular italic">{{ .Image.Name }}:{{ .Image.Tag }}</p>
 {{ else }}
 <h4>Vulnerability summary for "{{ .Image.Name }}:{{ .Image.Tag }}"</h4>
 {{ end }}
-{{ if .ScanFindings.FindingSeverityCounts }}
+{{ if .FindingSummary.Counts }}
 <dl class="flex flex-wrap mxn1">
-{{ $counts := .ScanFindings.FindingSeverityCounts}}
+{{ $counts := .FindingSummary.Counts }}
 {{ range $severity := $counts | sortSeverities }}
 {{ $severityCount := index $counts . }}
 {{ $exceedsThreshold := (or
-    (and (eq $severity "CRITICAL") (gt $severityCount $criticalThreshold))
-    (and (eq $severity "HIGH") (gt $severityCount $highThreshold))
+    (and (eq $severity "CRITICAL") (gt $severityCount.Included $criticalThreshold))
+    (and (eq $severity "HIGH") (gt $severityCount.Included $highThreshold))
 ) }}
 <div class="m1 p1 mr3">
-<dt>{{ $severity | lowerCase | titleCase }}</dt>
-<dd><h1 class="m0{{ if $exceedsThreshold }} red{{ end }}">{{ $severityCount }}</h1>
+<dt>{{ $severity | string | lowerCase | titleCase }}</dt>
+<dd><h1 class="m0{{ if $exceedsThreshold }} red{{ end }}">{{ $severityCount.Included }}</h1>
+{{ if $severityCount.Ignored }}<em>+ {{ $severityCount.Ignored }} ignored</em>{{ end }}
 </dd>
 </div>
 {{ end }}
@@ -33,33 +38,63 @@ there is no indentation: indented output can be rendered differently.
 {{ else }}
 <p>No vulnerabilities reported.</p>
 {{ end }}
-{{ if .ScanFindings.Findings }}
+{{ define "findingNameLink" }}{{ if .URI }}<a href="{{ .URI }}">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}{{ end }}
+{{ define "findingName" }}{{ if .Description }}<details><summary>{{ template "findingNameLink" . }}</summary><div>{{ .Description }}</div></details>{{ else }}{{ template "findingNameLink" . }}{{ end }}{{ end }}
+{{ define "findingIgnoreUntil" }}{{ if .Until | hasUntilValue }}{{ .Until }}{{ else }}<div class="italic">(indefinitely)</div>{{ end }}{{ end }}
+{{ define "findingIgnore"}}{{ if .Reason }}<details><summary>{{ template "findingIgnoreUntil" . }}</summary><div>{{ .Reason }}</div></details>{{ else }}{{ template "findingIgnoreUntil" . }}{{ end }}{{ end }}
+{{ if (or .FindingSummary.Details .FindingSummary.Ignored) }}
 <details>
 <summary>Vulnerability details</summary>
 <div>
+{{ if .FindingSummary.Details }}
 <table>
 <tr>
 <th>CVE</th>
 <th>Severity</th>
-<th>Effects</th>
+<th>Affects</th>
 <th>CVSS score</th>
 <th>Vector</th>
 </tr>
-{{ range $f := .ScanFindings.Findings | sortFindings }}
-{{ $vector := $f | findingAttribute "CVSS2_VECTOR"}}
+{{ range $f := .FindingSummary.Details | sortFindings }}
 <tr>
-<td>{{ if $f.Uri }}<a href="{{ $f.Uri }}">{{ $f.Name }}</a>{{ else }}{{ $f.Name }}{{ end }}</td>
+<td>{{ template "findingName" . }}</td>
 <td>{{ $f.Severity | string | lowerCase | titleCase }}</td>
-<td>{{ $f | findingAttribute "package_name" | nbsp }} {{ $f | findingAttribute "package_version" | nbsp }}</td>
-<td>{{ $f | findingAttribute "CVSS2_SCORE" | nbsp}}</td>
-<td>{{ if $vector }}<a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=({{ $vector }})">{{ $vector }}</a>{{ else }}&nbsp;{{ end }}</td>
+<td>{{ $f.PackageName | nbsp }} {{ $f.PackageVersion | nbsp }}</td>
+<td>{{ $f.CVSS2Score | nbsp}}</td>
+<td>{{ if $f.CVSS2Vector }}<a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=({{ $f.CVSS2Vector }})">{{ $f.CVSS2Vector }}</a>{{ else }}&nbsp;{{ end }}</td>
 </tr>
 {{ end }}
 </table>
+{{ end }}
+{{ if .FindingSummary.Ignored }}
+
+<h5>Ignored vulnerabilities</h5>
+<p class="italic">The below findings have been ignored for the purposes of threshold calculations. See the table for details, and adjust the plugin configuration if this is incorrect.</p>
+<table>
+<tr>
+<th>CVE</th>
+<th>Severity</th>
+<th>Ignored until</th>
+<th>Affects</th>
+<th>CVSS score</th>
+<th>Vector</th>
+</tr>
+{{ range $f := .FindingSummary.Ignored | sortFindings }}
+<tr>
+<td>{{ template "findingName" . }}</td>
+<td>{{ $f.Severity | string | lowerCase | titleCase }}</td>
+<td>{{ template "findingIgnore" $f.Ignore }}</td>
+<td>{{ $f.PackageName | nbsp }} {{ $f.PackageVersion | nbsp }}</td>
+<td>{{ $f.CVSS2Score | nbsp}}</td>
+<td>{{ if $f.CVSS2Vector }}<a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=({{ $f.CVSS2Vector }})">{{ $f.CVSS2Vector }}</a>{{ else }}&nbsp;{{ end }}</td>
+</tr>
+{{ end }}
+</table>
+{{ end }}
 </div>
 </details>
 {{ end }}
 <p class="p1">
-<i>scan completed: <span title="{{ .ScanFindings.ImageScanCompletedAt }}">{{ .ScanFindings.ImageScanCompletedAt | timeAgo }}</span></i> |
-<i>source updated: <span title="{{ .ScanFindings.VulnerabilitySourceUpdatedAt }}">{{ .ScanFindings.VulnerabilitySourceUpdatedAt | timeAgo }}</span></i>
+<i>scan completed: <span title="{{ .FindingSummary.ImageScanCompletedAt }}">{{ .FindingSummary.ImageScanCompletedAt | timeAgo }}</span></i> |
+<i>source updated: <span title="{{ .FindingSummary.VulnerabilitySourceUpdatedAt }}">{{ .FindingSummary.VulnerabilitySourceUpdatedAt | timeAgo }}</span></i>
 </p>

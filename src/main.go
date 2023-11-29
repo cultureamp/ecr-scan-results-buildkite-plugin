@@ -12,6 +12,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cultureamp/ecrscanresults/buildkite"
+	"github.com/cultureamp/ecrscanresults/finding"
+	"github.com/cultureamp/ecrscanresults/findingconfig"
 	"github.com/cultureamp/ecrscanresults/registry"
 	"github.com/cultureamp/ecrscanresults/report"
 	"github.com/cultureamp/ecrscanresults/runtimeerrors"
@@ -106,8 +108,27 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 
 	buildkite.Logf("retrieved. %d findings in report.\n", len(findings.ImageScanFindings.Findings))
 
-	criticalFindings := findings.ImageScanFindings.FindingSeverityCounts["CRITICAL"]
-	highFindings := findings.ImageScanFindings.FindingSeverityCounts["HIGH"]
+	buildkite.Logf("loading finding ignore files ...\n")
+
+	ignoreConfig, err := findingconfig.LoadExistingIgnores([]string{
+		".ecr-scan-results-ignore.yaml",
+		".ecr-scan-results-ignore.yml",
+		".buildkite/ecr-scan-results-ignore.yaml",
+		".buildkite/ecr-scan-results-ignore.yml",
+		"buildkite/ecr-scan-results-ignore.yaml",
+		"buildkite/ecr-scan-results-ignore.yml",
+		"/etc/ecr-scan-results-buildkite-plugin/ignore.yaml",
+		"/etc/ecr-scan-results-buildkite-plugin/ignore.yml",
+	}, findingconfig.DefaultSystemClock())
+	if err != nil {
+		return runtimeerrors.NonFatal("could not load finding ignore configuration", err)
+	}
+
+	// summarize findings, taking ignore configuration into account
+	findingSummary := finding.Summarize(findings.ImageScanFindings, ignoreConfig)
+
+	criticalFindings := findingSummary.Counts["CRITICAL"].Included
+	highFindings := findingSummary.Counts["HIGH"].Included
 	overThreshold :=
 		criticalFindings > pluginConfig.CriticalSeverityThreshold ||
 			highFindings > pluginConfig.HighSeverityThreshold
@@ -118,7 +139,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	annotationCtx := report.AnnotationContext{
 		Image:                     imageID,
 		ImageLabel:                pluginConfig.ImageLabel,
-		ScanFindings:              *findings.ImageScanFindings,
+		FindingSummary:            findingSummary,
 		CriticalSeverityThreshold: pluginConfig.CriticalSeverityThreshold,
 		HighSeverityThreshold:     pluginConfig.HighSeverityThreshold,
 	}

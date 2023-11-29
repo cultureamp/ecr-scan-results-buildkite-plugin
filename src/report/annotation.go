@@ -9,8 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/cultureamp/ecrscanresults/finding"
+	"github.com/cultureamp/ecrscanresults/findingconfig"
 	"github.com/cultureamp/ecrscanresults/registry"
 	"github.com/justincampbell/timeago"
 	"golang.org/x/exp/maps"
@@ -24,7 +25,7 @@ var annotationTemplateSource string
 type AnnotationContext struct {
 	Image                     registry.RegistryInfo
 	ImageLabel                string
-	ScanFindings              types.ImageScanFindings
+	FindingSummary            finding.Summary
 	CriticalSeverityThreshold int32
 	HighSeverityThreshold     int32
 }
@@ -33,12 +34,12 @@ func (c AnnotationContext) Render() ([]byte, error) {
 	t, err := template.
 		New("annotation").
 		Funcs(template.FuncMap{
+			"hasUntilValue": hasUntilValue,
 			"titleCase": func(s string) string {
 				c := cases.Title(language.English)
 				return c.String(s)
 			},
-			"lowerCase":        strings.ToLower,
-			"findingAttribute": findingAttributeValue,
+			"lowerCase": strings.ToLower,
 			"nbsp": func(input string) any {
 				if len(input) > 0 {
 					return input
@@ -77,35 +78,26 @@ func (c AnnotationContext) Render() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func findingAttributeValue(name string, finding types.ImageScanFinding) string {
-	for _, a := range finding.Attributes {
-		if aws.ToString(a.Key) == name {
-			return aws.ToString(a.Value)
-		}
-	}
-	return ""
-}
-
-func sortFindings(findings []types.ImageScanFinding) []types.ImageScanFinding {
+func sortFindings(findings []finding.Detail) []finding.Detail {
 	// shallow clone, don't affect source array
 	sorted := slices.Clone(findings)
 
 	// sort by severity rank, then CVE _descending_
-	slices.SortFunc(sorted, func(a, b types.ImageScanFinding) int {
-		sevRank := compareSeverities(string(a.Severity), string(b.Severity))
+	slices.SortFunc(sorted, func(a, b finding.Detail) int {
+		sevRank := compareSeverities(a.Severity, b.Severity)
 		if sevRank != 0 {
 			return sevRank
 		}
 
 		// descending order of CVE, in general this means that newer CVEs will be at
 		// the top
-		return strings.Compare(aws.ToString(b.Name), aws.ToString(a.Name))
+		return strings.Compare(b.Name, a.Name)
 	})
 
 	return sorted
 }
 
-func sortSeverities(severityCounts map[string]int32) []string {
+func sortSeverities(severityCounts map[types.FindingSeverity]finding.SeverityCount) []types.FindingSeverity {
 	// severities are the map key in the incoming data structure
 	severities := maps.Keys(severityCounts)
 
@@ -115,7 +107,7 @@ func sortSeverities(severityCounts map[string]int32) []string {
 }
 
 // sort severity strings by rank, then alphabetically
-func compareSeverities(a, b string) int {
+func compareSeverities(a, b types.FindingSeverity) int {
 	rank := rankSeverity(a) - rankSeverity(b)
 
 	if rank != 0 {
@@ -123,24 +115,28 @@ func compareSeverities(a, b string) int {
 	}
 
 	// for unknown severities, sort alphabetically
-	return strings.Compare(a, b)
+	return strings.Compare(string(a), string(b))
 }
 
-func rankSeverity(s string) int {
-	switch s {
-	case "CRITICAL":
+func rankSeverity(f types.FindingSeverity) int {
+	switch f {
+	case types.FindingSeverityCritical:
 		return 0
-	case "HIGH":
+	case types.FindingSeverityHigh:
 		return 1
-	case "MEDIUM":
+	case types.FindingSeverityMedium:
 		return 2
-	case "LOW":
+	case types.FindingSeverityLow:
 		return 3
-	case "INFORMATIONAL":
+	case types.FindingSeverityInformational:
 		return 4
-	case "UNDEFINED":
+	case types.FindingSeverityUndefined:
 		return 5
 	}
 
 	return 100
+}
+
+func hasUntilValue(until findingconfig.UntilTime) bool {
+	return time.Time(until).After(time.Time(findingconfig.UntilTime{}))
 }
