@@ -1,7 +1,10 @@
 package finding
 
 import (
+	"net/url"
+	"regexp"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,10 +21,16 @@ type Detail struct {
 
 	PackageName    string
 	PackageVersion string
-	CVSS2Score     string
-	CVSS2Vector    string
+	CVSS2          CVSSScore
+	CVSS3          CVSSScore
 
 	Ignore *findingconfig.Ignore
+}
+
+type CVSSScore struct {
+	Score     string
+	Vector    string
+	VectorURL string
 }
 
 type SeverityCount struct {
@@ -103,16 +112,34 @@ func Summarize(findings *types.ImageScanFindings, ignoreConfig []findingconfig.I
 }
 
 func findingToDetail(finding types.ImageScanFinding) Detail {
+	name := aws.ToString(finding.Name)
+	uri := aws.ToString(finding.Uri)
+
+	uri = fixFindingURI(name, uri)
+
+	cvss2Vector := findingAttributeValue(finding, "CVSS2_VECTOR")
+	cvss2VectorURL := cvss2VectorURL(cvss2Vector)
+
+	cvss3Vector := findingAttributeValue(finding, "CVSS3_VECTOR")
+	cvss3Vector, cvss3VectorURL := cvss3VectorURL(cvss3Vector)
+
 	return Detail{
-		Name:           aws.ToString(finding.Name),
-		URI:            aws.ToString(finding.Uri),
+		Name:           name,
+		URI:            uri,
 		Description:    aws.ToString(finding.Description),
 		Severity:       finding.Severity,
 		PackageName:    findingAttributeValue(finding, "package_name"),
 		PackageVersion: findingAttributeValue(finding, "package_version"),
-		CVSS2Score:     findingAttributeValue(finding, "CVSS2_SCORE"),
-		CVSS2Vector:    findingAttributeValue(finding, "CVSS2_VECTOR"),
-	}
+		CVSS2: CVSSScore{
+			Score:     findingAttributeValue(finding, "CVSS2_SCORE"),
+			Vector:    cvss2Vector,
+			VectorURL: cvss2VectorURL,
+		},
+		CVSS3: CVSSScore{
+			Score:     findingAttributeValue(finding, "CVSS3_SCORE"),
+			Vector:    cvss3Vector,
+			VectorURL: cvss3VectorURL,
+		}}
 }
 
 func findingAttributeValue(finding types.ImageScanFinding, name string) string {
@@ -122,4 +149,57 @@ func findingAttributeValue(finding types.ImageScanFinding, name string) string {
 		}
 	}
 	return ""
+}
+
+const legacyCVEURL = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
+const updatedCVEURL = "https://www.cve.org/CVERecord?id="
+
+func fixFindingURI(name string, uri string) string {
+	correctedURI := uri
+
+	// transition from the old CVE site that is deprecated
+	if strings.HasPrefix(correctedURI, legacyCVEURL) {
+		correctedURI = strings.Replace(correctedURI, legacyCVEURL, updatedCVEURL, 1)
+	}
+
+	// sometimes links are published that are not valid: in this case point to a
+	// GH vuln search as a way to provide some value
+	if strings.HasPrefix(correctedURI, updatedCVEURL) && !strings.HasPrefix(name, "CVE-") {
+		correctedURI = "https://github.com/advisories?query=" + url.QueryEscape(name)
+	}
+
+	return correctedURI
+}
+
+func cvss2VectorURL(cvss2Vector string) string {
+	if cvss2Vector == "" {
+		return ""
+	}
+
+	return "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=" +
+		url.QueryEscape("("+cvss2Vector+")")
+}
+
+// CVSS3 vector have their version at the front: we need to split this out to
+// pass to the calculator URL
+var cvss3VectorPattern = regexp.MustCompile(`^CVSS:([\d.]+)/(.+)$`)
+
+func cvss3VectorURL(versionedVector string) (string, string) {
+	vector := versionedVector
+	vectorURL := ""
+
+	if versionedVector != "" {
+		version := "3.1"
+
+		if matches := cvss3VectorPattern.FindStringSubmatch(versionedVector); matches != nil {
+			version = matches[1]
+			vector = matches[2]
+		}
+
+		vectorURL = "https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator" +
+			"?vector=" + url.QueryEscape(vector) +
+			"&version=" + url.QueryEscape(version)
+	}
+
+	return vector, vectorURL
 }

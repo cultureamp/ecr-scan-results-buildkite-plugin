@@ -44,9 +44,13 @@
 
 
 
+
+
+
 <details>
 <summary>Vulnerability details</summary>
 <div>
+<p>All listed scores are CVSS3 unless otherwise noted.</p>
 
 <table>
 <tr>
@@ -54,23 +58,25 @@
 <th>Severity</th>
 <th>Affects</th>
 <th>CVSS score</th>
-<th>Vector</th>
+<th>CVSS vector</th>
 </tr>
 
 <tr>
 <td><details><summary><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5200">CVE-2019-5200</a></summary><div>Another vulnerability.</div></details></td>
 <td>Critical</td>
 <td>5200-package 5200-version</td>
-<td>10.0</td>
-<td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=(AV%3aL%2fAC%3aL%2fAu%3aN%2fC%3aP%2fI%3aP%2fA%3aP)">AV:L/AC:L/Au:N/C:P/I:P/A:P</a></td>
+
+<td>10.0 <em>(*CVSS2)</em></td><td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29">AV:L/AC:L/Au:N/C:P/I:P/A:P</a></td>
+
 </tr>
 
 <tr>
 <td><details><summary><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2019-5188">CVE-2019-5188</a></summary><div>A code execution vulnerability exists in the directory rehashing functionality of E2fsprogs e2fsck 1.45.4. A specially crafted ext4 directory can cause an out-of-bounds write on the stack, resulting in code execution. An attacker can corrupt a partition to trigger this vulnerability.</div></details></td>
 <td>High</td>
 <td>e2fsprogs 1.44.1-1ubuntu1.1</td>
-<td>4.6</td>
-<td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=(AV%3aL%2fAC%3aL%2fAu%3aN%2fC%3aP%2fI%3aP%2fA%3aP)">AV:L/AC:L/Au:N/C:P/I:P/A:P</a></td>
+
+<td>4.6 <em>(*CVSS2)</em></td><td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29">AV:L/AC:L/Au:N/C:P/I:P/A:P</a></td>
+
 </tr>
 
 </table>
@@ -86,7 +92,7 @@
 <th>Ignored until</th>
 <th>Affects</th>
 <th>CVSS score</th>
-<th>Vector</th>
+<th>CVSS vector</th>
 </tr>
 
 <tr>
@@ -94,8 +100,9 @@
 <td>Critical</td>
 <td><details><summary>2023-12-31</summary><div>Ignored to give the base image a chance to be updated</div></details></td>
 <td>5300-package 5300-version</td>
-<td>10.0</td>
-<td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=(AV%3aL%2fAC%3aL%2fAu%3aN%2fC%3aP%2fI%3aP%2fA%3aP)">AV:L/AC:L/Au:N/C:P/I:P/A:P</a></td>
+
+<td>9</td><td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator?vector=AV%3AN%2FAC%3AL%2FPR%3AN%2FUI%3AN%2FS%3AU%2FC%3AH%2FI%3AH%2FA%3AN&amp;version=3.1">AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N</a></td>
+
 </tr>
 
 <tr>
@@ -103,8 +110,9 @@
 <td>Low</td>
 <td><div class="italic">(indefinitely)</div></td>
 <td>100-package 100-version</td>
-<td>4.0</td>
-<td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=(AV%3aL%2fAC%3aL%2fAu%3aN%2fC%3aP%2fI%3aP%2fA%3aP)">AV:L/AC:L/Au:N/C:P/I:P/A:P</a></td>
+
+<td>4.0 <em>(*CVSS2)</em></td><td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29">AV:L/AC:L/Au:N/C:P/I:P/A:P</a></td>
+
 </tr>
 
 </table>
