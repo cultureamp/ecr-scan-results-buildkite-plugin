@@ -152,7 +152,7 @@ func rankSeverity(f types.FindingSeverity) int {
 
 func compareCVSSScore(a, b finding.CVSSScore) int {
 	switch {
-	case a.Score == nil && b.Score == nil:
+	case a.Score == b.Score:
 		return 0
 	case a.Score == nil:
 		return -1
