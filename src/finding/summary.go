@@ -185,21 +185,21 @@ func cvss2VectorURL(cvss2Vector string) string {
 var cvss3VectorPattern = regexp.MustCompile(`^CVSS:([\d.]+)/(.+)$`)
 
 func cvss3VectorURL(versionedVector string) (string, string) {
-	vector := versionedVector
-	vectorURL := ""
-
-	if versionedVector != "" {
-		version := "3.1"
-
-		if matches := cvss3VectorPattern.FindStringSubmatch(versionedVector); matches != nil {
-			version = matches[1]
-			vector = matches[2]
-		}
-
-		vectorURL = "https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator" +
-			"?vector=" + url.QueryEscape(vector) +
-			"&version=" + url.QueryEscape(version)
+	if versionedVector == "" {
+		return "", ""
 	}
+
+	vector := versionedVector
+	version := "3.1"
+
+	if matches := cvss3VectorPattern.FindStringSubmatch(versionedVector); matches != nil {
+		version = matches[1]
+		vector = matches[2]
+	}
+
+	vectorURL := "https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator" +
+		"?vector=" + url.QueryEscape(vector) +
+		"&version=" + url.QueryEscape(version)
 
 	return vector, vectorURL
 }
