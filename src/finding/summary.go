@@ -164,15 +164,18 @@ func findingAttributeValue(finding types.ImageScanFinding, name string) string {
 	return ""
 }
 
-const legacyCVEURL = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
+// deprecatedCVEURL is the format of the now-deprecated cve.mitre.org CVE URLs.
+// While findings still refer to this source, it's in the process of being
+// retired and displays a warning when visited.
+const deprecatedCVEURL = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
 const updatedCVEURL = "https://www.cve.org/CVERecord?id="
 
 func fixFindingURI(name string, uri string) string {
 	correctedURI := uri
 
 	// transition from the old CVE site that is deprecated
-	if strings.HasPrefix(correctedURI, legacyCVEURL) {
-		correctedURI = strings.Replace(correctedURI, legacyCVEURL, updatedCVEURL, 1)
+	if strings.HasPrefix(correctedURI, deprecatedCVEURL) {
+		correctedURI = strings.Replace(correctedURI, deprecatedCVEURL, updatedCVEURL, 1)
 	}
 
 	// sometimes links are published that are not valid: in this case point to a
