@@ -223,11 +223,7 @@ func convertScore(s string) *decimal.Decimal {
 	}
 
 	d, err := decimal.NewFromString(s)
-	if err != nil {
-		return nil
-	}
-
-	if d.LessThanOrEqual(decimal.Decimal{}) {
+	if err != nil || d.LessThanOrEqual(decimal.Decimal{}) {
 		return nil
 	}
 
