@@ -7,7 +7,8 @@ ignores:
   - id: CVE-2023-100
   - id: CVE-2023-200
     until: 2023-12-31
-    reason: allowing 2 weeks for base image to update
+    reason: |
+      Allowing 2 weeks for [base image](https://google.com) to update. Markdown is allowed!
   - id: CVE-2023-300
 ```
 
