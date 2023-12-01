@@ -42,12 +42,12 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 {{ define "findingName" }}{{ if .Description }}<details><summary>{{ template "findingNameLink" . }}</summary><div>{{ .Description }}</div></details>{{ else }}{{ template "findingNameLink" . }}{{ end }}{{ end }}
 {{ define "findingIgnoreUntil" }}{{ if .Until | hasUntilValue }}{{ .Until }}{{ else }}<div class="italic">(indefinitely)</div>{{ end }}{{ end }}
 {{ define "findingIgnore"}}{{ if .Reason }}<details><summary>{{ template "findingIgnoreUntil" . }}</summary><div>{{ .Reason }}</div></details>{{ else }}{{ template "findingIgnoreUntil" . }}{{ end }}{{ end }}
-{{ define "cvssScore" }}{{ .Score | nbsp}}{{ end }}
+{{ define "cvssScore" }}{{ .Score.StringFixed 1 | nbsp}}{{ end }}
 {{ define "cvssVector" }}{{ if .Vector }}<a href="{{ .VectorURL }}">{{ .Vector }}</a>{{ else }}&nbsp;{{end}}{{ end }}
 {{ define "cvssCells" }}
 {{ if .CVSS3.Score }}<td>{{ template "cvssScore" .CVSS3 }}</td><td>{{ template "cvssVector" .CVSS3 }}</td>{{
    else
-}}<td>{{ if .CVSS2.Score }}{{ template "cvssScore" .CVSS2 }} <em>(*CVSS2)</em>{{ end }}</td><td>{{ template "cvssVector" .CVSS2 }}</td>{{ end }}
+}}<td>{{ if .CVSS2.Score }}{{ template "cvssScore" .CVSS2 }} <em>(*CVSS2)</em>{{ else }}&nbsp;{{ end }}</td><td>{{ template "cvssVector" .CVSS2 }}</td>{{ end }}
 {{ end }}
 {{ if (or .FindingSummary.Details .FindingSummary.Ignored) }}
 <details>

@@ -7,9 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cultureamp/ecrscanresults/findingconfig"
+	"github.com/shopspring/decimal"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
-	"github.com/cultureamp/ecrscanresults/findingconfig"
 )
 
 type Detail struct {
@@ -28,7 +30,7 @@ type Detail struct {
 }
 
 type CVSSScore struct {
-	Score     string
+	Score     *decimal.Decimal
 	Vector    string
 	VectorURL string
 }
@@ -87,6 +89,24 @@ func newSummary() Summary {
 	}
 }
 
+func NewCVSS2Score(score string, vector string) CVSSScore {
+	return CVSSScore{
+		Score:     convertScore(score),
+		Vector:    vector,
+		VectorURL: cvss2VectorURL(vector),
+	}
+}
+
+func NewCVSS3Score(score string, vector string) CVSSScore {
+	correctedVector, vectorURL := cvss3VectorURL(vector)
+
+	return CVSSScore{
+		Score:     convertScore(score),
+		Vector:    correctedVector,
+		VectorURL: vectorURL,
+	}
+}
+
 func Summarize(findings *types.ImageScanFindings, ignoreConfig []findingconfig.Ignore) Summary {
 	summary := newSummary()
 
@@ -117,12 +137,6 @@ func findingToDetail(finding types.ImageScanFinding) Detail {
 
 	uri = fixFindingURI(name, uri)
 
-	cvss2Vector := findingAttributeValue(finding, "CVSS2_VECTOR")
-	cvss2VectorURL := cvss2VectorURL(cvss2Vector)
-
-	cvss3Vector := findingAttributeValue(finding, "CVSS3_VECTOR")
-	cvss3Vector, cvss3VectorURL := cvss3VectorURL(cvss3Vector)
-
 	return Detail{
 		Name:           name,
 		URI:            uri,
@@ -130,16 +144,15 @@ func findingToDetail(finding types.ImageScanFinding) Detail {
 		Severity:       finding.Severity,
 		PackageName:    findingAttributeValue(finding, "package_name"),
 		PackageVersion: findingAttributeValue(finding, "package_version"),
-		CVSS2: CVSSScore{
-			Score:     findingAttributeValue(finding, "CVSS2_SCORE"),
-			Vector:    cvss2Vector,
-			VectorURL: cvss2VectorURL,
-		},
-		CVSS3: CVSSScore{
-			Score:     findingAttributeValue(finding, "CVSS3_SCORE"),
-			Vector:    cvss3Vector,
-			VectorURL: cvss3VectorURL,
-		}}
+		CVSS2: NewCVSS2Score(
+			findingAttributeValue(finding, "CVSS2_SCORE"),
+			findingAttributeValue(finding, "CVSS2_VECTOR"),
+		),
+		CVSS3: NewCVSS3Score(
+			findingAttributeValue(finding, "CVSS3_SCORE"),
+			findingAttributeValue(finding, "CVSS3_VECTOR"),
+		),
+	}
 }
 
 func findingAttributeValue(finding types.ImageScanFinding, name string) string {
@@ -151,15 +164,18 @@ func findingAttributeValue(finding types.ImageScanFinding, name string) string {
 	return ""
 }
 
-const legacyCVEURL = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
+// deprecatedCVEURL is the format of the now-deprecated cve.mitre.org CVE URLs.
+// While findings still refer to this source, it's in the process of being
+// retired and displays a warning when visited.
+const deprecatedCVEURL = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
 const updatedCVEURL = "https://www.cve.org/CVERecord?id="
 
 func fixFindingURI(name string, uri string) string {
 	correctedURI := uri
 
 	// transition from the old CVE site that is deprecated
-	if strings.HasPrefix(correctedURI, legacyCVEURL) {
-		correctedURI = strings.Replace(correctedURI, legacyCVEURL, updatedCVEURL, 1)
+	if strings.HasPrefix(correctedURI, deprecatedCVEURL) {
+		correctedURI = strings.Replace(correctedURI, deprecatedCVEURL, updatedCVEURL, 1)
 	}
 
 	// sometimes links are published that are not valid: in this case point to a
@@ -185,21 +201,34 @@ func cvss2VectorURL(cvss2Vector string) string {
 var cvss3VectorPattern = regexp.MustCompile(`^CVSS:([\d.]+)/(.+)$`)
 
 func cvss3VectorURL(versionedVector string) (string, string) {
-	vector := versionedVector
-	vectorURL := ""
-
-	if versionedVector != "" {
-		version := "3.1"
-
-		if matches := cvss3VectorPattern.FindStringSubmatch(versionedVector); matches != nil {
-			version = matches[1]
-			vector = matches[2]
-		}
-
-		vectorURL = "https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator" +
-			"?vector=" + url.QueryEscape(vector) +
-			"&version=" + url.QueryEscape(version)
+	if versionedVector == "" {
+		return "", ""
 	}
 
+	vector := versionedVector
+	version := "3.1"
+
+	if matches := cvss3VectorPattern.FindStringSubmatch(versionedVector); matches != nil {
+		version = matches[1]
+		vector = matches[2]
+	}
+
+	vectorURL := "https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator" +
+		"?vector=" + url.QueryEscape(vector) +
+		"&version=" + url.QueryEscape(version)
+
 	return vector, vectorURL
+}
+
+func convertScore(s string) *decimal.Decimal {
+	if s == "" {
+		return nil
+	}
+
+	d, err := decimal.NewFromString(s)
+	if err != nil || d.LessThanOrEqual(decimal.Decimal{}) {
+		return nil
+	}
+
+	return &d
 }

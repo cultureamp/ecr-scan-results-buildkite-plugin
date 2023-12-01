@@ -8,47 +8,48 @@ issues:
 linters:
   enable-all: true
   disable:
-  - gochecknoglobals
-  - wrapcheck
-  - varnamelen
-  - tagliatelle
-  - testpackage
-  - paralleltest
-  - gomnd
-  - goerr113
+  - asciicheck
   - depguard
   - dupl
-  - forbidigo
-  - funlen
-  - unparam
-  - wsl
   - errname
   - exhaustivestruct
   - exhaustruct
-  - nilnil
-  - nlreturn
-  - goconst
-  - lll
-  - asciicheck
+  - forbidigo
+  - funlen
+  - gci
+  - gochecknoglobals
   - gocognit
+  - goconst
   - godot
   - godox
+  - goerr113
   - gofumpt
+  - gomnd
+  - lll
+  - musttag
   - nestif
+  - nilnil
+  - nlreturn
+  - paralleltest
   - prealloc
   - revive
   - tagalign
+  - tagliatelle
+  - testpackage
+  - unparam
+  - varnamelen
   - whitespace
-  - musttag
+  - wrapcheck
+  - wsl
   # deprecated linters
-  - interfacer
-  - golint
-  - scopelint
-  - maligned
   - deadcode
+  - golint
   - ifshort
-  - structcheck
+  - interfacer
+  - maligned
   - nosnakecase
+  - scopelint
+  - structcheck
   - varcheck
 
 linters-settings:

@@ -1,0 +1,8 @@
+finding.Summary{
+	Counts: map[types.FindingSeverity]finding.SeverityCount{
+		types.FindingSeverity("CRITICAL"): {},
+		types.FindingSeverity("HIGH"):     {},
+	},
+	Details: []finding.Detail{},
+	Ignored: []finding.Detail{},
+}

@@ -70,11 +70,10 @@ func TestReports(t *testing.T) {
 							Severity:       "AA-BOGUS-SEVERITY",
 							PackageName:    "5300-package",
 							PackageVersion: "5300-version",
-							CVSS2: finding.CVSSScore{
-								Score:     "10.0",
-								Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
-								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
-							},
+							CVSS2: finding.NewCVSS2Score(
+								"10.0",
+								"AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							),
 						},
 						{
 							Name:           "CVE-2019-5188",
@@ -83,16 +82,14 @@ func TestReports(t *testing.T) {
 							Severity:       "HIGH",
 							PackageName:    "e2fsprogs",
 							PackageVersion: "1.44.1-1ubuntu1.1",
-							CVSS2: finding.CVSSScore{
-								Score:     "4.6",
-								Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
-								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
-							},
-							CVSS3: finding.CVSSScore{
-								Score:     "9",
-								Vector:    "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
-								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator?vector=AV%3AN%2FAC%3AL%2FPR%3AN%2FUI%3AN%2FS%3AU%2FC%3AH%2FI%3AH%2FA%3AN&version=3.1",
-							},
+							CVSS2: finding.NewCVSS2Score(
+								"4.6",
+								"AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							),
+							CVSS3: finding.NewCVSS3Score(
+								"9",
+								"AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+							),
 						},
 						{
 							Name:           "CVE-2019-5200",
@@ -101,11 +98,10 @@ func TestReports(t *testing.T) {
 							Severity:       "CRITICAL",
 							PackageName:    "5200-package",
 							PackageVersion: "5200-version",
-							CVSS2: finding.CVSSScore{
-								Score:     "10.0",
-								Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
-								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
-							},
+							CVSS2: finding.NewCVSS2Score(
+								"10.0",
+								"AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							),
 						},
 					},
 				},
@@ -137,11 +133,10 @@ func TestReports(t *testing.T) {
 							Severity:       "HIGH",
 							PackageName:    "e2fsprogs",
 							PackageVersion: "1.44.1-1ubuntu1.1",
-							CVSS2: finding.CVSSScore{
-								Score:     "4.6",
-								Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
-								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
-							},
+							CVSS2: finding.NewCVSS2Score(
+								"4.6",
+								"AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							),
 						},
 						{
 							Name:           "CVE-2019-5200",
@@ -150,11 +145,10 @@ func TestReports(t *testing.T) {
 							Severity:       "CRITICAL",
 							PackageName:    "5200-package",
 							PackageVersion: "5200-version",
-							CVSS2: finding.CVSSScore{
-								Score:     "10.0",
-								Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
-								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
-							},
+							CVSS2: finding.NewCVSS2Score(
+								"10.0",
+								"AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							),
 						},
 					},
 					Ignored: []finding.Detail{
@@ -165,11 +159,10 @@ func TestReports(t *testing.T) {
 							Severity:       "LOW",
 							PackageName:    "100-package",
 							PackageVersion: "100-version",
-							CVSS2: finding.CVSSScore{
-								Score:     "4.0",
-								Vector:    "AV:L/AC:L/Au:N/C:P/I:P/A:P",
-								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v2-calculator?vector=%28AV%3AL%2FAC%3AL%2FAu%3AN%2FC%3AP%2FI%3AP%2FA%3AP%29",
-							},
+							CVSS2: finding.NewCVSS2Score(
+								"4.0",
+								"AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							),
 							Ignore: &findingconfig.Ignore{
 								ID: "CVE-2023-100",
 							},
@@ -181,15 +174,14 @@ func TestReports(t *testing.T) {
 							Severity:       "CRITICAL",
 							PackageName:    "5300-package",
 							PackageVersion: "5300-version",
-							CVSS2: finding.CVSSScore{
-								Score:  "10.0",
-								Vector: "AV:L/AC:L/Au:N/C:P/I:P/A:P",
-							},
-							CVSS3: finding.CVSSScore{
-								Score:     "9",
-								Vector:    "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
-								VectorURL: "https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator?vector=AV%3AN%2FAC%3AL%2FPR%3AN%2FUI%3AN%2FS%3AU%2FC%3AH%2FI%3AH%2FA%3AN&version=3.1",
-							},
+							CVSS2: finding.NewCVSS2Score(
+								"10.0",
+								"AV:L/AC:L/Au:N/C:P/I:P/A:P",
+							),
+							CVSS3: finding.NewCVSS3Score(
+								"9",
+								"AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+							),
 							Ignore: &findingconfig.Ignore{
 								ID:     "CVE-2019-5300",
 								Until:  findingconfig.MustParseUntil("2023-12-31"),
@@ -201,7 +193,66 @@ func TestReports(t *testing.T) {
 				CriticalSeverityThreshold: 0,
 				HighSeverityThreshold:     0,
 			},
-		}}
+		},
+		{
+			name: "sorted findings",
+			data: report.AnnotationContext{
+				Image: registry.RegistryInfo{
+					RegistryID: "0123456789",
+					Region:     "us-west-2",
+					Name:       "test-repo",
+					Tag:        "digest-value",
+				},
+				ImageLabel: "label of image",
+				FindingSummary: finding.Summary{
+					Counts: map[types.FindingSeverity]finding.SeverityCount{
+						"HIGH":     {Included: 1},
+						"CRITICAL": {Included: 1, Ignored: 1},
+						"LOW":      {Included: 0, Ignored: 1},
+					},
+					Details: []finding.Detail{
+						{
+							Name:     "CVE-a",
+							Severity: "HIGH",
+							CVSS3:    finding.NewCVSS3Score("5.0", ""),
+							CVSS2:    finding.NewCVSS2Score("5.0", ""),
+						},
+						{
+							Name:     "CVE-b",
+							Severity: "HIGH",
+						},
+						{
+							Name:     "CVE-c",
+							Severity: "HIGH",
+						},
+						{
+							Name:     "CVE-d",
+							Severity: "HIGH",
+							CVSS2:    finding.NewCVSS2Score("6.0", ""),
+						},
+						{
+							Name:     "CVE-f",
+							Severity: "HIGH",
+							CVSS3:    finding.NewCVSS3Score("6.0", ""),
+							CVSS2:    finding.NewCVSS2Score("4.0", ""),
+						},
+						{
+							Name:     "CVE-g",
+							Severity: "HIGH",
+							CVSS2:    finding.NewCVSS3Score("8.0", ""),
+						},
+						{
+							Name:     "CVE-h",
+							Severity: "HIGH",
+							CVSS3:    finding.NewCVSS2Score("9.0", ""),
+						},
+					},
+				},
+				CriticalSeverityThreshold: 0,
+				HighSeverityThreshold:     0,
+			},
+		},
+	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
