@@ -41,7 +41,12 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 {{ define "findingNameLink" }}{{ if .URI }}<a href="{{ .URI }}">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}{{ end }}
 {{ define "findingName" }}{{ if .Description }}<details><summary>{{ template "findingNameLink" . }}</summary><div>{{ .Description }}</div></details>{{ else }}{{ template "findingNameLink" . }}{{ end }}{{ end }}
 {{ define "findingIgnoreUntil" }}{{ if .Until | hasUntilValue }}{{ .Until }}{{ else }}<div class="italic">(indefinitely)</div>{{ end }}{{ end }}
-{{ define "findingIgnore"}}{{ if .Reason }}<details><summary>{{ template "findingIgnoreUntil" . }}</summary><div>{{ .Reason }}</div></details>{{ else }}{{ template "findingIgnoreUntil" . }}{{ end }}{{ end }}
+{{ define "findingIgnore"}}{{ if .Reason }}<details><summary>{{ template "findingIgnoreUntil" . }}</summary><div>
+
+<!-- Whitespace above and below is required so `.Reason` is rendered as Markdown, not as plain text within HTML. -->
+{{ .Reason }}
+
+</div></details>{{ else }}{{ template "findingIgnoreUntil" . }}{{ end }}{{ end }}
 {{ define "cvssScore" }}{{ .Score.StringFixed 1 | nbsp}}{{ end }}
 {{ define "cvssVector" }}{{ if .Vector }}<a href="{{ .VectorURL }}">{{ .Vector }}</a>{{ else }}&nbsp;{{end}}{{ end }}
 {{ define "cvssCells" }}
