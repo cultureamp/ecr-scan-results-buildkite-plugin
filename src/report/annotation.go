@@ -23,7 +23,7 @@ import (
 var annotationTemplateSource string
 
 type AnnotationContext struct {
-	Image                     registry.RegistryInfo
+	Image                     registry.ImageReference
 	ImageLabel                string
 	FindingSummary            finding.Summary
 	CriticalSeverityThreshold int32

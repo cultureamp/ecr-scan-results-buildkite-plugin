@@ -70,7 +70,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	buildkite.Logf("Scan results report requested for %s\n", pluginConfig.Repository)
 	buildkite.Logf("Thresholds: criticals %d highs %d\n", pluginConfig.CriticalSeverityThreshold, pluginConfig.HighSeverityThreshold)
 
-	imageID, err := registry.RegistryInfoFromURL(pluginConfig.Repository)
+	imageID, err := registry.ParseReferenceFromURL(pluginConfig.Repository)
 	if err != nil {
 		return err
 	}
