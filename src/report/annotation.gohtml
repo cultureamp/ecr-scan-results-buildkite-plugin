@@ -14,9 +14,9 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 {{ $summary := .FindingSummary }}
 {{ if .ImageLabel }}
 <h4>Vulnerability summary for "{{ .ImageLabel }}"</h4>
-<p class="h6 regular italic">{{ .Image.Name }}:{{ .Image.Tag }}</p>
+<p class="h6 regular italic">{{ .Image.DisplayName }}</p>
 {{ else }}
-<h4>Vulnerability summary for "{{ .Image.Name }}:{{ .Image.Tag }}"</h4>
+<h4>Vulnerability summary for "{{ .Image.DisplayName }}"</h4>
 {{ end }}
 {{ if .FindingSummary.Counts }}
 <dl class="flex flex-wrap mxn1">

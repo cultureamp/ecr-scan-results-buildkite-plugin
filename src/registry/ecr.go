@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 )
 
-var registryImageExpr = regexp.MustCompile(`^(?P<registryId>[^.]+)\.dkr\.ecr\.(?P<region>[^.]+).amazonaws.com/(?P<repoName>[^:]+)(?::(?P<tag>.+))?$`)
+var registryImageExpr = regexp.MustCompile(`^(?P<registryId>[^.]+)\.dkr\.ecr\.(?P<region>[^.]+).amazonaws.com/(?P<repoName>[^:@]+)(?::(?P<tag>.+))?(?:@(?P<digest>.+))?$`)
 
 type RegistryInfo struct {
 	// RegistryID is the AWS ECR account ID of the source registry.
@@ -20,12 +20,42 @@ type RegistryInfo struct {
 	Region string
 	// Name is the ECR repository name.
 	Name string
-	// Tag is the image label or an image digest.
+	// Digest is the image digest segment of the image reference, often prefixed with sha256:.
+	Digest string
+	// Tag is the image label segment of the image reference
 	Tag string
 }
 
+// ID returns the known identifier for the image: this is the digest if present, otherwise the tag.
+func (i RegistryInfo) ID() string {
+	if i.Digest != "" {
+		return i.Digest
+	}
+	return i.Tag
+}
+
+func (i RegistryInfo) DisplayName() string {
+	return fmt.Sprintf("%s%s%s", i.Name, i.tagRef(), i.digestRef())
+}
+
 func (i RegistryInfo) String() string {
-	return fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s:%s", i.RegistryID, i.Region, i.Name, i.Tag)
+	return fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s%s%s", i.RegistryID, i.Region, i.Name, i.tagRef(), i.digestRef())
+}
+
+func (i RegistryInfo) tagRef() string {
+	if i.Tag == "" {
+		return ""
+	}
+
+	return ":" + i.Tag
+}
+
+func (i RegistryInfo) digestRef() string {
+	if i.Digest == "" {
+		return ""
+	}
+
+	return "@" + i.Digest
 }
 
 func RegistryInfoFromURL(url string) (RegistryInfo, error) {
@@ -46,6 +76,8 @@ func RegistryInfoFromURL(url string) (RegistryInfo, error) {
 			info.Region = value
 		case "repoName":
 			info.Name = value
+		case "digest":
+			info.Digest = value
 		case "tag":
 			info.Tag = value
 		}
@@ -85,7 +117,8 @@ func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo RegistryInf
 
 	// copy input and update tag from label to digest
 	digestInfo := imageInfo
-	digestInfo.Tag = *out.ImageDetails[0].ImageDigest
+	digestInfo.Tag = ""
+	digestInfo.Digest = *out.ImageDetails[0].ImageDigest
 
 	return digestInfo, nil
 }
@@ -103,7 +136,7 @@ func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo Regis
 		RegistryId:     &digestInfo.RegistryID,
 		RepositoryName: &digestInfo.Name,
 		ImageId: &types.ImageIdentifier{
-			ImageDigest: &digestInfo.Tag,
+			ImageDigest: &digestInfo.Digest,
 		},
 		MaxResults: aws.Int32(1), // reduce the size of the return payload when waiting for the completion state
 	}, maxTotalDelay, func(opts *ecr.ImageScanCompleteWaiterOptions) {
@@ -118,7 +151,7 @@ func (r *RegistryScan) GetScanFindings(ctx context.Context, digestInfo RegistryI
 		RegistryId:     &digestInfo.RegistryID,
 		RepositoryName: &digestInfo.Name,
 		ImageId: &types.ImageIdentifier{
-			ImageDigest: &digestInfo.Tag,
+			ImageDigest: &digestInfo.Digest,
 		},
 	})
 
