@@ -93,7 +93,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	}
 
 	buildkite.Logf("Getting image digest for %s\n", imageID)
-	imageDigest, err := scan.GetLabelDigest(ctx, imageID)
+	imageDigest, err := scan.GetScannableImageDigest(ctx, imageID)
 	if err != nil {
 		return runtimeerrors.NonFatal("could not find digest for image", err)
 	}

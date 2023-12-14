@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+
+	ocitypes "github.com/google/go-containerregistry/pkg/v1/types"
 )
 
 var registryImageExpr = regexp.MustCompile(`^(?P<registryId>[^.]+)\.dkr\.ecr\.(?P<region>[^.]+).amazonaws.com/(?P<repoName>[^:@]+)(?::(?P<tag>.+))?(?:@(?P<digest>.+))?$`)
@@ -100,7 +102,32 @@ func NewRegistryScan(config aws.Config) (*RegistryScan, error) {
 	}, nil
 }
 
-func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo ImageReference) (ImageReference, error) {
+// GetScannableImageDigest returns the digest of the image with the supplied
+// tag. If the image media type is a manifest list, the list will be looked up
+// using RemoteRepository.GetImageForArchitecture, and the digest of the image
+// with the supplied architecture will be returned.
+func (r *RegistryScan) GetScannableImageDigest(ctx context.Context, imageInfo ImageReference) (ImageReference, error) {
+	ref, mediaType, err := r.GetLabelDigest(ctx, imageInfo)
+	if err != nil {
+		return ImageReference{}, err
+	}
+
+	// standard image, return immediately
+	if !ocitypes.MediaType(mediaType).IsIndex() {
+		return ref, nil
+	}
+
+	// index image, look up the image for the architecture
+	repo := NewRemoteRepository()
+	scannableRef, _, err := repo.GetImageForArchitecture(ref, "amd64")
+	if err != nil {
+		return ImageReference{}, err
+	}
+
+	return scannableRef, nil
+}
+
+func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo ImageReference) (ImageReference, string, error) {
 	out, err := r.Client.DescribeImages(ctx, &ecr.DescribeImagesInput{
 		RegistryId:     &imageInfo.RegistryID,
 		RepositoryName: &imageInfo.Name,
@@ -111,18 +138,22 @@ func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo ImageRefere
 		},
 	})
 	if err != nil {
-		return ImageReference{}, err
+		return ImageReference{}, "", err
 	}
 	if len(out.ImageDetails) == 0 {
-		return ImageReference{}, fmt.Errorf("no image found for image %s", imageInfo)
+		return ImageReference{}, "", fmt.Errorf("no image found for image %s", imageInfo)
 	}
+
+	imageDetail := out.ImageDetails[0]
 
 	// copy input and update tag from label to digest
 	digestInfo := imageInfo
 	digestInfo.Tag = ""
-	digestInfo.Digest = *out.ImageDetails[0].ImageDigest
+	digestInfo.Digest = aws.ToString(imageDetail.ImageDigest)
 
-	return digestInfo, nil
+	mediaType := aws.ToString(imageDetail.ImageManifestMediaType)
+
+	return digestInfo, mediaType, nil
 }
 
 func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo ImageReference) error {
