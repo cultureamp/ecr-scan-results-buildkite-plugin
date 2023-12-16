@@ -11,6 +11,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var defaultIgnoreFileLocations = []string{
+	".ecr-scan-results-ignore.yaml",
+	".ecr-scan-results-ignore.yml",
+	".buildkite/ecr-scan-results-ignore.yaml",
+	".buildkite/ecr-scan-results-ignore.yml",
+	"buildkite/ecr-scan-results-ignore.yaml",
+	"buildkite/ecr-scan-results-ignore.yml",
+	"/etc/ecr-scan-results-buildkite-plugin/ignore.yaml",
+	"/etc/ecr-scan-results-buildkite-plugin/ignore.yml",
+}
+
 // An entry in an ignore file used by the plugin.
 type Ignore struct {
 	ID     string `yaml:"id"`
@@ -20,6 +31,12 @@ type Ignore struct {
 
 type Ignores struct {
 	Ignores []Ignore
+}
+
+// LoadFromDefaultLocations uses LoadExistingIgnores to read any of the default ignore
+// file locations.
+func LoadFromDefaultLocations(clock SystemClock) ([]Ignore, error) {
+	return LoadExistingIgnores(defaultIgnoreFileLocations, clock)
 }
 
 // LoadExistingIgnores uses LoadIgnores to read any of the given set of files
