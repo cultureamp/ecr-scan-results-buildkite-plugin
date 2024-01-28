@@ -60,7 +60,7 @@ func (r *RemoteRepository) ResolveImageReferences(imageReference ImageReference)
 		return []PlatformImageReference{
 			{
 				ImageReference: imageReference,
-				Platform:       *img.Platform,
+				Platform:       *platform,
 			},
 		}, nil
 	}

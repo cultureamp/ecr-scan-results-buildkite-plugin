@@ -153,6 +153,9 @@ func mergeSingle(merged, other Summary) Summary {
 
 	merged.Platforms = append(merged.Platforms, other.Platforms...)
 
+	merged.ImageScanCompletedAt = other.ImageScanCompletedAt
+	merged.VulnerabilitySourceUpdatedAt = other.VulnerabilitySourceUpdatedAt
+
 	return merged
 }
 

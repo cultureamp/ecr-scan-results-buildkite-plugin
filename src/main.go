@@ -18,6 +18,7 @@ import (
 	"github.com/cultureamp/ecrscanresults/report"
 	"github.com/cultureamp/ecrscanresults/runtimeerrors"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/sourcegraph/conc/iter"
 )
 
 const pluginEnvironmentPrefix = "BUILDKITE_PLUGIN_ECR_SCAN_RESULTS"
@@ -116,28 +117,19 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 		)
 	}
 
-	// temporarily: use the first image in the list
-	imageDigest = imageDigests[0].ImageReference
-
 	// now download all the results and create a merged report
 
 	buildkite.LogGroupf(":ecr: Creating ECR scan results report for %s\n", imageID)
-	err = scan.WaitForScanFindings(ctx, imageDigest)
+
+	summaries, err := iter.MapErr(imageDigests, func(image *registry.PlatformImageReference) (finding.Summary, error) {
+		return getImageScanSummary(ctx, scan, *image, ignoreConfig)
+	})
 	if err != nil {
 		return runtimeerrors.NonFatal("could not retrieve scan results", err)
 	}
 
-	buildkite.Log("report ready, retrieving ...")
-
-	findings, err := scan.GetScanFindings(ctx, imageDigest)
-	if err != nil {
-		return runtimeerrors.NonFatal("could not retrieve scan results", err)
-	}
-
-	buildkite.Logf("retrieved. %d findings in report.\n", len(findings.ImageScanFindings.Findings))
-
-	// summarize findings, taking ignore configuration into account
-	findingSummary := finding.Summarize(findings.ImageScanFindings, imageDigests[0].Platform, ignoreConfig)
+	// merge the set of returned summaries into a single one ready for reporting.
+	findingSummary := finding.MergeSummaries(summaries)
 
 	criticalFindings := findingSummary.Counts["CRITICAL"].Included
 	highFindings := findingSummary.Counts["HIGH"].Included
@@ -194,6 +186,31 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	}
 
 	return nil
+}
+
+func getImageScanSummary(ctx context.Context, scan *registry.RegistryScan, imageDigest registry.PlatformImageReference, ignoreConfig []findingconfig.Ignore) (finding.Summary, error) {
+	err := scan.WaitForScanFindings(ctx, imageDigest.ImageReference)
+	if err != nil {
+		return finding.Summary{}, err
+	}
+
+	buildkite.Log("report ready, retrieving ...")
+
+	findings, err := scan.GetScanFindings(ctx, imageDigest.ImageReference)
+	if err != nil {
+		return finding.Summary{}, err
+	}
+
+	numFindings := 0
+	if findings.ImageScanFindings != nil {
+		numFindings = len(findings.ImageScanFindings.Findings)
+	}
+
+	buildkite.Logf("retrieved. %d findings in report.\n", numFindings)
+
+	findingSummary := finding.Summarize(findings.ImageScanFindings, imageDigest.Platform, ignoreConfig)
+
+	return findingSummary, nil
 }
 
 func hash(data ...string) string {
