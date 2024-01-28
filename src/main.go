@@ -93,12 +93,33 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	}
 
 	buildkite.Logf("Getting image digest for %s\n", imageID)
-	imageDigest, err := scan.GetScannableImageDigest(ctx, imageID)
+	imageDigest, err := scan.GetLabelDigest(ctx, imageID)
 	if err != nil {
 		return runtimeerrors.NonFatal("could not find digest for image", err)
 	}
 
 	buildkite.Logf("Digest: %s\n", imageDigest)
+
+	buildkite.Logf("Resolve images (and platforms) for %s\n", imageID)
+	repo := registry.NewRemoteRepository()
+	imageDigests, err := repo.ResolveImageReferences(imageDigest)
+	if err != nil {
+		return runtimeerrors.NonFatal("could not find digest for image", err)
+	}
+
+	buildkite.Logf("Found %d images for digest: %s\n", len(imageDigests), imageDigest)
+
+	if len(imageDigests) == 0 {
+		return runtimeerrors.NonFatal(
+			fmt.Sprintf("image index %s did not reference any other images: no scan results to retrieve", imageDigest),
+			nil,
+		)
+	}
+
+	// temporarily: use the first image in the list
+	imageDigest = imageDigests[0].Image
+
+	// now download all the results and create a merged report
 
 	buildkite.LogGroupf(":ecr: Creating ECR scan results report for %s\n", imageID)
 	err = scan.WaitForScanFindings(ctx, imageDigest)
@@ -116,7 +137,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	buildkite.Logf("retrieved. %d findings in report.\n", len(findings.ImageScanFindings.Findings))
 
 	// summarize findings, taking ignore configuration into account
-	findingSummary := finding.Summarize(findings.ImageScanFindings, ignoreConfig)
+	findingSummary := finding.Summarize(findings.ImageScanFindings, imageDigests[0].Platform, ignoreConfig)
 
 	criticalFindings := findingSummary.Counts["CRITICAL"].Included
 	highFindings := findingSummary.Counts["HIGH"].Included
@@ -154,7 +175,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	}
 
 	buildkite.Log("Uploading report as an artifact...")
-	filename := fmt.Sprintf("result.%s.html", strings.TrimPrefix(imageDigest.Tag, "sha256:"))
+	filename := fmt.Sprintf("result.%s.html", strings.TrimPrefix(imageDigest.Digest, "sha256:"))
 	err = os.WriteFile(filename, annotation, fs.ModePerm)
 	if err != nil {
 		return runtimeerrors.NonFatal("could not write report artifact", err)

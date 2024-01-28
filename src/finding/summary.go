@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cultureamp/ecrscanresults/findingconfig"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/shopspring/decimal"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -27,12 +28,34 @@ type Detail struct {
 	CVSS3          CVSSScore
 
 	Ignore *findingconfig.Ignore
+
+	// Platforms is the set of OS and architecture combinations that the finding
+	// was reported for. This may be nil if this finding is for a single image.
+	Platforms []v1.Platform
 }
 
 type CVSSScore struct {
 	Score     *decimal.Decimal
 	Vector    string
 	VectorURL string
+}
+
+func NewCVSS2Score(score string, vector string) CVSSScore {
+	return CVSSScore{
+		Score:     convertScore(score),
+		Vector:    vector,
+		VectorURL: cvss2VectorURL(vector),
+	}
+}
+
+func NewCVSS3Score(score string, vector string) CVSSScore {
+	correctedVector, vectorURL := cvss3VectorURL(vector)
+
+	return CVSSScore{
+		Score:     convertScore(score),
+		Vector:    correctedVector,
+		VectorURL: vectorURL,
+	}
 }
 
 type SeverityCount struct {
@@ -57,6 +80,22 @@ type Summary struct {
 
 	// The time when the vulnerability data was last scanned.
 	VulnerabilitySourceUpdatedAt *time.Time
+
+	// Platforms is the set of OS and architecture combinations that this summary
+	// was collated for. Findings for this summary may be for a single image or
+	// for multiple images.
+	Platforms []v1.Platform
+}
+
+func newSummary() Summary {
+	return Summary{
+		Counts: map[types.FindingSeverity]SeverityCount{
+			"CRITICAL": {},
+			"HIGH":     {},
+		},
+		Details: []Detail{},
+		Ignored: []Detail{},
+	}
 }
 
 func (s *Summary) addDetail(d Detail) {
@@ -78,43 +117,79 @@ func (s *Summary) updateCount(severity types.FindingSeverity, updateBy SeverityC
 	s.Counts[severity] = counts
 }
 
-func newSummary() Summary {
-	return Summary{
-		Counts: map[types.FindingSeverity]SeverityCount{
-			"CRITICAL": {},
-			"HIGH":     {},
-		},
-		Details: []Detail{},
-		Ignored: []Detail{},
+func (s *Summary) updateCountByStatus(severity types.FindingSeverity, ignored bool) {
+	count := SeverityCount{}
+
+	if ignored {
+		count.Ignored = 1
+	} else {
+		count.Included = 1
 	}
+
+	s.updateCount(severity, count)
 }
 
-func NewCVSS2Score(score string, vector string) CVSSScore {
-	return CVSSScore{
-		Score:     convertScore(score),
-		Vector:    vector,
-		VectorURL: cvss2VectorURL(vector),
+func MergeSummaries(summaries []Summary) Summary {
+	merged := newSummary()
+
+	// merge findings from the other Summary into this one
+	for _, other := range summaries {
+		merged = mergeSingle(merged, other)
 	}
+
+	return merged
 }
 
-func NewCVSS3Score(score string, vector string) CVSSScore {
-	correctedVector, vectorURL := cvss3VectorURL(vector)
+// Merge another summary into this one. This assumes that the list of findings
+// is sorted by ID, and that the other summary is for a different platform. At
+// the end, the details are merged, and counts updated. If a finding appears in
+// both summaries, the platforms are merged together, keeping track of the
+// plaforms for a given finding.
+func mergeSingle(merged, other Summary) Summary {
+	// merge findings from the other Summary into this one
 
-	return CVSSScore{
-		Score:     convertScore(score),
-		Vector:    correctedVector,
-		VectorURL: vectorURL,
-	}
+	merged.Details = mergeDetails(merged, merged.Details, other.Details)
+	merged.Ignored = mergeDetails(merged, merged.Ignored, other.Ignored)
+
+	merged.Platforms = append(merged.Platforms, other.Platforms...)
+
+	return merged
 }
 
-func Summarize(findings *types.ImageScanFindings, ignoreConfig []findingconfig.Ignore) Summary {
+func mergeDetails(summary Summary, merged, other []Detail) []Detail {
+	for _, d := range other {
+		insertIdx, found := slices.BinarySearchFunc(merged, d, findingByID)
+
+		if found {
+			// already exists, update the platform set for the current finding
+			updated := merged[insertIdx]
+			updated.Platforms = append(updated.Platforms, d.Platforms...)
+			merged[insertIdx] = updated
+		} else {
+			// insert unique finding into sorted list and update counts
+			merged = slices.Insert(merged, insertIdx, d)
+			summary.updateCountByStatus(d.Severity, d.Ignore != nil)
+		}
+	}
+
+	return merged
+}
+
+// Summarize takes a set of findings from ECR and converts them into a summary
+// ready for rendering.
+func Summarize(findings *types.ImageScanFindings, platform v1.Platform, ignoreConfig []findingconfig.Ignore) Summary {
 	summary := newSummary()
 
 	summary.ImageScanCompletedAt = findings.ImageScanCompletedAt
 	summary.VulnerabilitySourceUpdatedAt = findings.VulnerabilitySourceUpdatedAt
+	summary.Platforms = []v1.Platform{platform}
 
 	for _, f := range findings.Findings {
 		detail := findingToDetail(f)
+
+		// ensure that the detail has the correct platform for this summary (ready
+		// for merging with other summaries).
+		detail.Platforms = summary.Platforms
 
 		index := slices.IndexFunc(ignoreConfig, func(ignore findingconfig.Ignore) bool {
 			return ignore.ID == detail.Name
@@ -231,4 +306,8 @@ func convertScore(s string) *decimal.Decimal {
 	}
 
 	return &d
+}
+
+func findingByID(a Detail, b Detail) int {
+	return strings.Compare(a.Name, b.Name)
 }

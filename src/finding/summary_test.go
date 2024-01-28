@@ -7,8 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/cultureamp/ecrscanresults/finding"
 	"github.com/cultureamp/ecrscanresults/findingconfig"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/hexops/autogold/v2"
 )
+
+var defaultPlatform = v1.Platform{OS: "default"}
 
 func TestSummarize(t *testing.T) {
 	cases := []struct {
@@ -70,11 +73,99 @@ func TestSummarize(t *testing.T) {
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
-			summary := finding.Summarize(&c.data, c.ignores)
+			summary := finding.Summarize(&c.data, defaultPlatform, c.ignores)
 
 			autogold.ExpectFile(t, summary)
 		})
 	}
+}
+
+func TestMergeSummary(t *testing.T) {
+	// base := finding.Summary{
+	// 	Platforms: p("base"),
+	// 	Counts: map[types.FindingSeverity]finding.SeverityCount{
+	// 		"HIGH":     {Included: 2},
+	// 		"CRITICAL": {Included: 0},
+	// 		"LOW":      {Included: 0},
+	// 	},
+	// 	Details: []finding.Detail{
+	// 		{
+	// 			Name:      "CVE-c",
+	// 			Severity:  "HIGH",
+	// 			Platforms: p("base"),
+	// 		},
+	// 		{
+	// 			Name:      "CVE-a",
+	// 			Severity:  "HIGH",
+	// 			Platforms: p("base"),
+	// 		},
+	// 	},
+	// }
+	others := []finding.Summary{
+		{
+			Platforms: p("base"),
+			Counts: map[types.FindingSeverity]finding.SeverityCount{
+				"HIGH": {Included: 2},
+			},
+			Details: []finding.Detail{
+				{
+					Name:      "CVE-c",
+					Severity:  "HIGH",
+					Platforms: p("base"),
+				},
+				{
+					Name:      "CVE-a",
+					Severity:  "HIGH",
+					Platforms: p("base"),
+				},
+			},
+		},
+		{
+			Platforms: p("other1"),
+			Counts: map[types.FindingSeverity]finding.SeverityCount{
+				"HIGH": {Included: 3},
+			},
+			Details: []finding.Detail{
+				{
+					Name:      "CVE-c",
+					Severity:  "HIGH",
+					Platforms: p("other1"),
+				},
+				{
+					Name:      "CVE-a",
+					Severity:  "HIGH",
+					Platforms: p("other1"),
+				},
+				{
+					Name:      "CVE-b",
+					Severity:  "HIGH",
+					Platforms: p("other1"),
+				},
+			},
+		},
+		{
+			Platforms: p("other2"),
+			Counts: map[types.FindingSeverity]finding.SeverityCount{
+				"HIGH": {Included: 1},
+			},
+			Details: []finding.Detail{
+				{
+					Name:      "CVE-d",
+					Severity:  "HIGH",
+					Platforms: p("other2"),
+				},
+			},
+		},
+	}
+
+	// base.Merge(others...)
+	base := finding.MergeSummaries(others)
+
+	autogold.ExpectFile(t, base)
+}
+
+func p(os string) []v1.Platform {
+	return []v1.Platform{{OS: os}}
 }
 
 func f(name string, severity types.FindingSeverity) types.ImageScanFinding {
