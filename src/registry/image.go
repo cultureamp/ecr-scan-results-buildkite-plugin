@@ -13,7 +13,7 @@ import (
 )
 
 type PlatformImageReference struct {
-	Image    ImageReference
+	ImageReference
 	Platform v1.Platform
 }
 
@@ -59,8 +59,8 @@ func (r *RemoteRepository) ResolveImageReferences(imageReference ImageReference)
 
 		return []PlatformImageReference{
 			{
-				Image:    imageReference,
-				Platform: *img.Platform,
+				ImageReference: imageReference,
+				Platform:       *img.Platform,
 			},
 		}, nil
 	}
@@ -89,8 +89,8 @@ func (r *RemoteRepository) ResolveImageReferences(imageReference ImageReference)
 		}
 
 		ref := PlatformImageReference{
-			Image:    imageReference.WithDigest(m.Digest.String()),
-			Platform: *m.Platform,
+			ImageReference: imageReference.WithDigest(m.Digest.String()),
+			Platform:       *m.Platform,
 		}
 
 		images = append(images, ref)

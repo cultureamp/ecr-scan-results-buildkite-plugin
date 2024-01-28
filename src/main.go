@@ -117,7 +117,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	}
 
 	// temporarily: use the first image in the list
-	imageDigest = imageDigests[0].Image
+	imageDigest = imageDigests[0].ImageReference
 
 	// now download all the results and create a merged report
 
