@@ -25,6 +25,11 @@ func (a Agent) ArtifactUpload(ctx context.Context, path string) error {
 func execCmd(ctx context.Context, executableName string, stdin *string, args ...string) error {
 	Logf("Executing: %s %s\n", executableName, strings.Join(args, " "))
 
+	// allow disabling the agent for local development purposes
+	if os.Getenv("ECRSCANRESULTS_DISABLE_AGENT") == "true" {
+		return nil
+	}
+
 	cmd := osexec.CommandContext(ctx, executableName, args...)
 
 	if stdin != nil {
