@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cultureamp/ecrscanresults/findingconfig"
+	_ "github.com/hexops/autogold/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
