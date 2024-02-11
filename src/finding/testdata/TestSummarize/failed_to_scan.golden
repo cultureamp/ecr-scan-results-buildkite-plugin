@@ -1,0 +1,15 @@
+finding.Summary{
+	Counts: map[types.FindingSeverity]finding.SeverityCount{
+		types.FindingSeverity("CRITICAL"): {},
+		types.FindingSeverity("HIGH"):     {},
+	},
+	Details:   []finding.Detail{},
+	Ignored:   []finding.Detail{},
+	Platforms: []v1.Platform{{OS: "default"}},
+	FailedPlatforms: []finding.PlatformScanFailure{{
+		Platform: v1.Platform{
+			OS: "default",
+		},
+		Reason: "I'm sorry Dave, I'm afraid I can't do that",
+	}},
+}

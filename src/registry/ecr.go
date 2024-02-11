@@ -120,6 +120,7 @@ func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo ImageRefere
 			},
 		},
 	})
+
 	if err != nil {
 		return ImageReference{}, err
 	}
@@ -144,7 +145,7 @@ func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo Image
 	maxAttemptDelay := 15 * time.Second
 	maxTotalDelay := 3 * time.Minute
 
-	return waiter.Wait(ctx, &ecr.DescribeImageScanFindingsInput{
+	err := waiter.Wait(ctx, &ecr.DescribeImageScanFindingsInput{
 		RegistryId:     &digestInfo.RegistryID,
 		RepositoryName: &digestInfo.Name,
 		ImageId: &types.ImageIdentifier{
@@ -156,6 +157,18 @@ func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo Image
 		opts.MinDelay = minAttemptDelay
 		opts.MaxDelay = maxAttemptDelay
 	})
+
+	// It is not good style to compare the error string, but this is the only way
+	// to capture that the scan failed, but everything else is hunky dory. We
+	// return nil here so that the caller will gather the scan results, and
+	// communicate to the user the reason this image has no results. "FAILURE" is
+	// returned when the image is unsupported, for example, and we want to
+	// communicate this properly to the user.
+	if err != nil && err.Error() == "waiter state transitioned to Failure" {
+		return nil
+	}
+
+	return err
 }
 
 func (r *RegistryScan) GetScanFindings(ctx context.Context, digestInfo ImageReference) (*ecr.DescribeImageScanFindingsOutput, error) {

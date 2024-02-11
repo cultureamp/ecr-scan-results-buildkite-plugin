@@ -3,7 +3,8 @@ finding.Summary{
 		types.FindingSeverity("CRITICAL"): {},
 		types.FindingSeverity("HIGH"):     {},
 	},
-	Details:   []finding.Detail{},
-	Ignored:   []finding.Detail{},
-	Platforms: []v1.Platform{{OS: "default"}},
+	Details:         []finding.Detail{},
+	Ignored:         []finding.Detail{},
+	Platforms:       []v1.Platform{{OS: "default"}},
+	FailedPlatforms: []finding.PlatformScanFailure{},
 }

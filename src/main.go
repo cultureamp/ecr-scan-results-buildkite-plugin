@@ -208,7 +208,7 @@ func getImageScanSummary(ctx context.Context, scan *registry.RegistryScan, image
 
 	buildkite.Logf("retrieved. %d findings in report.\n", numFindings)
 
-	findingSummary := finding.Summarize(findings.ImageScanFindings, imageDigest.Platform, ignoreConfig)
+	findingSummary := finding.Summarize(findings, imageDigest.Platform, ignoreConfig)
 
 	return findingSummary, nil
 }

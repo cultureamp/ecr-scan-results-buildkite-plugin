@@ -37,4 +37,5 @@ finding.Summary{
 		{OS: "other1"},
 		{OS: "other2"},
 	},
+	FailedPlatforms: []finding.PlatformScanFailure{},
 }

@@ -26,5 +26,6 @@ finding.Summary{
 		Ignore:    &findingconfig.Ignore{ID: "CVE-2019-5189"},
 		Platforms: []v1.Platform{{OS: "default"}},
 	}},
-	Platforms: []v1.Platform{{OS: "default"}},
+	Platforms:       []v1.Platform{{OS: "default"}},
+	FailedPlatforms: []finding.PlatformScanFailure{},
 }

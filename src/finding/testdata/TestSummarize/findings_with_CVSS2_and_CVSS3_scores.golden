@@ -41,6 +41,7 @@ finding.Summary{
 			Platforms: []v1.Platform{{OS: "default"}},
 		},
 	},
-	Ignored:   []finding.Detail{},
-	Platforms: []v1.Platform{{OS: "default"}},
+	Ignored:         []finding.Detail{},
+	Platforms:       []v1.Platform{{OS: "default"}},
+	FailedPlatforms: []finding.PlatformScanFailure{},
 }

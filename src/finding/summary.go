@@ -12,6 +12,7 @@ import (
 	"github.com/shopspring/decimal"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 )
 
@@ -66,6 +67,11 @@ type SeverityCount struct {
 	Ignored int32
 }
 
+type PlatformScanFailure struct {
+	Platform v1.Platform
+	Reason   string
+}
+
 type Summary struct {
 	// the counts by threshold, taking ignore configuration into account
 	Counts map[types.FindingSeverity]SeverityCount
@@ -85,6 +91,10 @@ type Summary struct {
 	// was collated for. Findings for this summary may be for a single image or
 	// for multiple images.
 	Platforms []v1.Platform
+
+	// The set of platforms (with reasons) for which the scan failed, and the
+	// reason given by AWS for the failure.
+	FailedPlatforms []PlatformScanFailure
 }
 
 func newSummary() Summary {
@@ -93,8 +103,10 @@ func newSummary() Summary {
 			"CRITICAL": {},
 			"HIGH":     {},
 		},
-		Details: []Detail{},
-		Ignored: []Detail{},
+		Details:         []Detail{},
+		Ignored:         []Detail{},
+		Platforms:       []v1.Platform{},
+		FailedPlatforms: []PlatformScanFailure{},
 	}
 }
 
@@ -152,6 +164,7 @@ func mergeSingle(merged, other Summary) Summary {
 	merged.Ignored = mergeDetails(merged, merged.Ignored, other.Ignored)
 
 	merged.Platforms = append(merged.Platforms, other.Platforms...)
+	merged.FailedPlatforms = append(merged.FailedPlatforms, other.FailedPlatforms...)
 
 	merged.ImageScanCompletedAt = other.ImageScanCompletedAt
 	merged.VulnerabilitySourceUpdatedAt = other.VulnerabilitySourceUpdatedAt
@@ -180,12 +193,25 @@ func mergeDetails(summary Summary, merged, other []Detail) []Detail {
 
 // Summarize takes a set of findings from ECR and converts them into a summary
 // ready for rendering.
-func Summarize(findings *types.ImageScanFindings, platform v1.Platform, ignoreConfig []findingconfig.Ignore) Summary {
+func Summarize(results *ecr.DescribeImageScanFindingsOutput, platform v1.Platform, ignoreConfig []findingconfig.Ignore) Summary {
 	summary := newSummary()
 
+	summary.Platforms = []v1.Platform{platform}
+
+	if results.ImageScanStatus != nil && results.ImageScanStatus.Status != types.ScanStatusComplete {
+		summary.FailedPlatforms = append(summary.FailedPlatforms, PlatformScanFailure{
+			Platform: platform,
+			Reason:   aws.ToString(results.ImageScanStatus.Description),
+		})
+	}
+
+	if results.ImageScanFindings == nil {
+		return summary
+	}
+
+	findings := results.ImageScanFindings
 	summary.ImageScanCompletedAt = findings.ImageScanCompletedAt
 	summary.VulnerabilitySourceUpdatedAt = findings.VulnerabilitySourceUpdatedAt
-	summary.Platforms = []v1.Platform{platform}
 
 	for _, f := range findings.Findings {
 		detail := findingToDetail(f)
