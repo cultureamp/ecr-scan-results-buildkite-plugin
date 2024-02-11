@@ -105,6 +105,7 @@ func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo Regis
 		ImageId: &types.ImageIdentifier{
 			ImageDigest: &digestInfo.Tag,
 		},
+		MaxResults: aws.Int32(1), // reduce the size of the return payload when waiting for the completion state
 	}, maxTotalDelay, func(opts *ecr.ImageScanCompleteWaiterOptions) {
 		opts.LogWaitAttempts = true
 		opts.MinDelay = minAttemptDelay
