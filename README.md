@@ -2,17 +2,20 @@
 
 Buildkite plugin to retrieve ECR scan results from AWS's ECR image scanning
 service. By default the plugin will cause the step to fail if there are critical
-or high vulnerabilities reported, but there are configurable thresholds on this
-behaviour.
+or high vulnerabilities reported. Specific vulnerabilities can be ignored via [a
+configuration file][ignore-findings], and there are configurable thresholds on
+absolute numbers of allowed critical and high vulnerabilities.
 
-> ℹ️ **TIP**: if you want the build to continue when vulnerabilities are found, be
-> sure to supply values for `max-criticals` and `max-highs` parameters. If these
-> are set to high values your build will never fail, but details will be
-> supplied in the annotation.
+> [!WARNING]
+> This plugin will only fail the build if the thresholds are exceeded. Failing
+> to read configuration or to download scan results are not considered blocking
+> failures.
 >
-> If a finding is irrelevant, or you're waiting on an upstream fix, use an
-> "ignore" configuration file instead: see the [ignore
-> findings](./docs/ignore-findings.md) documentation.
+> When configuring the plugin, check the plugin output to ensure that scan
+> results are being downloaded as expected.
+>
+> If blocking on configuration or retrieval failures is desired for use case,
+> consider submitting a PR to allow this to be configured.
 
 ## Rendering
 
@@ -22,7 +25,7 @@ The plugin shows a detailed summary of the vulnerability findings in the scanned
 <figcaption>
 The default view summarizes the number of findings in the scan, hiding details behind an expanding element.
 </figcaption>
-<img src="docs/img/eg-success-collapsed.png" alt="example of successful check annotation with collapsed results table">
+<img src="docs/img/eg-success-collapsed.png" alt="example of successful check annotation with collapsed results table" width="80%" align="center">
 </figure>
 
 <figure>
@@ -67,6 +70,21 @@ steps:
           image-name: "$BUILD_REPO:deploy-$BUILD_TAG"
 ```
 
+To [ignore specific vulnerabilities][ignore-findings], create a file name
+`.ecr-scan-results-ignore.yaml` in the repository root and add entries there.
+See the [documentation][ignore-findings] for more information.
+
+```yml
+# .ecr-scan-results-ignore.yaml contents
+ignores:
+  - id: CVE-2023-100
+  - id: CVE-2023-200
+    until: 2023-12-31
+    reason: |
+      Allowing 2 weeks for [base image](https://google.com) to update. Markdown is allowed!
+  - id: CVE-2023-300
+```
+
 If you want the pipeline to pass with some vulnerabilities then set
 `max-criticals` and `max-highs` like below. This pipeline will pass if there is
 one critical vulenerability but fail if there are two. Similarly it will fail if
@@ -87,6 +105,10 @@ steps:
           max-highs: "10"
 ```
 
+> [!TIP]
+> Prefer defining an ignore file over using thresholds, and use the `reason`
+> field to explain why the vulnerability is being ignored.
+
 ## Configuration
 
 ### `image-name` (Required, string)
@@ -104,7 +126,7 @@ the build is failed. Defaults to 0. Use a sufficiently large number (e.g. 999)
 to allow the build to always pass.
 
 > [!IMPORTANT]
-> Prefer an [ignore file](./docs/ignore-findings.md) over setting thresholds if
+> Prefer an [ignore file][ignore-findings] over setting thresholds if
 > a finding is irrelevant or time to respond is required.
 
 ### `max-highs` (Optional, string)
@@ -114,7 +136,7 @@ build is failed. Defaults to 0. Use a sufficiently large number (e.g. 999) to
 allow the build to always pass.
 
 > [!IMPORTANT]
-> Prefer an [ignore file](./docs/ignore-findings.md) over setting thresholds if
+> Prefer an [ignore file][ignore-findings] over setting thresholds if
 > a finding is irrelevant or time to respond is required.
 
 ### `image-label` (Optional, string)
@@ -157,7 +179,7 @@ for more information.
 
 There are two options here:
 
-1. configure an [ignore file](docs/ignore-findings.md) to tell the plugin to
+1. configure an [ignore file][ignore-findings] to tell the plugin to
   skip this vulnerability. Set an `until` date to ensure that it is dealt with
   in the future.
 2. refer to how to set your [max-criticals](#max-criticals-optional-string), and
@@ -179,7 +201,7 @@ application and the nature of the vulnerabilities themselves.
 
 Consult with your company's internal security teams about the acceptable risk
 level for a service if a non-zero threshold is desired, and consider making use
-of the [ignore file](docs/ignore-findings.md) configuration to avoid temporary
+of the [ignore file][ignore-findings] configuration to avoid temporary
 blockages. Using an ignore entry with an expiry is strongly recommended over
 increasing the threshold.
 
@@ -217,3 +239,5 @@ Possible actions:
 5. Ignore the finding indefinitely. This will generally only be valid if
    dependency both cannot be removed and is not used in a vulnerable fashion.
    Your working environment may require special exceptions for this.
+
+[ignore-findings]: ./docs/ignore-findings.md
