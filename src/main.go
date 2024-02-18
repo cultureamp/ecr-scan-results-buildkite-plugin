@@ -71,11 +71,20 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	buildkite.Logf("Scan results report requested for %s\n", pluginConfig.Repository)
 	buildkite.Logf("Thresholds: criticals %d highs %d\n", pluginConfig.CriticalSeverityThreshold, pluginConfig.HighSeverityThreshold)
 
-	buildkite.Logf("loading finding ignore files ...\n")
+	buildkite.Logf("Loading finding ignore files ...\n")
 
 	ignoreConfig, err := findingconfig.LoadFromDefaultLocations(findingconfig.DefaultSystemClock())
 	if err != nil {
 		return runtimeerrors.NonFatal("could not load finding ignore configuration", err)
+	}
+
+	if len(ignoreConfig) == 0 {
+		buildkite.Logf("No ignore rules loaded, or all rules have expired.\n")
+	} else {
+		buildkite.Logf("Loaded %d ignore rules:\n", len(ignoreConfig))
+		for _, ignore := range ignoreConfig {
+			buildkite.Logf("  - %s\n", ignore)
+		}
 	}
 
 	imageID, err := registry.ParseReferenceFromURL(pluginConfig.Repository)
@@ -188,6 +197,9 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	return nil
 }
 
+// getImageScanSummary retrieves the scan results for the given image digest and
+// returns the initial summary for the image. This function may be called in
+// parallel for multiple images.
 func getImageScanSummary(ctx context.Context, scan *registry.RegistryScan, imageDigest registry.PlatformImageReference, ignoreConfig []findingconfig.Ignore) (finding.Summary, error) {
 	err := scan.WaitForScanFindings(ctx, imageDigest.ImageReference)
 	if err != nil {
@@ -213,6 +225,7 @@ func getImageScanSummary(ctx context.Context, scan *registry.RegistryScan, image
 	return findingSummary, nil
 }
 
+// hash returns a hex-encoded sha256 hash of the given strings.
 func hash(data ...string) string {
 	h := sha256.New()
 	for _, d := range data {
