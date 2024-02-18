@@ -92,6 +92,8 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 		return err
 	}
 
+	buildkite.LogGroupf(":ecr: Creating ECR scan results report for %s\n", imageID)
+
 	awsConfig, err := config.LoadDefaultConfig(ctx, config.WithRegion(imageID.Region))
 	if err != nil {
 		return runtimeerrors.NonFatal("could not configure AWS access", err)
@@ -127,9 +129,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	}
 
 	// now download all the results and create a merged report
-
-	buildkite.LogGroupf(":ecr: Creating ECR scan results report for %s\n", imageID)
-
+	buildkite.Logf("Attempting to retrieve scan results for %d image(s)", len(imageDigests))
 	summaries, err := iter.MapErr(imageDigests, func(image *registry.PlatformImageReference) (finding.Summary, error) {
 		return getImageScanSummary(ctx, scan, *image, ignoreConfig)
 	})
