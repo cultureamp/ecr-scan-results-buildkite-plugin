@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cultureamp/ecrscanresults/runtimeerrors"
+	_ "github.com/hexops/autogold/v2"
 	"github.com/stretchr/testify/assert"
 )
 
