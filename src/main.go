@@ -70,7 +70,14 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	buildkite.Logf("Scan results report requested for %s\n", pluginConfig.Repository)
 	buildkite.Logf("Thresholds: criticals %d highs %d\n", pluginConfig.CriticalSeverityThreshold, pluginConfig.HighSeverityThreshold)
 
-	imageID, err := registry.RegistryInfoFromURL(pluginConfig.Repository)
+	buildkite.Logf("loading finding ignore files ...\n")
+
+	ignoreConfig, err := findingconfig.LoadFromDefaultLocations(findingconfig.DefaultSystemClock())
+	if err != nil {
+		return runtimeerrors.NonFatal("could not load finding ignore configuration", err)
+	}
+
+	imageID, err := registry.ParseReferenceFromURL(pluginConfig.Repository)
 	if err != nil {
 		return err
 	}
@@ -86,7 +93,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	}
 
 	buildkite.Logf("Getting image digest for %s\n", imageID)
-	imageDigest, err := scan.GetLabelDigest(ctx, imageID)
+	imageDigest, err := scan.GetScannableImageDigest(ctx, imageID)
 	if err != nil {
 		return runtimeerrors.NonFatal("could not find digest for image", err)
 	}
@@ -107,22 +114,6 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	}
 
 	buildkite.Logf("retrieved. %d findings in report.\n", len(findings.ImageScanFindings.Findings))
-
-	buildkite.Logf("loading finding ignore files ...\n")
-
-	ignoreConfig, err := findingconfig.LoadExistingIgnores([]string{
-		".ecr-scan-results-ignore.yaml",
-		".ecr-scan-results-ignore.yml",
-		".buildkite/ecr-scan-results-ignore.yaml",
-		".buildkite/ecr-scan-results-ignore.yml",
-		"buildkite/ecr-scan-results-ignore.yaml",
-		"buildkite/ecr-scan-results-ignore.yml",
-		"/etc/ecr-scan-results-buildkite-plugin/ignore.yaml",
-		"/etc/ecr-scan-results-buildkite-plugin/ignore.yml",
-	}, findingconfig.DefaultSystemClock())
-	if err != nil {
-		return runtimeerrors.NonFatal("could not load finding ignore configuration", err)
-	}
 
 	// summarize findings, taking ignore configuration into account
 	findingSummary := finding.Summarize(findings.ImageScanFindings, ignoreConfig)

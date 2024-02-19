@@ -21,11 +21,11 @@ func TestReports(t *testing.T) {
 		{
 			name: "no vulnerabilities",
 			data: report.AnnotationContext{
-				Image: registry.RegistryInfo{
+				Image: registry.ImageReference{
 					RegistryID: "0123456789",
 					Region:     "us-west-2",
 					Name:       "test-repo",
-					Tag:        "digest-value",
+					Digest:     "digest-value",
 				},
 				ImageLabel:                "",
 				CriticalSeverityThreshold: 0,
@@ -35,11 +35,11 @@ func TestReports(t *testing.T) {
 		{
 			name: "image label",
 			data: report.AnnotationContext{
-				Image: registry.RegistryInfo{
+				Image: registry.ImageReference{
 					RegistryID: "0123456789",
 					Region:     "us-west-2",
 					Name:       "test-repo",
-					Tag:        "digest-value",
+					Digest:     "digest-value",
 				},
 				ImageLabel:                "label of image",
 				CriticalSeverityThreshold: 0,
@@ -49,11 +49,11 @@ func TestReports(t *testing.T) {
 		{
 			name: "findings included",
 			data: report.AnnotationContext{
-				Image: registry.RegistryInfo{
+				Image: registry.ImageReference{
 					RegistryID: "0123456789",
 					Region:     "us-west-2",
 					Name:       "test-repo",
-					Tag:        "digest-value",
+					Digest:     "digest-value",
 				},
 				ImageLabel: "label of image",
 				FindingSummary: finding.Summary{
@@ -112,11 +112,11 @@ func TestReports(t *testing.T) {
 		{
 			name: "some findings ignored",
 			data: report.AnnotationContext{
-				Image: registry.RegistryInfo{
+				Image: registry.ImageReference{
 					RegistryID: "0123456789",
 					Region:     "us-west-2",
 					Name:       "test-repo",
-					Tag:        "digest-value",
+					Digest:     "digest-value",
 				},
 				ImageLabel: "label of image",
 				FindingSummary: finding.Summary{
@@ -197,11 +197,11 @@ func TestReports(t *testing.T) {
 		{
 			name: "sorted findings",
 			data: report.AnnotationContext{
-				Image: registry.RegistryInfo{
+				Image: registry.ImageReference{
 					RegistryID: "0123456789",
 					Region:     "us-west-2",
 					Name:       "test-repo",
-					Tag:        "digest-value",
+					Digest:     "digest-value",
 				},
 				ImageLabel: "label of image",
 				FindingSummary: finding.Summary{
