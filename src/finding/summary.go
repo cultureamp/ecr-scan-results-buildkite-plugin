@@ -99,15 +99,28 @@ type Summary struct {
 
 func newSummary() Summary {
 	return Summary{
-		Counts: map[types.FindingSeverity]SeverityCount{
-			"CRITICAL": {},
-			"HIGH":     {},
-		},
+		Counts:          map[types.FindingSeverity]SeverityCount{},
 		Details:         []Detail{},
 		Ignored:         []Detail{},
 		Platforms:       []v1.Platform{},
 		FailedPlatforms: []PlatformScanFailure{},
 	}
+}
+
+// IncludedCountFor returns the number of findings that count towards the
+// threshold for the given severity, returning 0 if there are no counts for the
+// given severity value.
+func (s Summary) IncludedCountFor(severity types.FindingSeverity) int32 {
+	if s.Counts == nil {
+		return 0
+	}
+
+	counts, ok := s.Counts[severity]
+	if !ok {
+		return 0
+	}
+
+	return counts.Included
 }
 
 func (s *Summary) addDetail(d Detail) {

@@ -140,8 +140,8 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	// merge the set of returned summaries into a single one ready for reporting.
 	findingSummary := finding.MergeSummaries(summaries)
 
-	criticalFindings := findingSummary.Counts["CRITICAL"].Included
-	highFindings := findingSummary.Counts["HIGH"].Included
+	criticalFindings := findingSummary.IncludedCountFor("CRITICAL")
+	highFindings := findingSummary.IncludedCountFor("HIGH")
 	overThreshold :=
 		criticalFindings > pluginConfig.CriticalSeverityThreshold ||
 			highFindings > pluginConfig.HighSeverityThreshold
