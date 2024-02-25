@@ -50,6 +50,7 @@ jobs:
           go-version-file: src/go.mod
           cache-dependency-path: src/go.sum
 
-      - name: Test code
-        run: |
-          make test-ci
+      - id: Test
+        uses: ./.github/actions/go-coverage
+        with:
+          working-directory: src
