@@ -125,6 +125,7 @@ runs:
         thresholds: '${{ inputs.coverage-threshold-min }} ${{ inputs.coverage-threshold-healthy }}'
 
     - name: Add Coverage PR Comment
+      if: steps.setup.outputs.pr != ''
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         recreate: true
