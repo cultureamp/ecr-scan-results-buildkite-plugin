@@ -1,0 +1,3 @@
+# packages exempt from coverage reporting
+github.com/cultureamp/ecrscanresults
+github.com/cultureamp/ecrscanresults/buildkite

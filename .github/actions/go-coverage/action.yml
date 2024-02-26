@@ -64,11 +64,40 @@ runs:
       shell: bash
       run: |
         # run go test
-        go test "${GOTEST_PACKAGES}" -json -v "-coverprofile=${ARTIFACTS_DIR}/coverage.json" -covermode atomic ${GOTEST_ARGUMENTS} 2>&1 | tee "${ARTIFACTS_DIR}/gotest.log" | gotestfmt
+        go test "${GOTEST_PACKAGES}" -json -v "-coverprofile=${ARTIFACTS_DIR}/coverage.out" -covermode atomic ${GOTEST_ARGUMENTS} 2>&1 | tee "${ARTIFACTS_DIR}/gotest.log" | gotestfmt
       env:
         ARTIFACTS_DIR: "${{ steps.setup.outputs.artifacts-dir }}"
         GOTEST_PACKAGES: "${{ inputs.gotest-packages }}"
         GOTEST_ARGUMENTS: "${{ inputs.gotest-arguments }}"
+
+    - name: Process package exclusions
+      working-directory: '${{ inputs.working-directory }}'
+      shell: bash
+      run: |
+        # exclude packages from coverage based on optional ".coverage-exclusions" configuration file
+        configuration_file=".coverage-exclusions"
+        coverage_file="${ARTIFACTS_DIR}/coverage.out"
+
+        if [[ -e "${configuration_file}" ]]; then
+          echo "Filtering coverage exclusions"
+
+          while IFS="" read -r exclusion
+          do
+            # ignore empty lines and comments
+            if [[ -z "${exclusion}" || "${exclusion}" = \#* ]]; then
+              continue
+            fi
+
+            printf 'exclude %s\n' "${exclusion}"
+
+            # each line in a coverage file looks like: github.com/cultureamp/ecrscanresults/registry/ecr.go:85.21,86.27 1 4
+            # excluding by package means matching from the start of the line, then any file name, stopping at the colon
+            grep --invert-match '^'"${exclusion}"'/[^/]*:' "${coverage_file}" > "${coverage_file}.tmp"
+            mv "${coverage_file}.tmp" "${coverage_file}"
+          done < "${configuration_file}"
+        fi
+      env:
+        ARTIFACTS_DIR: "${{ steps.setup.outputs.artifacts-dir }}"
 
     - name: Convert go coverage to cobertura format
       id: convert-format
@@ -76,7 +105,7 @@ runs:
       working-directory: '${{ inputs.working-directory }}'
       run: |
         # transform go coverage to cobertura format
-        gocover-cobertura < "${ARTIFACTS_DIR}/coverage.json" > "${ARTIFACTS_DIR}/coverage.xml"
+        gocover-cobertura < "${ARTIFACTS_DIR}/coverage.out" > "${ARTIFACTS_DIR}/coverage.xml"
 
         echo "cobertura-coverage=${ARTIFACTS_DIR}/coverage.xml" >> "${GITHUB_OUTPUT}"
       env:
