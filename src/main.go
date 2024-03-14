@@ -140,13 +140,18 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	// merge the set of returned summaries into a single one ready for reporting.
 	findingSummary := finding.MergeSummaries(summaries)
 
-	criticalFindings := findingSummary.IncludedCountFor("CRITICAL")
-	highFindings := findingSummary.IncludedCountFor("HIGH")
-	overThreshold :=
-		criticalFindings > pluginConfig.CriticalSeverityThreshold ||
-			highFindings > pluginConfig.HighSeverityThreshold
+	status := findingSummary.Status(pluginConfig.CriticalSeverityThreshold, pluginConfig.HighSeverityThreshold)
+	if status == finding.StatusAllPlatformsFailed {
+		// Failing on all platforms is terminating but not fatal to the build:
+		// builds are only blocked if thresholds are exceeded. When only some
+		// platforms have failed, the report will include details of the partial
+		// failure.
+		return runtimeerrors.NonFatal("no scan results could be retrieved", nil)
+	}
 
-	buildkite.Logf("Severity counts: critical=%d high=%d overThreshold=%v\n", criticalFindings, highFindings, overThreshold)
+	criticalFindings, highFindings := findingSummary.IncludedCounts()
+
+	buildkite.Logf("Severity counts: critical=%d high=%d overThreshold=%v\n", criticalFindings, highFindings, status)
 
 	buildkite.Log("Creating report annotation...")
 	annotationCtx := report.AnnotationContext{
@@ -164,7 +169,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	buildkite.Log("done.")
 
 	annotationStyle := "info"
-	if overThreshold {
+	if status != finding.StatusOk {
 		annotationStyle = "error"
 	} else if criticalFindings > 0 || highFindings > 0 {
 		annotationStyle = "warning"
@@ -189,12 +194,14 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 
 	buildkite.Log("done.")
 
-	// exceeding threshold is a fatal error
-	if overThreshold {
+	switch status {
+	case finding.StatusOk:
+		return nil
+	case finding.StatusThresholdsExceeded:
 		return errors.New("vulnerability threshold exceeded")
+	default:
+		return fmt.Errorf("unknown finding summary state %d", status)
 	}
-
-	return nil
 }
 
 // getImageScanSummary retrieves the scan results for the given image digest and

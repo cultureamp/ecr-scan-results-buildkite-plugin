@@ -16,6 +16,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 )
 
+type SummaryStatus int
+
+const (
+	StatusOk SummaryStatus = iota
+	StatusThresholdsExceeded
+	StatusAllPlatformsFailed
+)
+
 type Detail struct {
 	// The name associated with the finding, usually a CVE number.
 	Name        string
@@ -107,10 +115,43 @@ func newSummary() Summary {
 	}
 }
 
-// IncludedCountFor returns the number of findings that count towards the
+// Status returns the status of the summary, taking into account the status of
+// all of the platforms included in the target image, as well as the supplied
+// vulnerability thresholds.
+func (s Summary) Status(criticalThreshold int32, highThreshold int32) SummaryStatus {
+	if len(s.Platforms) == len(s.FailedPlatforms) {
+		return StatusAllPlatformsFailed
+	}
+
+	if s.ThresholdsExceeded(criticalThreshold, highThreshold) {
+		return StatusThresholdsExceeded
+	}
+
+	return StatusOk
+}
+
+// IncludedCounts returns the number of findings that count towards the
+// threshold for High and Critical severities.
+func (s Summary) IncludedCounts() (int32, int32) {
+	return s.includedCountFor("CRITICAL"), s.includedCountFor("HIGH")
+}
+
+// ThresholdsExceeded returns true if the number of included findings
+// exceed the given thresholds for their respective severities.
+func (s Summary) ThresholdsExceeded(criticalThreshold int32, highThreshold int32) bool {
+	criticalFindings, highFindings := s.IncludedCounts()
+
+	overThreshold :=
+		criticalFindings > criticalThreshold ||
+			highFindings > highThreshold
+
+	return overThreshold
+}
+
+// includedCountFor returns the number of findings that count towards the
 // threshold for the given severity, returning 0 if there are no counts for the
 // given severity value.
-func (s Summary) IncludedCountFor(severity types.FindingSeverity) int32 {
+func (s Summary) includedCountFor(severity types.FindingSeverity) int32 {
 	if s.Counts == nil {
 		return 0
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/cultureamp/ecrscanresults/findingconfig"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/hexops/autogold/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 var defaultPlatform = v1.Platform{OS: "default"}
@@ -19,10 +20,12 @@ func TestSummarize(t *testing.T) {
 		name    string
 		ignores []findingconfig.Ignore
 		data    *ecr.DescribeImageScanFindingsOutput
+		status  finding.SummaryStatus
 	}{
 		{
-			name: "no vulnerabilities",
-			data: &ecr.DescribeImageScanFindingsOutput{},
+			name:   "no vulnerabilities",
+			data:   &ecr.DescribeImageScanFindingsOutput{},
+			status: finding.StatusOk,
 		},
 		{
 			name: "failed to scan",
@@ -32,6 +35,7 @@ func TestSummarize(t *testing.T) {
 					Description: aws.String("I'm sorry Dave, I'm afraid I can't do that"),
 				},
 			},
+			status: finding.StatusAllPlatformsFailed,
 		},
 		{
 			name: "findings with links",
@@ -44,6 +48,7 @@ func TestSummarize(t *testing.T) {
 					},
 				},
 			},
+			status: finding.StatusOk,
 		},
 		{
 			name: "findings with CVSS2 and CVSS3 scores",
@@ -57,6 +62,7 @@ func TestSummarize(t *testing.T) {
 					},
 				},
 			},
+			status: finding.StatusThresholdsExceeded,
 		},
 		{
 			name: "findings with no ignores",
@@ -69,6 +75,7 @@ func TestSummarize(t *testing.T) {
 					},
 				},
 			},
+			status: finding.StatusOk,
 		},
 		{
 			name: "ignores affect counts",
@@ -85,6 +92,7 @@ func TestSummarize(t *testing.T) {
 				i("CVE-2019-5189"), // part of the summary
 				i("CVE-2019-6000"), // not part of it
 			},
+			status: finding.StatusOk,
 		},
 	}
 
@@ -93,32 +101,13 @@ func TestSummarize(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			summary := finding.Summarize(c.data, defaultPlatform, c.ignores)
 
+			assert.Equal(t, c.status, summary.Status(1, 2))
 			autogold.ExpectFile(t, summary)
 		})
 	}
 }
 
 func TestMergeSummary(t *testing.T) {
-	// base := finding.Summary{
-	// 	Platforms: p("base"),
-	// 	Counts: map[types.FindingSeverity]finding.SeverityCount{
-	// 		"HIGH":     {Included: 2},
-	// 		"CRITICAL": {Included: 0},
-	// 		"LOW":      {Included: 0},
-	// 	},
-	// 	Details: []finding.Detail{
-	// 		{
-	// 			Name:      "CVE-c",
-	// 			Severity:  "HIGH",
-	// 			Platforms: p("base"),
-	// 		},
-	// 		{
-	// 			Name:      "CVE-a",
-	// 			Severity:  "HIGH",
-	// 			Platforms: p("base"),
-	// 		},
-	// 	},
-	// }
 	others := []finding.Summary{
 		{
 			Platforms: p("base"),
