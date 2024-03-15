@@ -115,6 +115,10 @@ func newSummary() Summary {
 	}
 }
 
+func (s Summary) SuccessfulPlatformCount() int {
+	return len(s.Platforms) - len(s.FailedPlatforms)
+}
+
 // Status returns the status of the summary, taking into account the status of
 // all of the platforms included in the target image, as well as the supplied
 // vulnerability thresholds.

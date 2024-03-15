@@ -1,0 +1,93 @@
+{
+  "Counts": {
+    "MEDIUM": {
+      "Included": 1,
+      "Ignored": 0
+    }
+  },
+  "Details": [
+    {
+      "Name": "CVE-2021-3997",
+      "URI": "http://people.ubuntu.com/~ubuntu-security/cve/CVE-2021-3997",
+      "Description": "A flaw was found in systemd. An uncontrolled recursion in systemd-tmpfiles may lead to a denial of service at boot time when too many nested directories are created in /tmp.",
+      "Severity": "MEDIUM",
+      "PackageName": "systemd",
+      "PackageVersion": "247.3-3ubuntu3.6",
+      "CVSS2": {
+        "Score": null,
+        "Vector": "",
+        "VectorURL": ""
+      },
+      "CVSS3": {
+        "Score": "5.5",
+        "Vector": "AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H",
+        "VectorURL": "https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator?vector=AV%3AL%2FAC%3AL%2FPR%3AL%2FUI%3AN%2FS%3AU%2FC%3AN%2FI%3AN%2FA%3AH\u0026version=3.1"
+      },
+      "Ignore": null,
+      "Platforms": [
+        {
+          "architecture": "amd64",
+          "os": "linux"
+        },
+        {
+          "architecture": "arm64",
+          "os": "linux"
+        }
+      ]
+    }
+  ],
+  "Ignored": [],
+  "ImageScanCompletedAt": null,
+  "VulnerabilitySourceUpdatedAt": null,
+  "Platforms": [
+    {
+      "architecture": "amd64",
+      "os": "linux"
+    },
+    {
+      "architecture": "arm64",
+      "os": "linux"
+    },
+    {
+      "architecture": "amd64",
+      "os": "windows",
+      "os.version": "10.0.17763.2300"
+    },
+    {
+      "architecture": "amd64",
+      "os": "windows",
+      "os.version": "10.0.18363.1556"
+    },
+    {
+      "architecture": "amd64",
+      "os": "windows",
+      "os.version": "10.0.19041.1348"
+    }
+  ],
+  "FailedPlatforms": [
+    {
+      "Platform": {
+        "architecture": "amd64",
+        "os": "windows",
+        "os.version": "10.0.17763.2300"
+      },
+      "Reason": "UnsupportedImageError: The operating system and/or package manager are not supported."
+    },
+    {
+      "Platform": {
+        "architecture": "amd64",
+        "os": "windows",
+        "os.version": "10.0.18363.1556"
+      },
+      "Reason": "UnsupportedImageError: The operating system and/or package manager are not supported."
+    },
+    {
+      "Platform": {
+        "architecture": "amd64",
+        "os": "windows",
+        "os.version": "10.0.19041.1348"
+      },
+      "Reason": "UnsupportedImageError: The operating system and/or package manager are not supported."
+    }
+  ]
+}

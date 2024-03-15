@@ -1,0 +1,85 @@
+`
+
+
+
+
+<h4>Vulnerability summary for "label of image"</h4>
+<p class="h6 regular italic">test-repo@digest-value with platforms linux/amd64, linux/arm64, windows/amd64:10.0.17763.2300, windows/amd64:10.0.18363.1556, windows/amd64:10.0.19041.1348</p>
+
+
+<dl class="flex flex-wrap mxn1">
+
+
+
+
+<div class="m1 p1 mr3">
+<dt>Medium</dt>
+<dd><h1 class="m0">1</h1>
+
+</dd>
+</div>
+
+</dl>
+
+
+<details class="mb3">
+<summary>:fire_engine: 3 of 5 platforms did not produce scan results</summary>
+<div>
+<ul>
+
+<li><em>windows/amd64:10.0.17763.2300</em>: UnsupportedImageError: The operating system and/or package manager are not supported.</li>
+
+<li><em>windows/amd64:10.0.18363.1556</em>: UnsupportedImageError: The operating system and/or package manager are not supported.</li>
+
+<li><em>windows/amd64:10.0.19041.1348</em>: UnsupportedImageError: The operating system and/or package manager are not supported.</li>
+
+</ul>
+</div>
+</details>
+
+
+
+
+
+
+
+
+
+
+
+<details class="mb3">
+<summary>Vulnerability details</summary>
+<div>
+<p>All listed scores are CVSS3 unless otherwise noted.</p>
+
+<table>
+<tr>
+<th>CVE</th>
+<th>Severity</th>
+<th>Affects</th>
+<th>CVSS score</th>
+<th>CVSS vector</th>
+<th>Platforms</th>
+</tr>
+
+<tr>
+<td><details><summary><a href="http://people.ubuntu.com/~ubuntu-security/cve/CVE-2021-3997">CVE-2021-3997</a></summary><div>A flaw was found in systemd. An uncontrolled recursion in systemd-tmpfiles may lead to a denial of service at boot time when too many nested directories are created in /tmp.</div></details></td>
+<td>Medium</td>
+<td>systemd 247.3-3ubuntu3.6</td>
+
+<td>5.5</td><td><a href="https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator?vector=AV%3AL%2FAC%3AL%2FPR%3AL%2FUI%3AN%2FS%3AU%2FC%3AN%2FI%3AN%2FA%3AH&amp;version=3.1">AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H</a></td>
+
+<td>(all)</td>
+</tr>
+
+</table>
+
+
+</div>
+</details>
+
+<p class="p1">
+<i>scan completed: <span title="&lt;nil&gt;"></span></i> |
+<i>source updated: <span title="&lt;nil&gt;"></span></i>
+</p>
+`
