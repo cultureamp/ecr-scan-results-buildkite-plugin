@@ -4,6 +4,10 @@ issues:
       linters:
         # type assertion does not need checking as this will run in linux only (via Docker)
         - forcetypeassert
+    - path: src/report/annotation_test.go
+      linters:
+        # interface return from JSON function is A-OK
+        - ireturn
 
 linters:
   enable-all: true
