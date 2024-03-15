@@ -175,7 +175,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 		annotationStyle = "warning"
 	}
 
-	err = agent.Annotate(ctx, string(annotation), annotationStyle, "scan_results_"+imageDigest.Tag)
+	err = agent.Annotate(ctx, string(annotation), annotationStyle, "scan_results_"+imageDigest.Digest)
 	if err != nil {
 		return runtimeerrors.NonFatal("could not annotate build", err)
 	}
