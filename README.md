@@ -42,6 +42,13 @@ The details view can be expanded, showing a table of the vulnerability findings 
 <img src="docs/img/eg-success-expanded.png" alt="example of successful check annotation with collapsed results table" width="80%" align="center">
 </figure>
 
+<figure>
+<figcaption>
+Multi-platform images (image list manifests) are supported. Point the plugin at the tag for the manifest, and the plugin will retrieve and merge results for all linked images.
+</figcaption>
+<img src="docs/img/eg-multi-platform.png" alt="example of multi-platform image report rendering" width="80%" align="center">
+</figure>
+
 ## Example
 
 Add the following lines to your `pipeline.yml`:
