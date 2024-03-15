@@ -37,7 +37,7 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 {{ end }}
 </dl>
 {{ else }}
-<p>No vulnerabilities reported.</p>
+<p>✅ No vulnerabilities reported.</p>
 {{ end }}
 {{ if .FindingSummary.FailedPlatforms }}
 <details class="mb3">
@@ -124,7 +124,7 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 </div>
 </details>
 {{ end }}
-<p class="p1">
+<p>
 <i>scan completed: <span title="{{ .FindingSummary.ImageScanCompletedAt }}">{{ .FindingSummary.ImageScanCompletedAt | timeAgo }}</span></i> |
 <i>source updated: <span title="{{ .FindingSummary.VulnerabilitySourceUpdatedAt }}">{{ .FindingSummary.VulnerabilitySourceUpdatedAt | timeAgo }}</span></i>
 </p>
