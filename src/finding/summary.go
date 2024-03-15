@@ -224,8 +224,12 @@ func mergeSingle(merged, other Summary) Summary {
 	merged.Platforms = append(merged.Platforms, other.Platforms...)
 	merged.FailedPlatforms = append(merged.FailedPlatforms, other.FailedPlatforms...)
 
-	merged.ImageScanCompletedAt = other.ImageScanCompletedAt
-	merged.VulnerabilitySourceUpdatedAt = other.VulnerabilitySourceUpdatedAt
+	if other.ImageScanCompletedAt != nil {
+		merged.ImageScanCompletedAt = other.ImageScanCompletedAt
+	}
+	if other.VulnerabilitySourceUpdatedAt != nil {
+		merged.VulnerabilitySourceUpdatedAt = other.VulnerabilitySourceUpdatedAt
+	}
 
 	return merged
 }

@@ -2,6 +2,7 @@ package finding_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -149,6 +150,8 @@ func TestMergeSummary(t *testing.T) {
 					Platforms: p("other1"),
 				},
 			},
+			ImageScanCompletedAt:         tm(2010, 1, 1),
+			VulnerabilitySourceUpdatedAt: tm(2010, 1, 2),
 		},
 		{
 			Platforms: p("other2"),
@@ -167,6 +170,9 @@ func TestMergeSummary(t *testing.T) {
 
 	// base.Merge(others...)
 	base := finding.MergeSummaries(others)
+
+	assert.NotNil(t, base.ImageScanCompletedAt)
+	assert.NotNil(t, base.VulnerabilitySourceUpdatedAt)
 
 	autogold.ExpectFile(t, base)
 }
@@ -214,4 +220,9 @@ func fscore3(name string, severity types.FindingSeverity, score string, vector s
 
 func i(id string) findingconfig.Ignore {
 	return findingconfig.Ignore{ID: id}
+}
+
+func tm(yyyy int, mm time.Month, dd int) *time.Time {
+	t := time.Date(yyyy, mm, dd, 0, 0, 0, 0, time.UTC)
+	return &t
 }
