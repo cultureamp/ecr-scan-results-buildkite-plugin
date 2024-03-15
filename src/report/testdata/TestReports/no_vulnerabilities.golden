@@ -6,7 +6,7 @@
 <h4>Vulnerability summary for "test-repo@digest-value"</h4>
 
 
-<p>No vulnerabilities reported.</p>
+<p>✅ No vulnerabilities reported.</p>
 
 
 
@@ -19,7 +19,7 @@
 
 
 
-<p class="p1">
+<p>
 <i>scan completed: <span title="&lt;nil&gt;"></span></i> |
 <i>source updated: <span title="&lt;nil&gt;"></span></i>
 </p>
