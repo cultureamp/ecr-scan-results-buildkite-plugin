@@ -36,7 +36,8 @@ func (c AnnotationContext) Render() ([]byte, error) {
 	t, err := template.
 		New("annotation").
 		Funcs(template.FuncMap{
-			"hasUntilValue": hasUntilValue,
+			"hasKnownPlatform": hasKnownPlatform,
+			"hasUntilValue":    hasUntilValue,
 			"titleCase": func(s string) string {
 				c := cases.Title(language.English)
 				return c.String(s)
@@ -198,4 +199,13 @@ func joinPlatforms(input []v1.Platform) string {
 		platformValues[i] = s
 	}
 	return strings.Join(platformValues, ", ")
+}
+
+func hasKnownPlatform(input []v1.Platform) bool {
+	for _, v := range input {
+		if v.OS != "unknown" {
+			return true
+		}
+	}
+	return false
 }
