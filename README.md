@@ -154,33 +154,57 @@ reports harder to scan visually.
 
 ## Requirements
 
-### ECR Scan on Push
+### ECR Basic scanning only
 
-This plugin assumes that the ECR repository has the `ScanOnPush` setting set (see
-the [AWS
-docs](https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html)
-for more information). By default this is not set on AWS ECR repositories.
-However `Base Infrastructure for Services` configures this for all repostories
-that it creates so for `cultureamp` pipelines no change should be required.
+This plugin supports [ECR basic scanning][basic-scanning] only. If support for
+[ECR Advanced Scanning][advanced-scanning] is required, please consider
+submitting a PR.
 
-### Agent role requires the ecr:DescribeImages permission
+### ECR settings: Scan on Push
 
-The Buildkite agent needs the AWS IAM `ecr:DescribeImages` permission to
-retrieve the vulnerability scan counts. Culture Amp build-roles created by `Base
-Infrastructure for Services` have all been modified to include this permission.
+This plugin assumes that the ECR repository has the `ScanOnPush` setting set
+(see the [AWS docs][scan-on-push] for more information). By default this is not
+set on AWS ECR repositories. (Note for Culture Amp users: this is set
+automatically.)
 
-### Scratch images are not supported
+[Manual scanning][basic-scanning] support is possible: consider submitting a PR
+if this is something you need.
 
-ECR cannot scan scratch based images, and this should be OK as the underlying
-container doesn't contain packages to scan.
+[basic-scanning]: https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning-basic.html
+[advanced-scanning]: https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning-enhanced.html
+[scan-on-push]: https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html
 
-If this plugin is installed and pointed at a scratch image you may receive an
-error and it may block the pipeline as a result. The error
-`UnsupportedImageError` is expected in this scenario; see [the ECR
-docs](https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning-troubleshooting.html)
-for more information.
+### IAM role and other security requirements
+
+The executing role will need the following permissions on the target repository:
+
+1. `ecr:DescribeImages`: used to translate tags into digests, and discover the
+   media type of the target image.
+2. `ecr:DescribeImageScanFindings`: used to retrieve the vulnerability scan
+   results.
+3. `ecr:BatchGetImage`, `ecr:GetAuthorizationToken`,
+   `ecr:GetDownloadUrlForLayer`: allows the plugin to login and download the
+   manifests of the target image(s). This gives platform information as well as
+   the ability to read manifest lists of multi-platform images.
+
+> [!NOTE]
+> The plugin will not assume a role necessary to perform the above actions: this
+> is required separately. If there is no valid Docker login with the target
+> repository, the plugin will log in using the current AWS credentials.
 
 ## FAQ
+
+### Unsupported image types (scratch, Windows, etc)
+
+ECR cannot scan scratch based images.
+
+If this plugin is installed and pointed at a scratch image you may receive an
+error. The error `UnsupportedImageError` is expected in this scenario; see [the
+ECR docs][ecr-troubleshooting] for more information.
+
+Unsupported platforms (like Windows) will also result in this error.
+
+[ecr-troubleshooting]: (https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning-troubleshooting.html)
 
 ### The build is failing for an unresolved vulnerability. How do I do configure this plugin so I can unblock my builds?
 
