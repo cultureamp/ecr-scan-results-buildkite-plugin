@@ -1,0 +1,154 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+
+name: 'Go Coverage'
+description: 'Creates a coverage message in a PR comment'
+
+inputs:
+  working-directory:
+    description: 'Location of go.mod where tests should run'
+    required: false
+    default: '.'
+  gotest-packages:
+    description: 'The Go module path for the packages and paths to test. Defaults to ./...'
+    required: false
+    default: './...'
+  gotest-arguments:
+    description: 'Additional arguments to pass to "go test", e.g. "-race".'
+    required: false
+    default: ''
+  coverage-threshold-min:
+    description: 'The minimum coverage percentage to regarded as acceptable.'
+    required: false
+    default: '50'
+  coverage-threshold-healthy:
+    description: 'The coverage percentage to regard as healthy for this codebase.'
+    required: false
+    default: '75'
+
+runs:
+  using: "composite"
+  steps:
+
+    - name: Setup outputs
+      id: setup
+      working-directory: '${{ inputs.working-directory }}'
+      shell: bash
+      run: |
+          # find PR for branch
+          pr_number="${PR_NUMBER}"
+          if [[ -z "${pr_number:-}" ]]; then
+            echo "determining PR from branch"
+            pr_number="$(gh pr list --state open --head "${branch_name}" --repo "${REPOSITORY:-}" --json number | jq -r '.[0].number | select(. != null)')"
+          fi
+          echo "pr=${pr_number}" >> "$GITHUB_OUTPUT"
+
+          # create a temp directory for the results
+          tmp="$(mktemp --directory 'go-tests.XXXXXXXX')"
+          mkdir -p "$tmp"
+
+          echo "artifacts-dir=${tmp}" >> "$GITHUB_OUTPUT"
+      env:
+        GH_TOKEN: "${{ github.token }}"
+        PR_NUMBER: "${{ github.event.number }}"
+
+    - name: Install tooling dependencies
+      working-directory: '${{ inputs.working-directory }}'
+      shell: bash
+      run: |
+          # install required tooling
+          go install github.com/boumenot/gocover-cobertura@v1.2.0
+          go install github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@v2.5.0
+
+    - name: Run tests
+      working-directory: '${{ inputs.working-directory }}'
+      shell: bash
+      run: |
+        # run go test
+        go test "${GOTEST_PACKAGES}" -json -v "-coverprofile=${ARTIFACTS_DIR}/coverage.out" -covermode atomic ${GOTEST_ARGUMENTS} 2>&1 | tee "${ARTIFACTS_DIR}/gotest.log" | gotestfmt
+      env:
+        ARTIFACTS_DIR: "${{ steps.setup.outputs.artifacts-dir }}"
+        GOTEST_PACKAGES: "${{ inputs.gotest-packages }}"
+        GOTEST_ARGUMENTS: "${{ inputs.gotest-arguments }}"
+
+    - name: Process package exclusions
+      working-directory: '${{ inputs.working-directory }}'
+      shell: bash
+      run: |
+        # exclude packages from coverage based on optional ".coverage-exclusions" configuration file
+        configuration_file=".coverage-exclusions"
+        coverage_file="${ARTIFACTS_DIR}/coverage.out"
+
+        if [[ -e "${configuration_file}" ]]; then
+          echo "Filtering coverage exclusions"
+
+          while IFS="" read -r exclusion
+          do
+            # ignore empty lines and comments
+            if [[ -z "${exclusion}" || "${exclusion}" = \#* ]]; then
+              continue
+            fi
+
+            printf 'exclude %s\n' "${exclusion}"
+
+            # each line in a coverage file looks like: github.com/cultureamp/ecrscanresults/registry/ecr.go:85.21,86.27 1 4
+            # excluding by package means matching from the start of the line, then any file name, stopping at the colon
+            grep --invert-match '^'"${exclusion}"'/[^/]*:' "${coverage_file}" > "${coverage_file}.tmp"
+            mv "${coverage_file}.tmp" "${coverage_file}"
+          done < "${configuration_file}"
+        fi
+      env:
+        ARTIFACTS_DIR: "${{ steps.setup.outputs.artifacts-dir }}"
+
+    - name: Convert go coverage to cobertura format
+      id: convert-format
+      shell: bash
+      working-directory: '${{ inputs.working-directory }}'
+      run: |
+        # transform go coverage to cobertura format
+        gocover-cobertura < "${ARTIFACTS_DIR}/coverage.out" > "${ARTIFACTS_DIR}/coverage.xml"
+
+        echo "cobertura-coverage=${ARTIFACTS_DIR}/coverage.xml" >> "${GITHUB_OUTPUT}"
+      env:
+        ARTIFACTS_DIR: "${{ steps.setup.outputs.artifacts-dir }}"
+
+    - name: Generate code coverage report
+      uses: irongut/CodeCoverageSummary@v1.3.0
+      with:
+        filename: '${{ inputs.working-directory }}/${{ steps.convert-format.outputs.cobertura-coverage }}'
+        badge: false
+        fail_below_min: false
+        format: markdown
+        hide_branch_rate: false
+        hide_complexity: true
+        indicators: true
+        output: both
+        thresholds: '${{ inputs.coverage-threshold-min }} ${{ inputs.coverage-threshold-healthy }}'
+
+    - name: Add Coverage PR Comment
+      if: steps.setup.outputs.pr != ''
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        recreate: true
+        number: "${{ steps.setup.outputs.pr }}"
+        path: code-coverage-results.md
+
+    - name: Write to Job Summary
+      shell: bash
+      run: |
+        # write coverage to job summary
+        cat code-coverage-results.md >> "${GITHUB_STEP_SUMMARY}"
+
+    - name: Cleanup
+      if: 'always()'
+      working-directory: '${{ inputs.working-directory }}'
+      shell: bash
+      run: |
+        # Cleanup whatever temporary files were created by this step, as we
+        # don't need this step cluttering the working directory for other steps.
+        # The code coverage summary step runs in Docker, and doesn't have access
+        # to the runner temp directory.
+        rm -rfv "${ARTIFACTS_DIR}" || true
+        rm -fv code-coverage-results.md || true
+
+      env:
+        ARTIFACTS_DIR: "${{ steps.setup.outputs.artifacts-dir }}"
