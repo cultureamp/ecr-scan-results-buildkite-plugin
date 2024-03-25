@@ -9,8 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
-
-	ocitypes "github.com/google/go-containerregistry/pkg/v1/types"
 )
 
 var registryImageExpr = regexp.MustCompile(`^(?P<registryId>[^.]+)\.dkr\.ecr\.(?P<region>[^.]+).amazonaws.com/(?P<repoName>[^:@]+)(?::(?P<tag>.+))?(?:@(?P<digest>.+))?$`)
@@ -60,6 +58,16 @@ func (i ImageReference) digestRef() string {
 	return "@" + i.Digest
 }
 
+// WithDigest returns a copy of the image reference with the digest set to the
+// given value. The tag, if any, is cleared.
+func (i ImageReference) WithDigest(digest string) ImageReference {
+	ref := i
+	ref.Digest = digest
+	ref.Tag = ""
+
+	return ref
+}
+
 // ParseReferenceFromURL parses an image reference from a supplied ECR image
 // identifier.
 func ParseReferenceFromURL(url string) (ImageReference, error) {
@@ -102,32 +110,7 @@ func NewRegistryScan(config aws.Config) (*RegistryScan, error) {
 	}, nil
 }
 
-// GetScannableImageDigest returns the digest of the image with the supplied
-// tag. If the image media type is a manifest list, the list will be looked up
-// using RemoteRepository.GetImageForArchitecture, and the digest of the image
-// with the supplied architecture will be returned.
-func (r *RegistryScan) GetScannableImageDigest(ctx context.Context, imageInfo ImageReference) (ImageReference, error) {
-	ref, mediaType, err := r.GetLabelDigest(ctx, imageInfo)
-	if err != nil {
-		return ImageReference{}, err
-	}
-
-	// standard image, return immediately
-	if !ocitypes.MediaType(mediaType).IsIndex() {
-		return ref, nil
-	}
-
-	// index image, look up the image for the architecture
-	repo := NewRemoteRepository()
-	scannableRef, _, err := repo.GetImageForArchitecture(ref, "amd64")
-	if err != nil {
-		return ImageReference{}, err
-	}
-
-	return scannableRef, nil
-}
-
-func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo ImageReference) (ImageReference, string, error) {
+func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo ImageReference) (ImageReference, error) {
 	out, err := r.Client.DescribeImages(ctx, &ecr.DescribeImagesInput{
 		RegistryId:     &imageInfo.RegistryID,
 		RepositoryName: &imageInfo.Name,
@@ -137,23 +120,20 @@ func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo ImageRefere
 			},
 		},
 	})
+
 	if err != nil {
-		return ImageReference{}, "", err
+		return ImageReference{}, err
 	}
 	if len(out.ImageDetails) == 0 {
-		return ImageReference{}, "", fmt.Errorf("no image found for image %s", imageInfo)
+		return ImageReference{}, fmt.Errorf("no image found for image %s", imageInfo)
 	}
 
 	imageDetail := out.ImageDetails[0]
 
 	// copy input and update tag from label to digest
-	digestInfo := imageInfo
-	digestInfo.Tag = ""
-	digestInfo.Digest = aws.ToString(imageDetail.ImageDigest)
+	digestInfo := imageInfo.WithDigest(aws.ToString(imageDetail.ImageDigest))
 
-	mediaType := aws.ToString(imageDetail.ImageManifestMediaType)
-
-	return digestInfo, mediaType, nil
+	return digestInfo, nil
 }
 
 func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo ImageReference) error {
@@ -165,7 +145,7 @@ func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo Image
 	maxAttemptDelay := 15 * time.Second
 	maxTotalDelay := 3 * time.Minute
 
-	return waiter.Wait(ctx, &ecr.DescribeImageScanFindingsInput{
+	err := waiter.Wait(ctx, &ecr.DescribeImageScanFindingsInput{
 		RegistryId:     &digestInfo.RegistryID,
 		RepositoryName: &digestInfo.Name,
 		ImageId: &types.ImageIdentifier{
@@ -177,6 +157,18 @@ func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo Image
 		opts.MinDelay = minAttemptDelay
 		opts.MaxDelay = maxAttemptDelay
 	})
+
+	// It is not good style to compare the error string, but this is the only way
+	// to capture that the scan failed, but everything else is hunky dory. We
+	// return nil here so that the caller will gather the scan results, and
+	// communicate to the user the reason this image has no results. "FAILURE" is
+	// returned when the image is unsupported, for example, and we want to
+	// communicate this properly to the user.
+	if err != nil && err.Error() == "waiter state transitioned to Failure" {
+		return nil
+	}
+
+	return err
 }
 
 func (r *RegistryScan) GetScanFindings(ctx context.Context, digestInfo ImageReference) (*ecr.DescribeImageScanFindingsOutput, error) {

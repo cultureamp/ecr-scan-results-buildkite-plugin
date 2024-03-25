@@ -1,6 +1,8 @@
 package report_test
 
 import (
+	_ "embed"
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -12,6 +14,9 @@ import (
 	"github.com/hexops/autogold/v2"
 	"github.com/stretchr/testify/require"
 )
+
+//go:embed testdata/summary.multiplatform.json
+var summaryMultiplePlatforms []byte
 
 func TestReports(t *testing.T) {
 	cases := []struct {
@@ -252,6 +257,19 @@ func TestReports(t *testing.T) {
 				HighSeverityThreshold:     0,
 			},
 		},
+		{
+			name: "multi-platform findings",
+			data: report.AnnotationContext{
+				Image: registry.ImageReference{
+					RegistryID: "0123456789",
+					Region:     "us-west-2",
+					Name:       "test-repo",
+					Digest:     "digest-value",
+				},
+				ImageLabel:     "label of image",
+				FindingSummary: fromJSON[finding.Summary](t, summaryMultiplePlatforms),
+			},
+		},
 	}
 
 	for _, c := range cases {
@@ -263,4 +281,12 @@ func TestReports(t *testing.T) {
 			autogold.ExpectFile(t, string(result))
 		})
 	}
+}
+
+func fromJSON[T any](t *testing.T, source []byte) T {
+	t.Helper()
+
+	var result T
+	require.NoError(t, json.Unmarshal(source, &result))
+	return result
 }

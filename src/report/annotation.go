@@ -3,6 +3,7 @@ package report
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
 	"html/template"
 	"slices"
@@ -13,6 +14,7 @@ import (
 	"github.com/cultureamp/ecrscanresults/finding"
 	"github.com/cultureamp/ecrscanresults/findingconfig"
 	"github.com/cultureamp/ecrscanresults/registry"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/justincampbell/timeago"
 	"golang.org/x/exp/maps"
 	"golang.org/x/text/cases"
@@ -34,12 +36,15 @@ func (c AnnotationContext) Render() ([]byte, error) {
 	t, err := template.
 		New("annotation").
 		Funcs(template.FuncMap{
-			"hasUntilValue": hasUntilValue,
+			"hasKnownPlatform": hasKnownPlatform,
+			"hasUntilValue":    hasUntilValue,
 			"titleCase": func(s string) string {
 				c := cases.Title(language.English)
 				return c.String(s)
 			},
-			"lowerCase": strings.ToLower,
+			"lowerCase":     strings.ToLower,
+			"joinPlatforms": joinPlatforms,
+			"params":        params,
 			"nbsp": func(input string) any {
 				if len(input) > 0 {
 					return input
@@ -56,13 +61,7 @@ func (c AnnotationContext) Render() ([]byte, error) {
 			},
 			"sortFindings":   sortFindings,
 			"sortSeverities": sortSeverities,
-			"string": func(input any) (string, error) {
-				if strg, ok := input.(fmt.Stringer); ok {
-					return strg.String(), nil
-				}
-
-				return fmt.Sprintf("%s", input), nil
-			},
+			"string":         asString,
 		}).
 		Parse(annotationTemplateSource)
 	if err != nil {
@@ -76,6 +75,23 @@ func (c AnnotationContext) Render() ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func params(values ...any) (map[string]any, error) {
+	if len(values)%2 != 0 {
+		return nil, errors.New("invalid params call: values should be a list of key, value pairs")
+	}
+
+	dict := make(map[string]any, len(values)/2)
+	for i := 0; i < len(values); i += 2 {
+		key, ok := values[i].(string)
+		if !ok {
+			return nil, errors.New("dict keys must be strings")
+		}
+		dict[key] = values[i+1]
+	}
+
+	return dict, nil
 }
 
 // sortFindings sorts by severity rank, then CVSS3/CVSS2 score _descending_, then by CVE descending
@@ -165,4 +181,31 @@ func compareCVSSScore(a, b finding.CVSSScore) int {
 
 func hasUntilValue(until findingconfig.UntilTime) bool {
 	return time.Time(until).After(time.Time(findingconfig.UntilTime{}))
+}
+
+func asString(input any) (string, error) {
+	if strg, ok := input.(fmt.Stringer); ok {
+		return strg.String(), nil
+	}
+
+	return fmt.Sprintf("%s", input), nil
+}
+
+func joinPlatforms(input []v1.Platform) string {
+	platformValues := make([]string, len(input))
+
+	for i, v := range input {
+		s := v.String()
+		platformValues[i] = s
+	}
+	return strings.Join(platformValues, ", ")
+}
+
+func hasKnownPlatform(input []v1.Platform) bool {
+	for _, v := range input {
+		if v.OS != "unknown" {
+			return true
+		}
+	}
+	return false
 }

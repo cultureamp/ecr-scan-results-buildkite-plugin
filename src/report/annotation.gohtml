@@ -14,9 +14,10 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 {{ $summary := .FindingSummary }}
 {{ if .ImageLabel }}
 <h4>Vulnerability summary for "{{ .ImageLabel }}"</h4>
-<p class="h6 regular italic">{{ .Image.DisplayName }}</p>
+<p class="h6 regular italic">{{ .Image.DisplayName }}{{ if (and $summary.Platforms (hasKnownPlatform $summary.Platforms)) }} with platform{{ if gt (len $summary.Platforms) 1 }}s{{ end }} {{ joinPlatforms $summary.Platforms }}{{ end }}</p>
 {{ else }}
-<h4>Vulnerability summary for "{{ .Image.DisplayName }}"</h4>
+<h4>Vulnerability summary for "{{ .Image.DisplayName }}"</h4>{{ if (and $summary.Platforms (hasKnownPlatform $summary.Platforms)) }}
+<p class="h6 regular italic">Platform{{ if gt (len $summary.Platforms) 1 }}s{{ end }}: {{ joinPlatforms $summary.Platforms }}</p>{{ end }}
 {{ end }}
 {{ if .FindingSummary.Counts }}
 <dl class="flex flex-wrap mxn1">
@@ -36,7 +37,19 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 {{ end }}
 </dl>
 {{ else }}
-<p>No vulnerabilities reported.</p>
+<p>✅ No vulnerabilities reported.</p>
+{{ end }}
+{{ if .FindingSummary.FailedPlatforms }}
+<details class="mb3">
+<summary>:fire_engine: {{ len .FindingSummary.FailedPlatforms }} of {{ len .FindingSummary.Platforms }} platforms did not produce scan results</summary>
+<div>
+<ul>
+{{ range $platform := .FindingSummary.FailedPlatforms }}
+<li><em>{{ $platform.Platform }}</em>: {{ $platform.Reason }}</li>
+{{ end }}
+</ul>
+</div>
+</details>
 {{ end }}
 {{ define "findingNameLink" }}{{ if .URI }}<a href="{{ .URI }}">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}{{ end }}
 {{ define "findingName" }}{{ if .Description }}<details><summary>{{ template "findingNameLink" . }}</summary><div>{{ .Description }}</div></details>{{ else }}{{ template "findingNameLink" . }}{{ end }}{{ end }}
@@ -54,8 +67,10 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
    else
 }}<td>{{ if .CVSS2.Score }}{{ template "cvssScore" .CVSS2 }} <em>(*CVSS2)</em>{{ else }}&nbsp;{{ end }}</td><td>{{ template "cvssVector" .CVSS2 }}</td>{{ end }}
 {{ end }}
+{{ define "platformHeader" }}{{ if gt .SuccessfulPlatformCount 1 }}<th>Platforms</th>{{ end }}{{ end }}
+{{ define "platformCells" }}{{ if gt .Summary.SuccessfulPlatformCount 1 }}<td>{{ if eq .Summary.SuccessfulPlatformCount (len .Finding.Platforms) }}(all){{else}}{{ .Finding.Platforms | joinPlatforms }}{{ end }}</td>{{ end }}{{ end }}
 {{ if (or .FindingSummary.Details .FindingSummary.Ignored) }}
-<details>
+<details class="mb3">
 <summary>Vulnerability details</summary>
 <div>
 <p>All listed scores are CVSS3 unless otherwise noted.</p>
@@ -67,6 +82,7 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 <th>Affects</th>
 <th>CVSS score</th>
 <th>CVSS vector</th>
+{{ template "platformHeader" $summary }}
 </tr>
 {{ range $f := .FindingSummary.Details | sortFindings }}
 <tr>
@@ -74,6 +90,7 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 <td>{{ $f.Severity | string | lowerCase | titleCase }}</td>
 <td>{{ $f.PackageName | nbsp }} {{ $f.PackageVersion | nbsp }}</td>
 {{ template "cvssCells" $f }}
+{{ template "platformCells" params "Summary" $summary "Finding" $f }}
 </tr>
 {{ end }}
 </table>
@@ -90,6 +107,7 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 <th>Affects</th>
 <th>CVSS score</th>
 <th>CVSS vector</th>
+{{ template "platformHeader" $summary }}
 </tr>
 {{ range $f := .FindingSummary.Ignored | sortFindings }}
 <tr>
@@ -98,6 +116,7 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 <td>{{ template "findingIgnore" $f.Ignore }}</td>
 <td>{{ $f.PackageName | nbsp }} {{ $f.PackageVersion | nbsp }}</td>
 {{ template "cvssCells" $f }}
+{{ template "platformCells" params "Summary" $summary "Finding" $f }}
 </tr>
 {{ end }}
 </table>
@@ -105,7 +124,7 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 </div>
 </details>
 {{ end }}
-<p class="p1">
+<p>
 <i>scan completed: <span title="{{ .FindingSummary.ImageScanCompletedAt }}">{{ .FindingSummary.ImageScanCompletedAt | timeAgo }}</span></i> |
 <i>source updated: <span title="{{ .FindingSummary.VulnerabilitySourceUpdatedAt }}">{{ .FindingSummary.VulnerabilitySourceUpdatedAt | timeAgo }}</span></i>
 </p>

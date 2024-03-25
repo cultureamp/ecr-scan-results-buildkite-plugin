@@ -27,7 +27,15 @@ func (u *UntilTime) UnmarshalYAML(value *yaml.Node) error {
 	return nil
 }
 
+func (u UntilTime) IsZero() bool {
+	return time.Time(u).IsZero()
+}
+
 func (u UntilTime) String() string {
+	if u.IsZero() {
+		return "never"
+	}
+
 	return time.Time(u).Format(untilFormat)
 }
 

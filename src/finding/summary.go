@@ -8,10 +8,20 @@ import (
 	"time"
 
 	"github.com/cultureamp/ecrscanresults/findingconfig"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/shopspring/decimal"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
+)
+
+type SummaryStatus int
+
+const (
+	StatusOk SummaryStatus = iota
+	StatusThresholdsExceeded
+	StatusAllPlatformsFailed
 )
 
 type Detail struct {
@@ -27,6 +37,10 @@ type Detail struct {
 	CVSS3          CVSSScore
 
 	Ignore *findingconfig.Ignore
+
+	// Platforms is the set of OS and architecture combinations that the finding
+	// was reported for. This may be nil if this finding is for a single image.
+	Platforms []v1.Platform
 }
 
 type CVSSScore struct {
@@ -35,12 +49,35 @@ type CVSSScore struct {
 	VectorURL string
 }
 
+func NewCVSS2Score(score string, vector string) CVSSScore {
+	return CVSSScore{
+		Score:     convertScore(score),
+		Vector:    vector,
+		VectorURL: cvss2VectorURL(vector),
+	}
+}
+
+func NewCVSS3Score(score string, vector string) CVSSScore {
+	correctedVector, vectorURL := cvss3VectorURL(vector)
+
+	return CVSSScore{
+		Score:     convertScore(score),
+		Vector:    correctedVector,
+		VectorURL: vectorURL,
+	}
+}
+
 type SeverityCount struct {
 	// Included is the number of findings that count towards the threshold for this severity.
 	Included int32
 
 	// Ignored is the number of findings that were ignored for the purposes of the threshold.
 	Ignored int32
+}
+
+type PlatformScanFailure struct {
+	Platform v1.Platform
+	Reason   string
 }
 
 type Summary struct {
@@ -57,6 +94,78 @@ type Summary struct {
 
 	// The time when the vulnerability data was last scanned.
 	VulnerabilitySourceUpdatedAt *time.Time
+
+	// Platforms is the set of OS and architecture combinations that this summary
+	// was collated for. Findings for this summary may be for a single image or
+	// for multiple images.
+	Platforms []v1.Platform
+
+	// The set of platforms (with reasons) for which the scan failed, and the
+	// reason given by AWS for the failure.
+	FailedPlatforms []PlatformScanFailure
+}
+
+func newSummary() Summary {
+	return Summary{
+		Counts:          map[types.FindingSeverity]SeverityCount{},
+		Details:         []Detail{},
+		Ignored:         []Detail{},
+		Platforms:       []v1.Platform{},
+		FailedPlatforms: []PlatformScanFailure{},
+	}
+}
+
+func (s Summary) SuccessfulPlatformCount() int {
+	return len(s.Platforms) - len(s.FailedPlatforms)
+}
+
+// Status returns the status of the summary, taking into account the status of
+// all of the platforms included in the target image, as well as the supplied
+// vulnerability thresholds.
+func (s Summary) Status(criticalThreshold int32, highThreshold int32) SummaryStatus {
+	if len(s.Platforms) == len(s.FailedPlatforms) {
+		return StatusAllPlatformsFailed
+	}
+
+	if s.ThresholdsExceeded(criticalThreshold, highThreshold) {
+		return StatusThresholdsExceeded
+	}
+
+	return StatusOk
+}
+
+// IncludedCounts returns the number of findings that count towards the
+// threshold for High and Critical severities.
+func (s Summary) IncludedCounts() (int32, int32) {
+	return s.includedCountFor("CRITICAL"), s.includedCountFor("HIGH")
+}
+
+// ThresholdsExceeded returns true if the number of included findings
+// exceed the given thresholds for their respective severities.
+func (s Summary) ThresholdsExceeded(criticalThreshold int32, highThreshold int32) bool {
+	criticalFindings, highFindings := s.IncludedCounts()
+
+	overThreshold :=
+		criticalFindings > criticalThreshold ||
+			highFindings > highThreshold
+
+	return overThreshold
+}
+
+// includedCountFor returns the number of findings that count towards the
+// threshold for the given severity, returning 0 if there are no counts for the
+// given severity value.
+func (s Summary) includedCountFor(severity types.FindingSeverity) int32 {
+	if s.Counts == nil {
+		return 0
+	}
+
+	counts, ok := s.Counts[severity]
+	if !ok {
+		return 0
+	}
+
+	return counts.Included
 }
 
 func (s *Summary) addDetail(d Detail) {
@@ -78,43 +187,100 @@ func (s *Summary) updateCount(severity types.FindingSeverity, updateBy SeverityC
 	s.Counts[severity] = counts
 }
 
-func newSummary() Summary {
-	return Summary{
-		Counts: map[types.FindingSeverity]SeverityCount{
-			"CRITICAL": {},
-			"HIGH":     {},
-		},
-		Details: []Detail{},
-		Ignored: []Detail{},
+func (s *Summary) updateCountByStatus(severity types.FindingSeverity, ignored bool) {
+	count := SeverityCount{}
+
+	if ignored {
+		count.Ignored = 1
+	} else {
+		count.Included = 1
 	}
+
+	s.updateCount(severity, count)
 }
 
-func NewCVSS2Score(score string, vector string) CVSSScore {
-	return CVSSScore{
-		Score:     convertScore(score),
-		Vector:    vector,
-		VectorURL: cvss2VectorURL(vector),
+func MergeSummaries(summaries []Summary) Summary {
+	merged := newSummary()
+
+	// merge findings from the other Summary into this one
+	for _, other := range summaries {
+		merged = mergeSingle(merged, other)
 	}
+
+	return merged
 }
 
-func NewCVSS3Score(score string, vector string) CVSSScore {
-	correctedVector, vectorURL := cvss3VectorURL(vector)
+// Merge another summary into this one. This assumes that the list of findings
+// is sorted by ID, and that the other summary is for a different platform. At
+// the end, the details are merged, and counts updated. If a finding appears in
+// both summaries, the platforms are merged together, keeping track of the
+// plaforms for a given finding.
+func mergeSingle(merged, other Summary) Summary {
+	// merge findings from the other Summary into this one
 
-	return CVSSScore{
-		Score:     convertScore(score),
-		Vector:    correctedVector,
-		VectorURL: vectorURL,
+	merged.Details = mergeDetails(merged, merged.Details, other.Details)
+	merged.Ignored = mergeDetails(merged, merged.Ignored, other.Ignored)
+
+	merged.Platforms = append(merged.Platforms, other.Platforms...)
+	merged.FailedPlatforms = append(merged.FailedPlatforms, other.FailedPlatforms...)
+
+	if other.ImageScanCompletedAt != nil {
+		merged.ImageScanCompletedAt = other.ImageScanCompletedAt
 	}
+	if other.VulnerabilitySourceUpdatedAt != nil {
+		merged.VulnerabilitySourceUpdatedAt = other.VulnerabilitySourceUpdatedAt
+	}
+
+	return merged
 }
 
-func Summarize(findings *types.ImageScanFindings, ignoreConfig []findingconfig.Ignore) Summary {
+func mergeDetails(summary Summary, merged, other []Detail) []Detail {
+	for _, d := range other {
+		insertIdx, found := slices.BinarySearchFunc(merged, d, findingByID)
+
+		if found {
+			// already exists, update the platform set for the current finding
+			updated := merged[insertIdx]
+			updated.Platforms = append(updated.Platforms, d.Platforms...)
+			merged[insertIdx] = updated
+		} else {
+			// insert unique finding into sorted list and update counts
+			merged = slices.Insert(merged, insertIdx, d)
+			summary.updateCountByStatus(d.Severity, d.Ignore != nil)
+		}
+	}
+
+	return merged
+}
+
+// Summarize takes a set of findings from ECR and converts them into a summary
+// ready for rendering.
+func Summarize(results *ecr.DescribeImageScanFindingsOutput, platform v1.Platform, ignoreConfig []findingconfig.Ignore) Summary {
 	summary := newSummary()
 
+	summary.Platforms = []v1.Platform{platform}
+
+	if results.ImageScanStatus != nil && results.ImageScanStatus.Status != types.ScanStatusComplete {
+		summary.FailedPlatforms = append(summary.FailedPlatforms, PlatformScanFailure{
+			Platform: platform,
+			Reason:   aws.ToString(results.ImageScanStatus.Description),
+		})
+	}
+
+	if results.ImageScanFindings == nil {
+		return summary
+	}
+
+	findings := results.ImageScanFindings
 	summary.ImageScanCompletedAt = findings.ImageScanCompletedAt
 	summary.VulnerabilitySourceUpdatedAt = findings.VulnerabilitySourceUpdatedAt
 
 	for _, f := range findings.Findings {
 		detail := findingToDetail(f)
+
+		// ensure that the detail has the correct platform for this summary (ready
+		// for merging with other summaries).
+		detail.Platforms = summary.Platforms
 
 		index := slices.IndexFunc(ignoreConfig, func(ignore findingconfig.Ignore) bool {
 			return ignore.ID == detail.Name
@@ -231,4 +397,8 @@ func convertScore(s string) *decimal.Decimal {
 	}
 
 	return &d
+}
+
+func findingByID(a Detail, b Detail) int {
+	return strings.Compare(a.Name, b.Name)
 }

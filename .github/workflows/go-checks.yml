@@ -30,9 +30,10 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: src/go.mod
+          cache: false # the lint action does its own caching
 
       - name: Lint code
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v4
         with:
           version: v1.55.2
           working-directory: src
@@ -49,6 +50,7 @@ jobs:
           go-version-file: src/go.mod
           cache-dependency-path: src/go.sum
 
-      - name: Test code
-        run: |
-          make test-ci
+      - id: Test
+        uses: ./.github/actions/go-coverage
+        with:
+          working-directory: src

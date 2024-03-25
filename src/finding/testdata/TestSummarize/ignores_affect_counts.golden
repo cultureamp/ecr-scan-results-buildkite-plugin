@@ -10,17 +10,22 @@ finding.Summary{
 		{
 			Name:     "CVE-2019-5188",
 			Severity: types.FindingSeverity("HIGH"),
+			Platforms: []v1.Platform{
+				{OS: "default"},
+			},
 		},
 		{
-			Name:     "CVE-2019-5200",
-			Severity: types.FindingSeverity("CRITICAL"),
+			Name:      "CVE-2019-5200",
+			Severity:  types.FindingSeverity("CRITICAL"),
+			Platforms: []v1.Platform{{OS: "default"}},
 		},
 	},
 	Ignored: []finding.Detail{{
-		Name:     "CVE-2019-5189",
-		Severity: types.FindingSeverity("HIGH"),
-		Ignore: &findingconfig.Ignore{
-			ID: "CVE-2019-5189",
-		},
+		Name:      "CVE-2019-5189",
+		Severity:  types.FindingSeverity("HIGH"),
+		Ignore:    &findingconfig.Ignore{ID: "CVE-2019-5189"},
+		Platforms: []v1.Platform{{OS: "default"}},
 	}},
+	Platforms:       []v1.Platform{{OS: "default"}},
+	FailedPlatforms: []finding.PlatformScanFailure{},
 }

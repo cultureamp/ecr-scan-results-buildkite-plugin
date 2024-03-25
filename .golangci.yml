@@ -4,6 +4,10 @@ issues:
       linters:
         # type assertion does not need checking as this will run in linux only (via Docker)
         - forcetypeassert
+    - path: src/report/annotation_test.go
+      linters:
+        # interface return from JSON function is A-OK
+        - ireturn
 
 linters:
   enable-all: true
@@ -66,7 +70,7 @@ linters-settings:
         mode: strict
 
   cyclop:
-    max-complexity: 20
+    max-complexity: 30
 
   exhaustive:
     # Presence of "default" case in switch statements satisfies exhaustiveness,

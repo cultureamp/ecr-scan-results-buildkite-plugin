@@ -1,0 +1,56 @@
+finding.Summary{
+	Counts: map[types.FindingSeverity]finding.SeverityCount{
+		types.FindingSeverity("HIGH"): {Included: 4},
+	},
+	Details: []finding.Detail{
+		{
+			Name:     "CVE-a",
+			Severity: types.FindingSeverity("HIGH"),
+			Platforms: []v1.Platform{
+				{OS: "base"},
+				{OS: "other1"},
+			},
+		},
+		{
+			Name:      "CVE-b",
+			Severity:  types.FindingSeverity("HIGH"),
+			Platforms: []v1.Platform{{OS: "other1"}},
+		},
+		{
+			Name:     "CVE-c",
+			Severity: types.FindingSeverity("HIGH"),
+			Platforms: []v1.Platform{
+				{OS: "base"},
+				{OS: "other1"},
+			},
+		},
+		{
+			Name:      "CVE-d",
+			Severity:  types.FindingSeverity("HIGH"),
+			Platforms: []v1.Platform{{OS: "other2"}},
+		},
+	},
+	Ignored: []finding.Detail{},
+	ImageScanCompletedAt: valast.Ptr(time.Date(2010,
+		1,
+		1,
+		0,
+		0,
+		0,
+		0,
+		time.UTC)),
+	VulnerabilitySourceUpdatedAt: valast.Ptr(time.Date(2010,
+		1,
+		2,
+		0,
+		0,
+		0,
+		0,
+		time.UTC)),
+	Platforms: []v1.Platform{
+		{OS: "base"},
+		{OS: "other1"},
+		{OS: "other2"},
+	},
+	FailedPlatforms: []finding.PlatformScanFailure{},
+}
