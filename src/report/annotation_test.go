@@ -211,9 +211,7 @@ func TestReports(t *testing.T) {
 				ImageLabel: "label of image",
 				FindingSummary: finding.Summary{
 					Counts: map[types.FindingSeverity]finding.SeverityCount{
-						"HIGH":     {Included: 1},
-						"CRITICAL": {Included: 1, Ignored: 1},
-						"LOW":      {Included: 0, Ignored: 1},
+						"HIGH": {Included: 10},
 					},
 					Details: []finding.Detail{
 						{
@@ -231,7 +229,12 @@ func TestReports(t *testing.T) {
 							Severity: "HIGH",
 						},
 						{
-							Name:     "CVE-d",
+							Name:     "CVE-d1",
+							Severity: "HIGH",
+							CVSS2:    finding.NewCVSS2Score("6.0", ""),
+						},
+						{
+							Name:     "CVE-d2",
 							Severity: "HIGH",
 							CVSS2:    finding.NewCVSS2Score("6.0", ""),
 						},
@@ -242,9 +245,22 @@ func TestReports(t *testing.T) {
 							CVSS2:    finding.NewCVSS2Score("4.0", ""),
 						},
 						{
-							Name:     "CVE-g",
-							Severity: "HIGH",
-							CVSS2:    finding.NewCVSS3Score("8.0", ""),
+							Name:        "CVE-g",
+							Severity:    "HIGH",
+							CVSS2:       finding.NewCVSS3Score("8.0", ""),
+							PackageName: "g-3",
+						},
+						{
+							Name:        "CVE-g",
+							Severity:    "HIGH",
+							CVSS2:       finding.NewCVSS3Score("8.0", ""),
+							PackageName: "g-1",
+						},
+						{
+							Name:        "CVE-g",
+							Severity:    "HIGH",
+							CVSS2:       finding.NewCVSS3Score("8.0", ""),
+							PackageName: "g-2",
 						},
 						{
 							Name:     "CVE-h",

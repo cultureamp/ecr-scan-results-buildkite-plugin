@@ -13,27 +13,9 @@
 
 
 <div class="m1 p1 mr3">
-<dt>Critical</dt>
-<dd><h1 class="m0 red">1</h1>
-<em>+ 1 ignored</em>
-</dd>
-</div>
-
-
-
-<div class="m1 p1 mr3">
 <dt>High</dt>
-<dd><h1 class="m0 red">1</h1>
+<dd><h1 class="m0 red">10</h1>
 
-</dd>
-</div>
-
-
-
-<div class="m1 p1 mr3">
-<dt>Low</dt>
-<dd><h1 class="m0">0</h1>
-<em>+ 1 ignored</em>
 </dd>
 </div>
 
@@ -98,7 +80,7 @@
 <tr>
 <td>CVE-g</td>
 <td>High</td>
-<td>&nbsp; &nbsp;</td>
+<td>g-1 &nbsp;</td>
 
 <td>8.0 <em>(*CVSS2)</em></td><td>&nbsp;</td>
 
@@ -106,7 +88,37 @@
 </tr>
 
 <tr>
-<td>CVE-d</td>
+<td>CVE-g</td>
+<td>High</td>
+<td>g-2 &nbsp;</td>
+
+<td>8.0 <em>(*CVSS2)</em></td><td>&nbsp;</td>
+
+
+</tr>
+
+<tr>
+<td>CVE-g</td>
+<td>High</td>
+<td>g-3 &nbsp;</td>
+
+<td>8.0 <em>(*CVSS2)</em></td><td>&nbsp;</td>
+
+
+</tr>
+
+<tr>
+<td>CVE-d2</td>
+<td>High</td>
+<td>&nbsp; &nbsp;</td>
+
+<td>6.0 <em>(*CVSS2)</em></td><td>&nbsp;</td>
+
+
+</tr>
+
+<tr>
+<td>CVE-d1</td>
 <td>High</td>
 <td>&nbsp; &nbsp;</td>
 

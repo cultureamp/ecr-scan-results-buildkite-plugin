@@ -120,7 +120,16 @@ func sortFindings(findings []finding.Detail) []finding.Detail {
 
 		// descending order of CVE, in general this means that newer CVEs will be at
 		// the top
-		return strings.Compare(b.Name, a.Name)
+		if name := strings.Compare(a.Name, b.Name); name != 0 {
+			return name * -1
+		}
+
+		// package name and version in ascending lexical order
+		if pname := strings.Compare(a.PackageName, b.PackageName); pname != 0 {
+			return pname
+		}
+
+		return strings.Compare(a.PackageVersion, b.PackageVersion)
 	})
 
 	return sorted
