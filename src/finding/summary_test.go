@@ -109,6 +109,7 @@ func TestSummarize(t *testing.T) {
 }
 
 func TestMergeSummary(t *testing.T) {
+	// details match on ID, PackageName and PackageValue
 	others := []finding.Summary{
 		{
 			Platforms: p("base"),
@@ -122,9 +123,11 @@ func TestMergeSummary(t *testing.T) {
 					Platforms: p("base"),
 				},
 				{
-					Name:      "CVE-a",
-					Severity:  "HIGH",
-					Platforms: p("base"),
+					Name:           "CVE-a",
+					Severity:       "HIGH",
+					Platforms:      p("base"),
+					PackageName:    "cvea-pkg",
+					PackageVersion: "1.0.0",
 				},
 			},
 		},
@@ -140,9 +143,34 @@ func TestMergeSummary(t *testing.T) {
 					Platforms: p("other1"),
 				},
 				{
+					Name:           "CVE-a",
+					Severity:       "HIGH",
+					Platforms:      p("other1"),
+					PackageName:    "cvea-pkg",
+					PackageVersion: "1.0.0",
+				},
+				{
 					Name:      "CVE-a",
 					Severity:  "HIGH",
 					Platforms: p("other1"),
+					// varying by package name is a separate finding
+					PackageName:    "cvea-pkg-2",
+					PackageVersion: "1.0.0",
+				},
+				{
+					Name:           "CVE-a",
+					Severity:       "HIGH",
+					Platforms:      p("other1"),
+					PackageName:    "cvea-pkg-3",
+					PackageVersion: "1.0.0",
+				},
+				{
+					Name:        "CVE-a",
+					Severity:    "HIGH",
+					Platforms:   p("other1"),
+					PackageName: "cvea-pkg-3",
+					// varying by version is a separate finding
+					PackageVersion: "1.0.1",
 				},
 				{
 					Name:      "CVE-b",

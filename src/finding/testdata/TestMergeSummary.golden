@@ -1,15 +1,38 @@
 finding.Summary{
 	Counts: map[types.FindingSeverity]finding.SeverityCount{
-		types.FindingSeverity("HIGH"): {Included: 4},
+		types.FindingSeverity("HIGH"): {Included: 7},
 	},
 	Details: []finding.Detail{
 		{
-			Name:     "CVE-a",
-			Severity: types.FindingSeverity("HIGH"),
+			Name:           "CVE-a",
+			Severity:       types.FindingSeverity("HIGH"),
+			PackageName:    "cvea-pkg",
+			PackageVersion: "1.0.0",
 			Platforms: []v1.Platform{
 				{OS: "base"},
 				{OS: "other1"},
 			},
+		},
+		{
+			Name:           "CVE-a",
+			Severity:       types.FindingSeverity("HIGH"),
+			PackageName:    "cvea-pkg-2",
+			PackageVersion: "1.0.0",
+			Platforms:      []v1.Platform{{OS: "other1"}},
+		},
+		{
+			Name:           "CVE-a",
+			Severity:       types.FindingSeverity("HIGH"),
+			PackageName:    "cvea-pkg-3",
+			PackageVersion: "1.0.0",
+			Platforms:      []v1.Platform{{OS: "other1"}},
+		},
+		{
+			Name:           "CVE-a",
+			Severity:       types.FindingSeverity("HIGH"),
+			PackageName:    "cvea-pkg-3",
+			PackageVersion: "1.0.1",
+			Platforms:      []v1.Platform{{OS: "other1"}},
 		},
 		{
 			Name:      "CVE-b",
