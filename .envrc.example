@@ -1,0 +1,22 @@
+#!/bin/sh
+
+#
+# REQUIRED: set the image that is to be inspected.
+#
+
+# export BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME="[account-id].dkr.ecr.[region-id].amazonaws.com/[repo-name]:[label]"
+
+
+#
+# set thresholds as desired
+#
+
+# export BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS=0
+# export BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS=0
+
+
+#
+# set display name if desired: this variable is basically obsolete though.
+#
+
+# export BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_LABEL=latest

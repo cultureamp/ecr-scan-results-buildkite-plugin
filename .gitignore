@@ -1,5 +1,7 @@
-.envrc
+.envrc.private
+
 # VIM swap files
 *.swp
+
 src/ecrscanresults
 src/*.html

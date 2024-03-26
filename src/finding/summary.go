@@ -24,6 +24,8 @@ const (
 	StatusAllPlatformsFailed
 )
 
+// Detail represents a vulnerability finding detail. Details are unique
+// according to their Name, PackageName and PackageVersion attributes.
 type Detail struct {
 	// The name associated with the finding, usually a CVE number.
 	Name        string
@@ -236,7 +238,7 @@ func mergeSingle(merged, other Summary) Summary {
 
 func mergeDetails(summary Summary, merged, other []Detail) []Detail {
 	for _, d := range other {
-		insertIdx, found := slices.BinarySearchFunc(merged, d, findingByID)
+		insertIdx, found := slices.BinarySearchFunc(merged, d, findingByKey)
 
 		if found {
 			// already exists, update the platform set for the current finding
@@ -399,6 +401,14 @@ func convertScore(s string) *decimal.Decimal {
 	return &d
 }
 
-func findingByID(a Detail, b Detail) int {
-	return strings.Compare(a.Name, b.Name)
+func findingByKey(a Detail, b Detail) int {
+	if n := strings.Compare(a.Name, b.Name); n != 0 {
+		return n
+	}
+
+	if n := strings.Compare(a.PackageName, b.PackageName); n != 0 {
+		return n
+	}
+
+	return strings.Compare(a.PackageVersion, b.PackageVersion)
 }
