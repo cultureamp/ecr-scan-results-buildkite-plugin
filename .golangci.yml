@@ -8,53 +8,58 @@ issues:
       linters:
         # interface return from JSON function is A-OK
         - ireturn
+    - path: src/main.go
+      linters:
+        # use of the `fmt.Sprintf` in `main.go` isn't that big of a worry performance-wise, we will
+        # let it rock
+        - perfsprint
 
 linters:
   enable-all: true
   disable:
-  - asciicheck
-  - depguard
-  - dupl
-  - errname
-  - exhaustivestruct
-  - exhaustruct
-  - forbidigo
-  - funlen
-  - gci
-  - gochecknoglobals
-  - gocognit
-  - goconst
-  - godot
-  - godox
-  - goerr113
-  - gofumpt
-  - gomnd
-  - lll
-  - musttag
-  - nestif
-  - nilnil
-  - nlreturn
-  - paralleltest
-  - prealloc
-  - revive
-  - tagalign
-  - tagliatelle
-  - testpackage
-  - unparam
-  - varnamelen
-  - whitespace
-  - wrapcheck
-  - wsl
-  # deprecated linters
-  - deadcode
-  - golint
-  - ifshort
-  - interfacer
-  - maligned
-  - nosnakecase
-  - scopelint
-  - structcheck
-  - varcheck
+    - asciicheck
+    - depguard
+    - dupl
+    - errname
+    - exhaustivestruct
+    - exhaustruct
+    - forbidigo
+    - funlen
+    - gci
+    - gochecknoglobals
+    - gocognit
+    - goconst
+    - godot
+    - godox
+    - goerr113
+    - gofumpt
+    - gomnd
+    - lll
+    - musttag
+    - nestif
+    - nilnil
+    - nlreturn
+    - paralleltest
+    - prealloc
+    - revive
+    - tagalign
+    - tagliatelle
+    - testpackage
+    - unparam
+    - varnamelen
+    - whitespace
+    - wrapcheck
+    - wsl
+    # deprecated linters
+    - deadcode
+    - golint
+    - ifshort
+    - interfacer
+    - maligned
+    - nosnakecase
+    - scopelint
+    - structcheck
+    - varcheck
 
 linters-settings:
   gosec:
