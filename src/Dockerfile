@@ -1,4 +1,4 @@
-ARG BUILDER_IMAGE=public.ecr.aws/docker/library/golang:1.18-alpine
+ARG BUILDER_IMAGE=public.ecr.aws/docker/library/golang:1.22-alpine
 ARG DISTROLESS_IMAGE=gcr.io/distroless/static
 
 FROM ${BUILDER_IMAGE} as builder
