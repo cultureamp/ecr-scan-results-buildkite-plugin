@@ -8,6 +8,11 @@ issues:
       linters:
         # interface return from JSON function is A-OK
         - ireturn
+    - path: src/main.go
+      linters:
+        # use of the `fmt.Sprintf` in `main.go` isn't that big of a worry performance-wise, we will
+        # let it rock
+        - perfsprint
 
 linters:
   enable-all: true
