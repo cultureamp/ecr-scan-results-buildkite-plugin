@@ -9,7 +9,7 @@ require (
 	github.com/hexops/autogold/v2 v2.2.1
 	github.com/justincampbell/timeago v0.0.0-20160528003754-027f40306f1d
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/shopspring/decimal v1.3.1
+	github.com/shopspring/decimal v1.4.0
 	github.com/sourcegraph/conc v0.3.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a
