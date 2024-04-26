@@ -152,6 +152,18 @@ When supplied, this is used to title the report annotation in place of the
 repository name and tag. Useful sometimes when the repo name and tag make the
 reports harder to scan visually.
 
+### `fail-build-on-plugin-failure` (Optional, boolean. Default: false)
+
+By default, a failure to fetch the results of an image scan will not cause the
+build to fail, since scan access and availability can be flakey. The build will
+fail only if the plugin finds results and the results exceed `max-criticals` or
+`max-highs`.
+
+When set to `true`, the build will fail if the plugin fails to fetch scan
+results. This may results in builds failing even if the images have no
+vulnerabilities at all. Useful if you prefer to pass only with a confirmed good
+result.
+
 ## Requirements
 
 ### ECR Basic scanning only
