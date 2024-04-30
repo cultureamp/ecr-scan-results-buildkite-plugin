@@ -7,15 +7,19 @@ configuration file][ignore-findings], and there are configurable thresholds on
 absolute numbers of allowed critical and high vulnerabilities.
 
 > [!WARNING]
-> This plugin will only fail the build if the thresholds are exceeded. Failing
-> to read configuration or to download scan results are not considered blocking
-> failures.
+> By default, this plugin will only fail the build if the thresholds are
+> exceeded. Failing to read configuration or to download scan results are only
+> considered blocking failures if `fail-build-on-plugin-failure` is explicitly
+> set to `true`.
 >
-> When configuring the plugin, check the plugin output to ensure that scan
-> results are being downloaded as expected.
+> When configuring the plugin, you can either:
+> - Check the plugin output to ensure that scan results are being downloaded as
+>   expected, or
+> - Set `fail-build-on-plugin-failure` to `true` to raise the visibility of
+>   problems with fetching scan results.
 >
-> If blocking on configuration or retrieval failures is desired for use case,
-> consider submitting a PR to allow this to be configured.
+> If blocking on configuration or retrieval failures is desired for your use
+> case, see the `fail-build-on-plugin-failure` configuration item below.
 
 ## Rendering
 
