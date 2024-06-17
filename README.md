@@ -116,6 +116,11 @@ steps:
 > Prefer defining an ignore file over using thresholds, and use the `reason`
 > field to explain why the vulnerability is being ignored.
 
+## Making contributions
+
+Contributions are welcome! See the [Contributions Guide](./CONTRIBUTING.md) for
+information about running the plugin locally for testing.
+
 ## Configuration
 
 ### `image-name` (Required, string)
