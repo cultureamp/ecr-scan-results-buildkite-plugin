@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"strings"
-	"syscall"
 
 	osexec "golang.org/x/sys/execabs"
 )
@@ -60,8 +59,7 @@ func execCmd(ctx context.Context, executableName string, stdin *string, args ...
 		return fmt.Errorf("failed to wait for command termination: %w", err)
 	}
 
-	waitStatus := cmd.ProcessState.Sys().(syscall.WaitStatus)
-	exitStatus := waitStatus.ExitStatus()
+	exitStatus := cmd.ProcessState.ExitCode()
 	if exitStatus != 0 {
 		return fmt.Errorf("command exited with non-zero status: %d", exitStatus)
 	}
