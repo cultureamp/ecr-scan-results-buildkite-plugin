@@ -11,6 +11,8 @@ import (
 	osexec "golang.org/x/sys/execabs"
 )
 
+var AgentEnabled = true
+
 type Agent struct {
 }
 
@@ -26,7 +28,7 @@ func execCmd(ctx context.Context, executableName string, stdin *string, args ...
 	Logf("Executing: %s %s\n", executableName, strings.Join(args, " "))
 
 	// allow disabling the agent for local development purposes
-	if os.Getenv("ECRSCANRESULTS_DISABLE_AGENT") == "true" {
+	if !AgentEnabled {
 		return nil
 	}
 

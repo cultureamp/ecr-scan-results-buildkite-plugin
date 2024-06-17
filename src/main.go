@@ -23,6 +23,7 @@ import (
 )
 
 type Config struct {
+	AgentTestMode             bool   `envconfig:"ECR_SCAN_RESULTS_BUILDKITE_AGENT_TEST_MODE" split_words:"true"`
 	JobID                     string `envconfig:"BUILDKITE_JOB_ID" split_words:"true" required:"true"`
 	Repository                string `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME" split_words:"true" required:"true"`
 	ImageLabel                string `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_LABEL" split_words:"true"`
@@ -44,6 +45,8 @@ func main() {
 		buildkite.LogFailuref("max-highs must be greater than or equal to 0")
 		os.Exit(1)
 	}
+
+	buildkite.AgentEnabled = !pluginConfig.AgentTestMode
 
 	ctx := context.Background()
 	agent := buildkite.Agent{}
