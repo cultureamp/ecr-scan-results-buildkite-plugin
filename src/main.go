@@ -21,18 +21,16 @@ import (
 	"github.com/sourcegraph/conc/iter"
 )
 
-const pluginEnvironmentPrefix = "BUILDKITE_PLUGIN_ECR_SCAN_RESULTS"
-
 type Config struct {
-	Repository                string `envconfig:"IMAGE_NAME" split_words:"true" required:"true"`
-	ImageLabel                string `envconfig:"IMAGE_LABEL" split_words:"true"`
-	CriticalSeverityThreshold int32  `envconfig:"MAX_CRITICALS" split_words:"true"`
-	HighSeverityThreshold     int32  `envconfig:"MAX_HIGHS" split_words:"true"`
+	Repository                string `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME" split_words:"true" required:"true"`
+	ImageLabel                string `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_LABEL" split_words:"true"`
+	CriticalSeverityThreshold int32  `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS" split_words:"true"`
+	HighSeverityThreshold     int32  `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS" split_words:"true"`
 }
 
 func main() {
 	var pluginConfig Config
-	if err := envconfig.Process(pluginEnvironmentPrefix, &pluginConfig); err != nil {
+	if err := envconfig.Process("", &pluginConfig); err != nil {
 		buildkite.LogFailuref("plugin configuration error: %s\n", err.Error())
 		os.Exit(1)
 	}
