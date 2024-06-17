@@ -146,7 +146,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 		// builds are only blocked if thresholds are exceeded. When only some
 		// platforms have failed, the report will include details of the partial
 		// failure.
-		return runtimeerrors.NonFatal("no scan results could be retrieved", nil)
+		return runtimeerrors.NonFatal("no scan results could be retrieved", findingSummary.FailureReasons())
 	}
 
 	criticalFindings, highFindings := findingSummary.IncludedCounts()
