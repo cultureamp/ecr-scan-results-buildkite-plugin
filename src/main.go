@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"net/url"
 	"os"
 	"strings"
 
@@ -22,6 +23,7 @@ import (
 )
 
 type Config struct {
+	JobID                     string `envconfig:"BUILDKITE_JOB_ID" split_words:"true" required:"true"`
 	Repository                string `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME" split_words:"true" required:"true"`
 	ImageLabel                string `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_LABEL" split_words:"true"`
 	CriticalSeverityThreshold int32  `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS" split_words:"true"`
@@ -59,7 +61,10 @@ func main() {
 			// Attempt to annotate the build with the issue, but it's OK if the
 			// annotation fails. We annotate to notify the user of the issue,
 			// otherwise it would be lost in the log.
-			annotation := fmt.Sprintf("ECR scan results plugin could not create a result for the image %s", "")
+			annotation := fmt.Sprintf("ECR scan results plugin [could not create a result](%s) for the image: `%s`",
+				"#"+url.QueryEscape(pluginConfig.JobID),
+				pluginConfig.Repository,
+			)
 			_ = agent.Annotate(ctx, annotation, "error", hash(pluginConfig.Repository))
 		}
 	}
