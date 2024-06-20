@@ -28,6 +28,7 @@ type Config struct {
 	ImageLabel                string `envconfig:"IMAGE_LABEL" split_words:"true"`
 	CriticalSeverityThreshold int32  `envconfig:"MAX_CRITICALS" split_words:"true"`
 	HighSeverityThreshold     int32  `envconfig:"MAX_HIGHS" split_words:"true"`
+	FailBuildOnPluginFailure  bool   `envconfig:"FAIL_BUILD_ON_PLUGIN_FAILURE" default:"false"`
 }
 
 func main() {
@@ -52,10 +53,11 @@ func main() {
 	if err != nil {
 		buildkite.LogFailuref("plugin execution failed: %s\n", err.Error())
 
-		// For this plugin, we don't want to block the build on most errors:
-		// scan access and availability can be quite flakey. For this reason, we
-		// wrap most issues in a non-fatal error type.
-		if runtimeerrors.IsFatal(err) {
+		// For this plugin, we don't want to block the build on most errors
+		// unless specifically configured to do so: scan access and availability
+		// can be quite flakey. For this reason, we wrap most issues in a
+		// non-fatal error type.
+		if pluginConfig.FailBuildOnPluginFailure || runtimeerrors.IsFatal(err) {
 			os.Exit(1)
 		} else {
 			// Attempt to annotate the build with the issue, but it's OK if the
