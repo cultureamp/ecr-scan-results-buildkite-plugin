@@ -6,10 +6,11 @@ import (
 	"os"
 	"os/signal"
 	"strings"
-	"syscall"
 
 	osexec "golang.org/x/sys/execabs"
 )
+
+var AgentEnabled = true
 
 type Agent struct {
 }
@@ -26,7 +27,7 @@ func execCmd(ctx context.Context, executableName string, stdin *string, args ...
 	Logf("Executing: %s %s\n", executableName, strings.Join(args, " "))
 
 	// allow disabling the agent for local development purposes
-	if os.Getenv("ECRSCANRESULTS_DISABLE_AGENT") == "true" {
+	if !AgentEnabled {
 		return nil
 	}
 
@@ -58,8 +59,7 @@ func execCmd(ctx context.Context, executableName string, stdin *string, args ...
 		return fmt.Errorf("failed to wait for command termination: %w", err)
 	}
 
-	waitStatus := cmd.ProcessState.Sys().(syscall.WaitStatus)
-	exitStatus := waitStatus.ExitStatus()
+	exitStatus := cmd.ProcessState.ExitCode()
 	if exitStatus != 0 {
 		return fmt.Errorf("command exited with non-zero status: %d", exitStatus)
 	}

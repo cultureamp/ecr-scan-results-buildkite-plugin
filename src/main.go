@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"net/url"
 	"os"
 	"strings"
 
@@ -21,19 +22,19 @@ import (
 	"github.com/sourcegraph/conc/iter"
 )
 
-const pluginEnvironmentPrefix = "BUILDKITE_PLUGIN_ECR_SCAN_RESULTS"
-
 type Config struct {
-	Repository                string `envconfig:"IMAGE_NAME" split_words:"true" required:"true"`
-	ImageLabel                string `envconfig:"IMAGE_LABEL" split_words:"true"`
-	CriticalSeverityThreshold int32  `envconfig:"MAX_CRITICALS" split_words:"true"`
-	HighSeverityThreshold     int32  `envconfig:"MAX_HIGHS" split_words:"true"`
+	AgentTestMode             bool   `envconfig:"ECR_SCAN_RESULTS_BUILDKITE_AGENT_TEST_MODE" split_words:"true"`
+	JobID                     string `envconfig:"BUILDKITE_JOB_ID" split_words:"true" required:"true"`
+	Repository                string `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME" split_words:"true" required:"true"`
+	ImageLabel                string `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_LABEL" split_words:"true"`
+	CriticalSeverityThreshold int32  `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS" split_words:"true"`
+	HighSeverityThreshold     int32  `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS" split_words:"true"`
 	FailBuildOnPluginFailure  bool   `envconfig:"FAIL_BUILD_ON_PLUGIN_FAILURE" default:"false"`
 }
 
 func main() {
 	var pluginConfig Config
-	if err := envconfig.Process(pluginEnvironmentPrefix, &pluginConfig); err != nil {
+	if err := envconfig.Process("", &pluginConfig); err != nil {
 		buildkite.LogFailuref("plugin configuration error: %s\n", err.Error())
 		os.Exit(1)
 	}
@@ -45,6 +46,8 @@ func main() {
 		buildkite.LogFailuref("max-highs must be greater than or equal to 0")
 		os.Exit(1)
 	}
+
+	buildkite.AgentEnabled = !pluginConfig.AgentTestMode
 
 	ctx := context.Background()
 	agent := buildkite.Agent{}
@@ -63,7 +66,10 @@ func main() {
 			// Attempt to annotate the build with the issue, but it's OK if the
 			// annotation fails. We annotate to notify the user of the issue,
 			// otherwise it would be lost in the log.
-			annotation := fmt.Sprintf("ECR scan results plugin could not create a result for the image %s", "")
+			annotation := fmt.Sprintf("ECR scan results plugin [could not create a result](%s) for the image: `%s`",
+				"#"+url.QueryEscape(pluginConfig.JobID),
+				pluginConfig.Repository,
+			)
 			_ = agent.Annotate(ctx, annotation, "error", hash(pluginConfig.Repository))
 		}
 	}
@@ -148,7 +154,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 		// builds are only blocked if thresholds are exceeded. When only some
 		// platforms have failed, the report will include details of the partial
 		// failure.
-		return runtimeerrors.NonFatal("no scan results could be retrieved", nil)
+		return runtimeerrors.NonFatal("no scan results could be retrieved", findingSummary.FailureReasons())
 	}
 
 	criticalFindings, highFindings := findingSummary.IncludedCounts()
