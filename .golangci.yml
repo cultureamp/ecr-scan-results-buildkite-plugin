@@ -21,7 +21,6 @@ linters:
     - depguard
     - dupl
     - errname
-    - exhaustivestruct
     - exhaustruct
     - forbidigo
     - funlen
@@ -31,11 +30,13 @@ linters:
     - goconst
     - godot
     - godox
-    - goerr113
+    - err113
     - gofumpt
     - gomnd
+    - mnd
     - lll
     - musttag
+    - mnd
     - nestif
     - nilnil
     - nlreturn
@@ -51,15 +52,6 @@ linters:
     - wrapcheck
     - wsl
     # deprecated linters
-    - deadcode
-    - golint
-    - ifshort
-    - interfacer
-    - maligned
-    - nosnakecase
-    - scopelint
-    - structcheck
-    - varcheck
 
 linters-settings:
   gosec:
