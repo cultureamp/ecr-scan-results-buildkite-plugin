@@ -4,7 +4,7 @@ go 1.23.1
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.32.2
-	github.com/aws/aws-sdk-go-v2/config v1.27.43
+	github.com/aws/aws-sdk-go-v2/config v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.2
 	github.com/hexops/autogold/v2 v2.2.1
 	github.com/justincampbell/timeago v0.0.0-20160528003754-027f40306f1d
