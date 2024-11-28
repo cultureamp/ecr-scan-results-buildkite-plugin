@@ -20,9 +20,10 @@ linters:
     - asciicheck
     - depguard
     - dupl
+    - err113
     - errname
-    - exhaustivestruct
     - exhaustruct
+    - exportloopref
     - forbidigo
     - funlen
     - gci
@@ -31,10 +32,9 @@ linters:
     - goconst
     - godot
     - godox
-    - goerr113
     - gofumpt
-    - gomnd
     - lll
+    - mnd
     - musttag
     - nestif
     - nilnil
@@ -50,16 +50,6 @@ linters:
     - whitespace
     - wrapcheck
     - wsl
-    # deprecated linters
-    - deadcode
-    - golint
-    - ifshort
-    - interfacer
-    - maligned
-    - nosnakecase
-    - scopelint
-    - structcheck
-    - varcheck
 
 linters-settings:
   gosec:
