@@ -17,4 +17,6 @@ configuration:
       type: string
     image-label:
       type: string
+    fail-build-on-plugin-failure:
+      type: boolean
   additionalProperties: false

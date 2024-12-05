@@ -33,6 +33,7 @@ linters:
     - godot
     - godox
     - gofumpt
+    - gomnd
     - lll
     - mnd
     - musttag

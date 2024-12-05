@@ -1,6 +1,8 @@
 package finding
 
 import (
+	"errors"
+	"fmt"
 	"net/url"
 	"regexp"
 	"slices"
@@ -153,6 +155,18 @@ func (s Summary) ThresholdsExceeded(criticalThreshold int32, highThreshold int32
 			highFindings > highThreshold
 
 	return overThreshold
+}
+
+// FailureReasons returns a single error that contains the set of failures for
+// all platforms.
+func (s Summary) FailureReasons() error {
+	reasons := make([]error, len(s.FailedPlatforms))
+
+	for i, f := range s.FailedPlatforms {
+		reasons[i] = fmt.Errorf("(%s/%s) %s", f.Platform.OS, f.Platform.Architecture, f.Reason)
+	}
+
+	return errors.Join(reasons...)
 }
 
 // includedCountFor returns the number of findings that count towards the

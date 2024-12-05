@@ -82,7 +82,7 @@ func params(values ...any) (map[string]any, error) {
 		return nil, errors.New("invalid params call: values should be a list of key, value pairs")
 	}
 
-	dict := make(map[string]any, len(values)/2) //nolint:mnd
+	dict := make(map[string]any, len(values)/2)
 	for i := 0; i < len(values); i += 2 {
 		key, ok := values[i].(string)
 		if !ok {
@@ -156,7 +156,6 @@ func compareSeverities(a, b types.FindingSeverity) int {
 	return strings.Compare(string(a), string(b))
 }
 
-//nolint:mnd
 func rankSeverity(f types.FindingSeverity) int {
 	switch f {
 	case types.FindingSeverityCritical:
