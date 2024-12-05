@@ -10,7 +10,7 @@ import (
 
 const untilFormat = "2006-01-02"
 
-type UntilTime time.Time
+type UntilTime time.Time //nolint:recvcheck
 
 func (u *UntilTime) UnmarshalYAML(value *yaml.Node) error {
 	if value.Kind != yaml.ScalarNode {

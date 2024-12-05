@@ -20,8 +20,10 @@ linters:
     - asciicheck
     - depguard
     - dupl
+    - err113
     - errname
     - exhaustruct
+    - exportloopref
     - forbidigo
     - funlen
     - gci
@@ -30,13 +32,11 @@ linters:
     - goconst
     - godot
     - godox
-    - err113
     - gofumpt
     - gomnd
-    - mnd
     - lll
-    - musttag
     - mnd
+    - musttag
     - nestif
     - nilnil
     - nlreturn
@@ -51,7 +51,6 @@ linters:
     - whitespace
     - wrapcheck
     - wsl
-    # deprecated linters
 
 linters-settings:
   gosec:
