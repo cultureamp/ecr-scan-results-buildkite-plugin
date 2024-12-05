@@ -141,9 +141,9 @@ func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo Image
 
 	// wait between attempts for between 3 and 15 secs (exponential backoff)
 	// wait for a maximum of 3 minutes
-	minAttemptDelay := 3 * time.Second
-	maxAttemptDelay := 15 * time.Second
-	maxTotalDelay := 3 * time.Minute
+	minAttemptDelay := 3 * time.Second  //nolint:mnd
+	maxAttemptDelay := 15 * time.Second //nolint:mnd
+	maxTotalDelay := 3 * time.Minute    //nolint:mnd
 
 	err := waiter.Wait(ctx, &ecr.DescribeImageScanFindingsInput{
 		RegistryId:     &digestInfo.RegistryID,

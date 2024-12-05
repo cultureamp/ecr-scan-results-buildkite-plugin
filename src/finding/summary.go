@@ -82,6 +82,7 @@ type PlatformScanFailure struct {
 	Reason   string
 }
 
+//nolint:recvcheck
 type Summary struct {
 	// the counts by threshold, taking ignore configuration into account
 	Counts map[types.FindingSeverity]SeverityCount
