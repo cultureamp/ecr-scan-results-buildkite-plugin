@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"maps"
 	"slices"
 	"strings"
 	"time"
@@ -16,7 +17,6 @@ import (
 	"github.com/cultureamp/ecrscanresults/registry"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/justincampbell/timeago"
-	"golang.org/x/exp/maps"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -137,7 +137,7 @@ func sortFindings(findings []finding.Detail) []finding.Detail {
 
 func sortSeverities(severityCounts map[types.FindingSeverity]finding.SeverityCount) []types.FindingSeverity {
 	// severities are the map key in the incoming data structure
-	severities := maps.Keys(severityCounts)
+	severities := slices.Collect(maps.Keys(severityCounts))
 
 	slices.SortFunc(severities, compareSeverities)
 
