@@ -41,7 +41,7 @@ need_cmd() {
   fi
 }
 
-# This function retires the download - if it fails due to network issues.
+# This function retries the download - if it fails due to network issues.
 retry_download(){
   local max_retries=5
   local retry_delay=2
@@ -51,7 +51,7 @@ retry_download(){
      if [ "$3" = "curl" ]; then
         curl -sSfL "$1" -o "$2" && return 0
      elif [ "$3" = "wget" ]; then
-        wget "$1" -O "$2"
+        wget "$1" -O "$2" && return 0
      fi
 
      echo "Attempt $i failed. Retrying"
@@ -60,7 +60,6 @@ retry_download(){
 
   echo "Download failed after $max_retries attempts"
   return 1
-
 }
 
 # This wraps curl or wget.
