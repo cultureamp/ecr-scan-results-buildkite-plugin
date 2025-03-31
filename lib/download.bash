@@ -41,6 +41,28 @@ need_cmd() {
   fi
 }
 
+# This function retires the download - if it fails due to network issues.
+retry_download(){
+  local max_retries=5
+  local retry_delay=2
+
+  for (( i=0 ; i<max_retries ; i++ ))
+  do
+     if [ "$3" = "curl" ]; then
+        curl -sSfL "$1" -o "$2" && return 0
+     elif [ "$3" = "wget" ]; then
+        wget "$1" -O "$2"
+     fi
+
+     echo "Attempt $i failed. Retrying"
+     sleep $retry_delay 
+  done
+
+  echo "Download failed after $max_retries attempts"
+  return 1
+
+}
+
 # This wraps curl or wget.
 # Try curl first, if not installed, use wget instead.
 downloader() {
@@ -55,9 +77,9 @@ downloader() {
   if [ "$1" = --check ]; then
     need_cmd "$_dld"
   elif [ "$_dld" = curl ]; then
-    curl -sSfL "$1" -o "$2"
+    retry_download "$1" "$2" "curl"
   elif [ "$_dld" = wget ]; then
-    wget "$1" -O "$2"
+    retry_download "$1" "$2" "wget"
   else
     err "Unknown downloader"
   fi
