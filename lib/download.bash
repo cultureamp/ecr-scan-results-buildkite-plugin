@@ -49,9 +49,9 @@ retry_download(){
   for (( i=1 ; i<=max_retries ; i++ ))
   do
      if [ "$3" = "curl" ]; then
-        curl -sSfL "$1" -o "$2"  && echo "Success" && return 0
+        curl -sSfL "$1" -o "$2" && return 0
      elif [ "$3" = "wget" ]; then
-        wget "$1" -O "$2" && echo "Success" && return 0
+        wget "$1" -O "$2" && return 0
      fi
 
      echo "Attempt $i failed. Retrying"
