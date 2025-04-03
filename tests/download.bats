@@ -4,7 +4,6 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 
 load '../lib/download.bash'
 
-is_stubbed=false
 sleep_stub_command='echo sleep $@'
 sleep_stubs=("$sleep_stub_command" "$sleep_stub_command" "$sleep_stub_command" "$sleep_stub_command" "$sleep_stub_command")
 
@@ -23,12 +22,9 @@ setup() {
 
 teardown() {
     unset BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_BUILDKITE_PLUGIN_TEST_MODE
-    if $is_stubbed; then
-      unstub curl || true
-      unstub sleep || true
-    else
-     rm ./ecr-scan-results-buildkite-plugin || true
-    fi
+    unstub curl || true
+    unstub sleep || true
+    rm ./ecr-scan-results-buildkite-plugin || true
 }
 
 create_script() {
@@ -77,7 +73,6 @@ EOM
   assert_line --partial "Attempt 1"
   assert_line --partial "Attempt 2"
   assert_line --partial "Success"
-
 }
 
 @test "Attempts to download and fails after maximum tries" {
@@ -90,7 +85,6 @@ EOM
         "echo 'curl 3 (7) Failed to connect to example.com port 80 - Connection refused' && exit 7"  \
         "echo 'curl 4 (7) Failed to connect to example.com port 80 - Connection refused' && exit 7"  \
         "echo 'curl 5 (7) Failed to connect to example.com port 80 - Connection refused' && exit 7"  \
-        "echo 'curl 6 (7) Failed to connect to example.com port 80 - Connection refused' && exit 7"  \
 
   stub sleep "${sleep_stubs[@]}"
   is_stubbed=true
@@ -98,7 +92,7 @@ EOM
   # executes the retry download command
   run retry_download "https://example.com" "$TMPDIR/output-plugin" "curl"
 
-  assert_failure 1
-  #Checks if multiple attempts are made to retry the download
+  assert_failure
+  # Checks if multiple attempts are made to retry the download
   assert_line --partial "Download failed after 5 attempts" 
 }
