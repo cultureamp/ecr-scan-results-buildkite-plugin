@@ -96,7 +96,7 @@ func TestScanStateRetryableOnNotFound(t *testing.T) {
 			Message: "Scan not found",
 		}
 
-		shouldRetry, err := retry(context.Background(), nil, nil, scanNotFoundErr)
+		shouldRetry, err := retry(t.Context(), nil, nil, scanNotFoundErr)
 
 		assert.True(t, shouldRetry, "Should retry on ScanNotFoundException")
 		require.NoError(t, err, "Should not return an error")
@@ -111,7 +111,7 @@ func TestScanStateRetryableOnNotFound(t *testing.T) {
 			Message: "Some other error",
 		}
 
-		shouldRetry, err := retry(context.Background(), nil, nil, otherErr)
+		shouldRetry, err := retry(t.Context(), nil, nil, otherErr)
 
 		assert.True(t, shouldRetry, "Should return wrapped function's retry decision")
 		require.EqualError(t, err, "wrapped error", "Should return wrapped function's error")
@@ -123,7 +123,7 @@ func TestScanStateRetryableOnNotFound(t *testing.T) {
 
 		nonAPIErr := errors.New("non-API error")
 
-		shouldRetry, err := retry(context.Background(), nil, nil, nonAPIErr)
+		shouldRetry, err := retry(t.Context(), nil, nil, nonAPIErr)
 
 		assert.False(t, shouldRetry, "Should return wrapped function's retry decision")
 		require.NoError(t, err, "Should return wrapped function's error")

@@ -23,7 +23,6 @@ linters:
     - err113
     - errname
     - exhaustruct
-    - exportloopref
     - forbidigo
     - funlen
     - gci
@@ -33,7 +32,6 @@ linters:
     - godot
     - godox
     - gofumpt
-    - gomnd
     - lll
     - mnd
     - musttag
@@ -43,6 +41,7 @@ linters:
     - paralleltest
     - prealloc
     - revive
+    - tenv
     - tagalign
     - tagliatelle
     - testpackage
