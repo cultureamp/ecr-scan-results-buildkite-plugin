@@ -41,6 +41,7 @@ linters:
     - paralleltest
     - prealloc
     - revive
+    - tenv
     - tagalign
     - tagliatelle
     - testpackage
