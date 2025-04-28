@@ -1,21 +1,6 @@
-issues:
-  exclude-rules:
-    - path: buildkite/agent.go
-      linters:
-        # type assertion does not need checking as this will run in linux only (via Docker)
-        - forcetypeassert
-    - path: src/report/annotation_test.go
-      linters:
-        # interface return from JSON function is A-OK
-        - ireturn
-    - path: src/main.go
-      linters:
-        # use of the `fmt.Sprintf` in `main.go` isn't that big of a worry performance-wise, we will
-        # let it rock
-        - perfsprint
-
+version: "2"
 linters:
-  enable-all: true
+  default: all
   disable:
     - asciicheck
     - depguard
@@ -25,13 +10,11 @@ linters:
     - exhaustruct
     - forbidigo
     - funlen
-    - gci
     - gochecknoglobals
     - gocognit
     - goconst
     - godot
     - godox
-    - gofumpt
     - lll
     - mnd
     - musttag
@@ -41,7 +24,6 @@ linters:
     - paralleltest
     - prealloc
     - revive
-    - tenv
     - tagalign
     - tagliatelle
     - testpackage
@@ -50,24 +32,46 @@ linters:
     - whitespace
     - wrapcheck
     - wsl
-
-linters-settings:
-  gosec:
-    # all rules enabled
-    # see also: https://securego.io/docs/rules/rule-intro.html
-    config:
-      global:
-        # allow #nosec override comments
-        nosec: enabled
-        # disable potentially noisy stricter audit mode
-        audit: disabled
-      G101: # "Look for hard-coded credentials"
-        mode: strict
-
-  cyclop:
-    max-complexity: 30
-
-  exhaustive:
-    # Presence of "default" case in switch statements satisfies exhaustiveness,
-    # even if all enum members are not listed.
-    default-signifies-exhaustive: true
+  settings:
+    cyclop:
+      max-complexity: 30
+    exhaustive:
+      default-signifies-exhaustive: true
+    gosec:
+      config:
+        G101:
+          mode: strict
+        global:
+          audit: disabled
+          nosec: enabled
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - forcetypeassert
+        path: buildkite/agent.go
+      - linters:
+          - ireturn
+        path: src/report/annotation_test.go
+      - linters:
+          - perfsprint
+        path: src/main.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
