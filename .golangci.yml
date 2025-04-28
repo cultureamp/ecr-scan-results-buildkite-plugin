@@ -9,6 +9,7 @@ linters:
     - errname
     - exhaustruct
     - forbidigo
+    - funcorder
     - funlen
     - gochecknoglobals
     - gocognit
