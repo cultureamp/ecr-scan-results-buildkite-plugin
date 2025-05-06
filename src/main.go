@@ -61,6 +61,10 @@ func main() {
 		// can be quite flakey. For this reason, we wrap most issues in a
 		// non-fatal error type.
 		if pluginConfig.FailBuildOnPluginFailure || runtimeerrors.IsFatal(err) {
+			// If timeout error, exit 75 (POSIX timer expired)
+			if registry.IsErrWaiterTimeout(err) {
+				os.Exit(75)
+			}
 			os.Exit(1)
 		} else {
 			// Attempt to annotate the build with the issue, but it's OK if the

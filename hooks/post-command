@@ -18,4 +18,4 @@ fi
 # shellcheck source=lib/download.bash
 . "$dir/../lib/download.bash"
 
-download_binary_and_run "$@" || exit 1
+download_binary_and_run "$@"
