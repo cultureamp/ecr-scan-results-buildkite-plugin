@@ -176,26 +176,7 @@ func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo Image
 			opts.MinDelay = minAttemptDelay
 			opts.MaxDelay = maxAttemptDelay
 		},
-		func(opts *ecr.ImageScanCompleteWaiterOptions) {
-			/*
-				We must copy this function outside the closure to avoid an infinite loop
-				If we copy it inside the closure the compiler will assign it to a pointer
-				to itself
-			*/
-			defaultRetryableFunc := opts.Retryable
-			customRetryable := func(ctx context.Context, params *ecr.DescribeImageScanFindingsInput,
-				output *ecr.DescribeImageScanFindingsOutput, err error) (bool, error) {
-
-				if err != nil && strings.Contains(err.Error(), "AccessDeniedException") {
-					return false, err
-				}
-				if err != nil {
-					log.Printf("error waiting for scan findings: %v", err)
-				}
-				return defaultRetryableFunc(ctx, params, output, err)
-			}
-			opts.Retryable = customRetryable
-		})
+		optionsWaiterRetryPolicy)
 
 	if err != nil && err.Error() == "exceeded max wait time for ImageScanComplete waiter" {
 		return ErrWaiterTimeout
@@ -250,6 +231,25 @@ func (r *RegistryScan) GetScanFindings(ctx context.Context, digestInfo ImageRefe
 }
 
 type RetryPolicyFunc = func(context.Context, *ecr.DescribeImageScanFindingsInput, *ecr.DescribeImageScanFindingsOutput, error) (bool, error)
+
+func optionsWaiterRetryPolicy(opts *ecr.ImageScanCompleteWaiterOptions) {
+	defaultRetryable := opts.Retryable
+	opts.Retryable = waiterStateRetryable(defaultRetryable)
+}
+
+func waiterStateRetryable(wrapped RetryPolicyFunc) RetryPolicyFunc {
+	return func(ctx context.Context, input *ecr.DescribeImageScanFindingsInput,
+		output *ecr.DescribeImageScanFindingsOutput, err error) (bool, error) {
+		if err != nil && strings.Contains(err.Error(), "AccessDeniedException") {
+			return false, err
+		}
+		if err != nil {
+			log.Printf("error waiting for scan findings: %v", err)
+		}
+
+		return wrapped(ctx, input, output, err)
+	}
+}
 
 func optionsScanFindingsRetryPolicy(opts *ecr.ImageScanCompleteWaiterOptions) {
 	defaultRetryable := opts.Retryable
