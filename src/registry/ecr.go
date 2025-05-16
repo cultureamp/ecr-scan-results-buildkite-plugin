@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -138,6 +140,18 @@ func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo ImageRefere
 	return digestInfo, nil
 }
 
+type WaiterError string
+
+func (w WaiterError) Error() string {
+	return string(w)
+}
+
+func IsErrWaiterTimeout(w error) bool {
+	return errors.Is(w, ErrWaiterTimeout)
+}
+
+var ErrWaiterTimeout WaiterError = "image scan waiter timed out"
+
 func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo ImageReference) error {
 	waiter := ecr.NewImageScanCompleteWaiter(r.Client, optionsScanFindingsRetryPolicy)
 
@@ -147,18 +161,26 @@ func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo Image
 	maxAttemptDelay := 15 * time.Second
 	maxTotalDelay := 3 * time.Minute
 
-	err := waiter.Wait(ctx, &ecr.DescribeImageScanFindingsInput{
-		RegistryId:     &digestInfo.RegistryID,
-		RepositoryName: &digestInfo.Name,
-		ImageId: &types.ImageIdentifier{
-			ImageDigest: &digestInfo.Digest,
+	err := waiter.Wait(ctx,
+		&ecr.DescribeImageScanFindingsInput{
+			RegistryId:     &digestInfo.RegistryID,
+			RepositoryName: &digestInfo.Name,
+			ImageId: &types.ImageIdentifier{
+				ImageDigest: &digestInfo.Digest,
+			},
+			MaxResults: aws.Int32(1), // reduce the size of the return payload when waiting for the completion state
 		},
-		MaxResults: aws.Int32(1), // reduce the size of the return payload when waiting for the completion state
-	}, maxTotalDelay, func(opts *ecr.ImageScanCompleteWaiterOptions) {
-		opts.LogWaitAttempts = true
-		opts.MinDelay = minAttemptDelay
-		opts.MaxDelay = maxAttemptDelay
-	})
+		maxTotalDelay,
+		func(opts *ecr.ImageScanCompleteWaiterOptions) {
+			opts.LogWaitAttempts = true
+			opts.MinDelay = minAttemptDelay
+			opts.MaxDelay = maxAttemptDelay
+		},
+		optionsWaiterRetryPolicy)
+
+	if err != nil && err.Error() == "exceeded max wait time for ImageScanComplete waiter" {
+		return ErrWaiterTimeout
+	}
 
 	// It is not good style to compare the error string, but this is the only way
 	// to capture that the scan failed, but everything else is hunky dory. We
@@ -209,6 +231,25 @@ func (r *RegistryScan) GetScanFindings(ctx context.Context, digestInfo ImageRefe
 }
 
 type RetryPolicyFunc = func(context.Context, *ecr.DescribeImageScanFindingsInput, *ecr.DescribeImageScanFindingsOutput, error) (bool, error)
+
+func optionsWaiterRetryPolicy(opts *ecr.ImageScanCompleteWaiterOptions) {
+	defaultRetryable := opts.Retryable
+	opts.Retryable = waiterStateRetryable(defaultRetryable)
+}
+
+func waiterStateRetryable(wrapped RetryPolicyFunc) RetryPolicyFunc {
+	return func(ctx context.Context, input *ecr.DescribeImageScanFindingsInput,
+		output *ecr.DescribeImageScanFindingsOutput, err error) (bool, error) {
+		if err != nil && strings.Contains(err.Error(), "AccessDeniedException") {
+			return false, err
+		}
+		if err != nil {
+			log.Printf("error waiting for scan findings: %v", err)
+		}
+
+		return wrapped(ctx, input, output, err)
+	}
+}
 
 func optionsScanFindingsRetryPolicy(opts *ecr.ImageScanCompleteWaiterOptions) {
 	defaultRetryable := opts.Retryable

@@ -112,4 +112,5 @@ download_binary_and_run() {
   chmod +x ${_executable}
 
   ./${_executable}
+  return $?
 }

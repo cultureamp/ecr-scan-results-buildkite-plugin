@@ -73,23 +73,23 @@ func TestRegistryInfoFromURLFails(t *testing.T) {
 	assert.Equal(t, ImageReference{}, info)
 }
 
-func TestScanStateRetryableOnNotFound(t *testing.T) {
-	setupRetryTest := func(wrappedReturnValue bool, wrappedError error) (func(*testing.T, bool), RetryPolicyFunc) {
-		wrappedCalled := false
-		wrapped := func(ctx context.Context, input *ecr.DescribeImageScanFindingsInput, output *ecr.DescribeImageScanFindingsOutput, err error) (bool, error) {
-			wrappedCalled = true
-			return wrappedReturnValue, wrappedError
-		}
-
-		retry := scanStateRetryableOnNotFound(wrapped)
-		return func(t *testing.T, expected bool) {
-			t.Helper()
-			assert.Equal(t, expected, wrappedCalled, "Calling wrapped function: expected %t but was %t", expected, wrappedCalled)
-		}, retry
+func setupRetryTest(wrappedReturnValue bool, wrappedError error, retryPolicyFunc func(wrapped RetryPolicyFunc) RetryPolicyFunc) (func(*testing.T, bool), RetryPolicyFunc) {
+	wrappedCalled := false
+	wrapped := func(ctx context.Context, input *ecr.DescribeImageScanFindingsInput, output *ecr.DescribeImageScanFindingsOutput, err error) (bool, error) {
+		wrappedCalled = true
+		return wrappedReturnValue, wrappedError
 	}
 
+	retry := retryPolicyFunc(wrapped)
+	return func(t *testing.T, expected bool) {
+		t.Helper()
+		assert.Equal(t, expected, wrappedCalled, "Calling wrapped function: expected %t but was %t", expected, wrappedCalled)
+	}, retry
+}
+
+func TestScanStateRetryableOnNotFound(t *testing.T) {
 	t.Run("Returns true for ScanNotFoundException", func(t *testing.T) {
-		assertCalled, retry := setupRetryTest(false, nil)
+		assertCalled, retry := setupRetryTest(false, nil, scanStateRetryableOnNotFound)
 
 		scanNotFoundErr := &smithy.GenericAPIError{
 			Code:    "ScanNotFoundException",
@@ -104,7 +104,7 @@ func TestScanStateRetryableOnNotFound(t *testing.T) {
 	})
 
 	t.Run("Delegates to wrapped function for other API errors", func(t *testing.T) {
-		assertWrapped, retry := setupRetryTest(true, errors.New("wrapped error"))
+		assertWrapped, retry := setupRetryTest(true, errors.New("wrapped error"), scanStateRetryableOnNotFound)
 
 		otherErr := &smithy.GenericAPIError{
 			Code:    "OtherError",
@@ -119,7 +119,48 @@ func TestScanStateRetryableOnNotFound(t *testing.T) {
 	})
 
 	t.Run("Delegates to wrapped function for non-API errors", func(t *testing.T) {
-		assertWrapped, retry := setupRetryTest(false, nil)
+		assertWrapped, retry := setupRetryTest(false, nil, scanStateRetryableOnNotFound)
+
+		nonAPIErr := errors.New("non-API error")
+
+		shouldRetry, err := retry(t.Context(), nil, nil, nonAPIErr)
+
+		assert.False(t, shouldRetry, "Should return wrapped function's retry decision")
+		require.NoError(t, err, "Should return wrapped function's error")
+		assertWrapped(t, true)
+	})
+}
+
+func TestWaiterStateRetryable(t *testing.T) {
+	t.Run("Returns false for AccessDeniedException", func(t *testing.T) {
+		assertCalled, retry := setupRetryTest(false, nil, waiterStateRetryable)
+
+		accessDeniedErr := errors.New("AccessDeniedException")
+
+		shouldRetry, err := retry(t.Context(), nil, nil, accessDeniedErr)
+
+		assert.False(t, shouldRetry, "Should not retry on AccessDeniedException")
+		require.EqualError(t, err, "AccessDeniedException", "Should return the AccessDeniedException error")
+		assertCalled(t, false)
+	})
+
+	t.Run("Delegates to wrapped function for other API errors", func(t *testing.T) {
+		assertWrapped, retry := setupRetryTest(true, errors.New("wrapped error"), waiterStateRetryable)
+
+		otherErr := &smithy.GenericAPIError{
+			Code:    "OtherError",
+			Message: "Some other error",
+		}
+
+		shouldRetry, err := retry(t.Context(), nil, nil, otherErr)
+
+		assert.True(t, shouldRetry, "Should return wrapped function's retry decision")
+		require.EqualError(t, err, "wrapped error", "Should return wrapped function's error")
+		assertWrapped(t, true)
+	})
+
+	t.Run("Delegates to wrapped function for non-API errors", func(t *testing.T) {
+		assertWrapped, retry := setupRetryTest(false, nil, waiterStateRetryable)
 
 		nonAPIErr := errors.New("non-API error")
 
