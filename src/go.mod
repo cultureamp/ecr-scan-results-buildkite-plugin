@@ -39,8 +39,8 @@ require (
 	github.com/vbatts/tar-split v0.12.1 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/sync v0.14.0 // indirect
+	golang.org/x/mod v0.25.0 // indirect
+	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/tools v0.33.0 // indirect
 	mvdan.cc/gofumpt v0.7.0 // indirect
 )
@@ -61,6 +61,6 @@ require (
 	github.com/justincampbell/bigduration v0.0.0-20160531141349-e45bf03c0666 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/sys v0.33.0
-	golang.org/x/text v0.25.0
+	golang.org/x/text v0.26.0
 	gopkg.in/yaml.v3 v3.0.1
 )
