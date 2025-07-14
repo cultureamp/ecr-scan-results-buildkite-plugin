@@ -21,11 +21,11 @@ until: 2015-02-15
 `
 
 	var out timer
+
 	err := yaml.Unmarshal([]byte(in), &out)
 	require.NoError(t, err)
 
 	expected, _ := time.Parse("2006-01-02", "2015-02-15")
 
 	assert.Equal(t, timer{findingconfig.UntilTime(expected)}, out)
-
 }

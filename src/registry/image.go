@@ -14,6 +14,7 @@ import (
 
 type PlatformImageReference struct {
 	ImageReference
+
 	Platform v1.Platform
 }
 

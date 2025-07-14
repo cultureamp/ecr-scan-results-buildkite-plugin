@@ -80,7 +80,6 @@ func TestCompareCVSSScore(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-
 			actual := compareCVSSScore(finding.NewCVSS2Score(test.a, ""), finding.NewCVSS2Score(test.b, ""))
 			assert.Equal(t, test.expected, actual)
 		})

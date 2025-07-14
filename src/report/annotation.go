@@ -69,6 +69,7 @@ func (c AnnotationContext) Render() ([]byte, error) {
 	}
 
 	var buf bytes.Buffer
+
 	err = t.Execute(&buf, c)
 	if err != nil {
 		return nil, err
@@ -88,6 +89,7 @@ func params(values ...any) (map[string]any, error) {
 		if !ok {
 			return nil, errors.New("dict keys must be strings")
 		}
+
 		dict[key] = values[i+1]
 	}
 
@@ -207,6 +209,7 @@ func joinPlatforms(input []v1.Platform) string {
 		s := v.String()
 		platformValues[i] = s
 	}
+
 	return strings.Join(platformValues, ", ")
 }
 
@@ -216,5 +219,6 @@ func hasKnownPlatform(input []v1.Platform) bool {
 			return true
 		}
 	}
+
 	return false
 }
