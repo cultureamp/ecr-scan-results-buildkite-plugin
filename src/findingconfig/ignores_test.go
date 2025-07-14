@@ -34,7 +34,6 @@ ignores:
 }
 
 func TestLoadIgnores_Fails(t *testing.T) {
-
 	cases := []struct {
 		in            string
 		expectedError string

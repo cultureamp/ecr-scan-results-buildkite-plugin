@@ -13,6 +13,7 @@ func (e NonFatalError) Error() string {
 	if e.Wrapped != nil {
 		m += ": " + e.Wrapped.Error()
 	}
+
 	return m
 }
 
