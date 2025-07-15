@@ -38,10 +38,12 @@ func main() {
 		buildkite.LogFailuref("plugin configuration error: %s\n", err.Error())
 		os.Exit(1)
 	}
+
 	if pluginConfig.CriticalSeverityThreshold < 0 {
 		buildkite.LogFailuref("max-criticals must be greater than or equal to 0")
 		os.Exit(1)
 	}
+
 	if pluginConfig.HighSeverityThreshold < 0 {
 		buildkite.LogFailuref("max-highs must be greater than or equal to 0")
 		os.Exit(1)
@@ -65,6 +67,7 @@ func main() {
 			if registry.IsErrWaiterTimeout(err) {
 				os.Exit(75)
 			}
+
 			os.Exit(1)
 		} else {
 			// Attempt to annotate the build with the issue, but it's OK if the
@@ -94,6 +97,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 		buildkite.Logf("No ignore rules loaded, or all rules have expired.\n")
 	} else {
 		buildkite.Logf("Loaded %d ignore rules:\n", len(ignoreConfig))
+
 		for _, ignore := range ignoreConfig {
 			buildkite.Logf("  - %s\n", ignore)
 		}
@@ -117,6 +121,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	}
 
 	buildkite.Logf("Getting image digest for %s\n", imageID)
+
 	imageDigest, err := scan.GetLabelDigest(ctx, imageID)
 	if err != nil {
 		return runtimeerrors.NonFatal("could not find digest for image", err)
@@ -125,7 +130,9 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	buildkite.Logf("Digest: %s\n", imageDigest)
 
 	buildkite.Logf("Resolve images (and platforms) for %s\n", imageID)
+
 	repo := registry.NewRemoteRepository()
+
 	imageDigests, err := repo.ResolveImageReferences(imageDigest)
 	if err != nil {
 		return runtimeerrors.NonFatal("could not find digest for image", err)
@@ -142,6 +149,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 
 	// now download all the results and create a merged report
 	buildkite.Logf("Attempting to retrieve scan results for %d image(s)", len(imageDigests))
+
 	summaries, err := iter.MapErr(imageDigests, func(image *registry.PlatformImageReference) (finding.Summary, error) {
 		return getImageScanSummary(ctx, scan, *image, ignoreConfig)
 	})
@@ -166,6 +174,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	buildkite.Logf("Severity counts: critical=%d high=%d overThreshold=%v\n", criticalFindings, highFindings, status)
 
 	buildkite.Log("Creating report annotation...")
+
 	annotationCtx := report.AnnotationContext{
 		Image:                     imageID,
 		ImageLabel:                pluginConfig.ImageLabel,
@@ -178,6 +187,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	if err != nil {
 		return runtimeerrors.NonFatal("could not render report", err)
 	}
+
 	buildkite.Log("done.")
 
 	annotationStyle := "info"
@@ -193,7 +203,9 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	}
 
 	buildkite.Log("Uploading report as an artifact...")
+
 	filename := fmt.Sprintf("result.%s.html", strings.TrimPrefix(imageDigest.Digest, "sha256:"))
+
 	err = os.WriteFile(filename, annotation, fs.ModePerm)
 	if err != nil {
 		return runtimeerrors.NonFatal("could not write report artifact", err)
@@ -250,5 +262,6 @@ func hash(data ...string) string {
 	for _, d := range data {
 		h.Write([]byte(d))
 	}
+
 	return hex.EncodeToString(h.Sum(nil))
 }

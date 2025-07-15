@@ -234,7 +234,6 @@ func MergeSummaries(summaries []Summary) Summary {
 // plaforms for a given finding.
 func mergeSingle(merged, other Summary) Summary {
 	// merge findings from the other Summary into this one
-
 	merged.Details = mergeDetails(merged, merged.Details, other.Details)
 	merged.Ignored = mergeDetails(merged, merged.Ignored, other.Ignored)
 
@@ -244,6 +243,7 @@ func mergeSingle(merged, other Summary) Summary {
 	if other.ImageScanCompletedAt != nil {
 		merged.ImageScanCompletedAt = other.ImageScanCompletedAt
 	}
+
 	if other.VulnerabilitySourceUpdatedAt != nil {
 		merged.VulnerabilitySourceUpdatedAt = other.VulnerabilitySourceUpdatedAt
 	}
@@ -344,6 +344,7 @@ func findingAttributeValue(finding types.ImageScanFinding, name string) string {
 			return aws.ToString(a.Value)
 		}
 	}
+
 	return ""
 }
 

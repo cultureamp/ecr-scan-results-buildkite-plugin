@@ -35,6 +35,7 @@ func (i ImageReference) ID() string {
 	if i.Digest != "" {
 		return i.Digest
 	}
+
 	return i.Tag
 }
 
@@ -77,6 +78,7 @@ func (i ImageReference) WithDigest(digest string) ImageReference {
 func ParseReferenceFromURL(url string) (ImageReference, error) {
 	info := ImageReference{}
 	names := registryImageExpr.SubexpNames()
+
 	match := registryImageExpr.FindStringSubmatch(url)
 	if match == nil {
 		return info, fmt.Errorf("invalid registry URL: %s", url)
@@ -124,10 +126,10 @@ func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo ImageRefere
 			},
 		},
 	})
-
 	if err != nil {
 		return ImageReference{}, err
 	}
+
 	if len(out.ImageDetails) == 0 {
 		return ImageReference{}, fmt.Errorf("no image found for image %s", imageInfo)
 	}
@@ -177,7 +179,6 @@ func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo Image
 			opts.MaxDelay = maxAttemptDelay
 		},
 		optionsWaiterRetryPolicy)
-
 	if err != nil && err.Error() == "exceeded max wait time for ImageScanComplete waiter" {
 		return ErrWaiterTimeout
 	}
@@ -243,6 +244,7 @@ func waiterStateRetryable(wrapped RetryPolicyFunc) RetryPolicyFunc {
 		if err != nil && strings.Contains(err.Error(), "AccessDeniedException") {
 			return false, err
 		}
+
 		if err != nil {
 			log.Printf("error waiting for scan findings: %v", err)
 		}
@@ -261,6 +263,7 @@ func scanStateRetryableOnNotFound(wrapped RetryPolicyFunc) RetryPolicyFunc {
 		var aerr smithy.APIError
 		if err != nil && errors.As(err, &aerr) {
 			fmt.Printf("Smithy error?\n%+v\n%+v\n", aerr.ErrorCode(), aerr.ErrorFault())
+
 			if aerr.ErrorCode() == "ScanNotFoundException" {
 				fmt.Println("retrying")
 				return true, nil

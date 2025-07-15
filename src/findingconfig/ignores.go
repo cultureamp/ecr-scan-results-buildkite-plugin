@@ -33,6 +33,7 @@ func (i Ignore) String() string {
 	if i.Until.IsZero() {
 		return fmt.Sprintf("%s %s", i.ID, i.Reason)
 	}
+
 	return fmt.Sprintf("%s (until %s) %s", i.ID, i.Until, i.Reason)
 }
 
@@ -99,6 +100,7 @@ func readIgnores(filename string) ([]Ignore, error) {
 	}
 
 	var i Ignores
+
 	err = unmarshalYAML(content, &i)
 	if err != nil {
 		return nil, err

@@ -81,6 +81,7 @@ func setupRetryTest(wrappedReturnValue bool, wrappedError error, retryPolicyFunc
 	}
 
 	retry := retryPolicyFunc(wrapped)
+
 	return func(t *testing.T, expected bool) {
 		t.Helper()
 		assert.Equal(t, expected, wrappedCalled, "Calling wrapped function: expected %t but was %t", expected, wrappedCalled)

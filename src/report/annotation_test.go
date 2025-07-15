@@ -304,5 +304,6 @@ func fromJSON[T any](t *testing.T, source []byte) T {
 
 	var result T
 	require.NoError(t, json.Unmarshal(source, &result))
+
 	return result
 }
