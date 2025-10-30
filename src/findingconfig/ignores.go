@@ -22,7 +22,7 @@ var defaultIgnoreFileLocations = []string{
 	"/etc/ecr-scan-results-buildkite-plugin/ignore.yml",
 }
 
-// An entry in an ignore file used by the plugin.
+// Ignore is an entry in an ignore file used by the plugin.
 type Ignore struct {
 	ID     string `yaml:"id"`
 	Until  UntilTime
