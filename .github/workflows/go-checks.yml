@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: src/go.mod
           cache-dependency-path: src/go.sum
@@ -27,7 +27,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: src/go.mod
           cache: false # the lint action does its own caching
@@ -45,7 +45,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: src/go.mod
           cache-dependency-path: src/go.sum
