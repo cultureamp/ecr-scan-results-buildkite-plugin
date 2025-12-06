@@ -33,7 +33,7 @@ jobs:
           cache: false # the lint action does its own caching
 
       - name: Lint code
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: v2.6.2
           working-directory: src
