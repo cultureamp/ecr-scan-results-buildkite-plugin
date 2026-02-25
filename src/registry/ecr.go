@@ -116,8 +116,66 @@ func NewRegistryScan(config aws.Config) (*RegistryScan, error) {
 	}, nil
 }
 
+// isRetryableError determines if an error is retryable based on its type and message
+func isRetryableError(err error) bool {
+	// If no error, no need to retry
+	if err == nil {
+		return false
+	}
+
+	// Check for specific API errors
+	var apiErr smithy.APIError
+	if errors.As(err, &apiErr) {
+		// List of error codes that should not be retried
+		nonRetryableCodes := map[string]bool{
+			"AccessDeniedException":     false,
+			"ValidationException":       false,
+			"InvalidParameterException": false,
+		}
+
+		// Check if error code is explicitly non-retryable
+		if retry, exists := nonRetryableCodes[apiErr.ErrorCode()]; exists {
+			return retry
+		}
+
+		// Explicitly retryable errors
+		retryableCodes := map[string]bool{
+			"ThrottlingException":         true,
+			"ServiceUnavailableException": true,
+			"InternalServerError":         true,
+			"RequestTimeout":              true,
+			"RequestThrottled":            true,
+			"TooManyRequestsException":    true,
+			"InternalFailure":             true,
+			"Throttling":                  true,
+			"ImageNotFoundException":      true, // Specifically retry on ImageNotFound
+			"ResourceNotFoundException":   true, // General resource not found - retry
+		}
+
+		// Check if error code is explicitly retryable
+		if retry, exists := retryableCodes[apiErr.ErrorCode()]; exists {
+			return retry
+		}
+
+		// For other API errors, retry on 500s (server errors), not on 400s (client errors)
+		errorFault := apiErr.ErrorFault()
+
+		return errorFault == smithy.FaultServer
+	}
+
+	// For network errors or context timeouts, generally we want to retry
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		// Don't retry if the context was explicitly canceled or timed out
+		return false
+	}
+
+	// For any other error types, assume they might be temporary network issues and retry
+	return true
+}
+
 func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo ImageReference) (ImageReference, error) {
-	out, err := r.Client.DescribeImages(ctx, &ecr.DescribeImagesInput{
+	// Create the ECR API input
+	input := &ecr.DescribeImagesInput{
 		RegistryId:     &imageInfo.RegistryID,
 		RepositoryName: &imageInfo.Name,
 		ImageIds: []types.ImageIdentifier{
@@ -125,18 +183,98 @@ func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo ImageRefere
 				ImageTag: &imageInfo.Tag,
 			},
 		},
-	})
-	if err != nil {
-		return ImageReference{}, err
 	}
 
-	if len(out.ImageDetails) == 0 {
+	// Configure retry parameters
+	maxRetries := 5
+	baseDelay := 5 * time.Second
+	maxDelay := 30 * time.Second
+
+	// Log the start of the operation
+	log.Printf("Getting image digest for %s:%s", imageInfo.Name, imageInfo.Tag)
+
+	var (
+		out     *ecr.DescribeImagesOutput
+		lastErr error
+	)
+
+	// Retry loop
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		// If this isn't the first attempt, calculate and sleep for the backoff period
+		if attempt > 0 {
+			// Calculate backoff with exponential delay: baseDelay * 2^(attempt-1)
+			// For attempt 1: baseDelay * 2^0 = baseDelay
+			// For attempt 2: baseDelay * 2^1 = baseDelay * 2
+			// For attempt 3: baseDelay * 2^2 = baseDelay * 4, etc.
+			backoffDelay := baseDelay
+			for i := 1; i < attempt; i++ {
+				backoffDelay *= 2
+			}
+
+			// Enforce maximum delay
+			if backoffDelay > maxDelay {
+				backoffDelay = maxDelay
+			}
+
+			// Log retry information
+			log.Printf("Retrying DescribeImages... (attempt %d/%d) after %v delay. Previous error: %v",
+				attempt, maxRetries, backoffDelay, lastErr)
+
+			// Create a timer for the backoff delay
+			timer := time.NewTimer(backoffDelay)
+
+			// Wait for either the timer to expire or the context to be canceled
+			select {
+			case <-timer.C:
+				// Timer expired, continue with retry
+			case <-ctx.Done():
+				// Context was canceled, clean up the timer and return context error
+				timer.Stop()
+				return ImageReference{}, ctx.Err()
+			}
+		}
+
+		// Make the API call
+		var err error
+
+		out, err = r.Client.DescribeImages(ctx, input)
+
+		// If successful, break out of the retry loop
+		if err == nil {
+			if attempt > 0 {
+				log.Printf("DescribeImages succeeded after %d attempts", attempt)
+			}
+
+			break
+		}
+
+		// Store the error for logging in next iteration
+		lastErr = err
+
+		// Log the error
+		log.Printf("Error describing images: %v", err)
+
+		// Check if this is a retryable error
+		if !isRetryableError(err) {
+			log.Printf("Non-retryable error encountered: %v", err)
+			return ImageReference{}, err
+		}
+
+		// Check if we've reached the max retries
+		if attempt == maxRetries {
+			log.Printf("Maximum retry attempts (%d) reached. Last error: %v", maxRetries, err)
+			return ImageReference{}, fmt.Errorf("failed to describe image after %d attempts: %w", maxRetries, err)
+		}
+	}
+
+	// Handle no image details found
+	if out == nil || len(out.ImageDetails) == 0 {
 		return ImageReference{}, fmt.Errorf("no image found for image %s", imageInfo)
 	}
 
+	// Extract and return the image digest
 	imageDetail := out.ImageDetails[0]
-
-	// copy input and update tag from label to digest
 	digestInfo := imageInfo.WithDigest(aws.ToString(imageDetail.ImageDigest))
 
 	return digestInfo, nil
