@@ -132,6 +132,94 @@ func TestScanStateRetryableOnNotFound(t *testing.T) {
 	})
 }
 
+func TestIsRetryableError(t *testing.T) {
+	t.Run("Returns false for nil error", func(t *testing.T) {
+		result := isRetryableError(nil)
+		assert.False(t, result, "Should return false for nil error")
+	})
+
+	t.Run("Returns false for non-retryable API error codes", func(t *testing.T) {
+		nonRetryableCodes := []string{
+			"AccessDeniedException",
+			"ValidationException",
+			"InvalidParameterException",
+		}
+
+		for _, code := range nonRetryableCodes {
+			t.Run(code, func(t *testing.T) {
+				apiErr := &smithy.GenericAPIError{
+					Code:    code,
+					Message: "Non-retryable error",
+				}
+				result := isRetryableError(apiErr)
+				assert.False(t, result, "Should return false for %s", code)
+			})
+		}
+	})
+
+	t.Run("Returns true for explicitly retryable API error codes", func(t *testing.T) {
+		retryableCodes := []string{
+			"ThrottlingException",
+			"ServiceUnavailableException",
+			"InternalServerError",
+			"RequestTimeout",
+			"RequestThrottled",
+			"TooManyRequestsException",
+			"InternalFailure",
+			"Throttling",
+			"ImageNotFoundException",
+			"ResourceNotFoundException",
+		}
+
+		for _, code := range retryableCodes {
+			t.Run(code, func(t *testing.T) {
+				apiErr := &smithy.GenericAPIError{
+					Code:    code,
+					Message: "Retryable error",
+				}
+				result := isRetryableError(apiErr)
+				assert.True(t, result, "Should return true for %s", code)
+			})
+		}
+	})
+
+	t.Run("Returns true for server fault API errors", func(t *testing.T) {
+		apiErr := &smithy.GenericAPIError{
+			Code:    "SomeServerError",
+			Message: "Some server error",
+			Fault:   smithy.FaultServer,
+		}
+		result := isRetryableError(apiErr)
+		assert.True(t, result, "Should return true for server fault errors")
+	})
+
+	t.Run("Returns false for client fault API errors", func(t *testing.T) {
+		apiErr := &smithy.GenericAPIError{
+			Code:    "SomeClientError",
+			Message: "Some client error",
+			Fault:   smithy.FaultClient,
+		}
+		result := isRetryableError(apiErr)
+		assert.False(t, result, "Should return false for client fault errors")
+	})
+
+	t.Run("Returns false for context deadline exceeded", func(t *testing.T) {
+		result := isRetryableError(context.DeadlineExceeded)
+		assert.False(t, result, "Should return false for context.DeadlineExceeded")
+	})
+
+	t.Run("Returns false for context canceled", func(t *testing.T) {
+		result := isRetryableError(context.Canceled)
+		assert.False(t, result, "Should return false for context.Canceled")
+	})
+
+	t.Run("Returns true for other error types", func(t *testing.T) {
+		otherErr := errors.New("some other error")
+		result := isRetryableError(otherErr)
+		assert.True(t, result, "Should return true for other error types")
+	})
+}
+
 func TestWaiterStateRetryable(t *testing.T) {
 	t.Run("Returns false for AccessDeniedException", func(t *testing.T) {
 		assertCalled, retry := setupRetryTest(false, nil, waiterStateRetryable)
