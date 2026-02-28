@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.41.2
 	github.com/aws/aws-sdk-go-v2/config v1.32.10
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.3
-	github.com/hexops/autogold/v2 v2.3.0
+	github.com/hexops/autogold/v2 v2.3.1
 	github.com/justincampbell/timeago v0.0.0-20160528003754-027f40306f1d
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/shopspring/decimal v1.4.0
@@ -26,7 +26,7 @@ require (
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
-	github.com/hexops/valast v1.4.4 // indirect
+	github.com/hexops/valast v1.5.0 // indirect
 	github.com/klauspost/compress v1.18.1 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -38,10 +38,10 @@ require (
 	github.com/vbatts/tar-split v0.12.2 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/mod v0.30.0 // indirect
+	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/tools v0.39.0 // indirect
-	mvdan.cc/gofumpt v0.7.0 // indirect
+	golang.org/x/tools v0.41.0 // indirect
+	mvdan.cc/gofumpt v0.9.2 // indirect
 )
 
 require (
@@ -59,7 +59,7 @@ require (
 	github.com/google/go-containerregistry v0.20.7
 	github.com/justincampbell/bigduration v0.0.0-20160531141349-e45bf03c0666 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	golang.org/x/sys v0.39.0
+	golang.org/x/sys v0.41.0
 	golang.org/x/text v0.32.0
 	gopkg.in/yaml.v3 v3.0.1
 )
