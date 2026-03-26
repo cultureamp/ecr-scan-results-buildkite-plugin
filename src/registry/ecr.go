@@ -166,7 +166,7 @@ func IsErrWaiterTimeout(w error) bool {
 
 // ErrWaiterTimeout is returned by WaitForScanFindings when the scan does not
 // complete within the maximum wait time.
-var ErrWaiterTimeout WaiterError = "image scan waiter timed out"
+const ErrWaiterTimeout WaiterError = "image scan waiter timed out"
 
 // WaitForScanFindings blocks until the ECR image scan for digestInfo has
 // completed, or until the maximum wait time is exceeded.
