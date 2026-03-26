@@ -82,7 +82,6 @@ func setupRetryTest(wrappedReturnValue bool, wrappedError error, retryPolicyFunc
 	}
 	withRetryPolicy(retryPolicyFunc...)(&opts)
 
-
 	return func(t *testing.T, expected bool) {
 		t.Helper()
 		assert.Equal(t, expected, wrappedCalled, "Calling wrapped function: expected %t but was %t", expected, wrappedCalled)
@@ -147,7 +146,6 @@ func TestRetryOnScanNotFound(t *testing.T) {
 		assertWrapped(t, false) // retryOnScanNotFound short-circuits before reaching wrapped
 	})
 }
-
 
 func TestWithRetryPolicy(t *testing.T) {
 	t.Run("Policies execute in listed order: first policy sees errors first", func(t *testing.T) {

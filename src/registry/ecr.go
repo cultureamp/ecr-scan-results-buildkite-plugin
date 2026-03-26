@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"slices"
 	"strings"
@@ -129,17 +128,13 @@ func NewRegistryScan(config aws.Config) (*RegistryScan, error) {
 // GetLabelDigest resolves a tag-based image reference to the equivalent
 // digest-based reference by looking up the image in ECR.
 func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo ImageReference) (ImageReference, error) {
-	input := &ecr.DescribeImagesInput{
+	out, err := r.Client.DescribeImages(ctx, &ecr.DescribeImagesInput{
 		RegistryId:     &imageInfo.RegistryID,
 		RepositoryName: &imageInfo.Name,
 		ImageIds: []types.ImageIdentifier{
 			{ImageTag: &imageInfo.Tag},
 		},
-	}
-
-	log.Printf("Getting image digest for %s:%s", imageInfo.Name, imageInfo.Tag)
-
-	out, err := r.Client.DescribeImages(ctx, input, func(o *ecr.Options) {
+	}, func(o *ecr.Options) {
 		// ImageNotFoundException is retried because a freshly pushed image
 		// tag may not be immediately visible in DescribeImages.
 		o.Retryer = retry.AddWithErrorCodes(o.Retryer, "ImageNotFoundException")
@@ -203,7 +198,6 @@ func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo Image
 			opts.MaxDelay = maxAttemptDelay
 		},
 	)
-
 
 	if err != nil && err.Error() == "exceeded max wait time for ImageScanComplete waiter" {
 		return ErrWaiterTimeout
@@ -270,6 +264,7 @@ func withRetryPolicy(policies ...func(RetryPolicyFunc) RetryPolicyFunc) func(*ec
 		for _, policy := range slices.Backward(policies) {
 			chain = policy(chain)
 		}
+
 		opts.Retryable = chain
 	}
 }
