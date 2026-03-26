@@ -21,7 +21,6 @@ linters:
     - mnd
     - musttag
     - nestif
-    - nilnil
     - nlreturn
     - noinlineerr
     - paralleltest
@@ -30,7 +29,6 @@ linters:
     - tagalign
     - tagliatelle
     - testpackage
-    - unparam
     - varnamelen
     - whitespace
     - wrapcheck
