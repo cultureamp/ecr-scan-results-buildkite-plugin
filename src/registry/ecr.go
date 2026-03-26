@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -274,7 +273,7 @@ func withRetryPolicy(policies ...func(RetryPolicyFunc) RetryPolicyFunc) func(*ec
 // burn time against the wait timeout.
 func fastFailOnAccessDenied(wrapped RetryPolicyFunc) RetryPolicyFunc {
 	return func(ctx context.Context, input *ecr.DescribeImageScanFindingsInput, output *ecr.DescribeImageScanFindingsOutput, err error) (bool, error) {
-		if err != nil && strings.Contains(err.Error(), "AccessDeniedException") {
+		if isAPIError(err, "AccessDeniedException") {
 			return false, err
 		}
 
@@ -287,13 +286,19 @@ func fastFailOnAccessDenied(wrapped RetryPolicyFunc) RetryPolicyFunc {
 // when the waiter first polls.
 func retryOnScanNotFound(wrapped RetryPolicyFunc) RetryPolicyFunc {
 	return func(ctx context.Context, input *ecr.DescribeImageScanFindingsInput, output *ecr.DescribeImageScanFindingsOutput, err error) (bool, error) {
-		var aerr smithy.APIError
-		if err != nil && errors.As(err, &aerr) {
-			if aerr.ErrorCode() == "ScanNotFoundException" {
-				return true, nil
-			}
+		if isAPIError(err, "ScanNotFoundException") {
+			return true, nil
 		}
 
 		return wrapped(ctx, input, output, err)
 	}
+}
+
+func isAPIError(err error, codes ...string) bool {
+	aerr, ok := errors.AsType[smithy.APIError](err)
+	if !ok {
+		return false
+	}
+
+	return slices.Contains(codes, aerr.ErrorCode())
 }

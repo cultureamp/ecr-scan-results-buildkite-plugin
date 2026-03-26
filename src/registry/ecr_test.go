@@ -158,11 +158,11 @@ func TestWithRetryPolicy(t *testing.T) {
 
 		withRetryPolicy(fastFailOnAccessDenied, retryOnScanNotFound)(&opts)
 
-		accessDeniedErr := errors.New("AccessDeniedException")
+		accessDeniedErr := &smithy.GenericAPIError{Code: "AccessDeniedException", Message: "Access denied"}
 		shouldRetry, err := opts.Retryable(t.Context(), nil, nil, accessDeniedErr)
 
 		assert.False(t, shouldRetry, "fastFailOnAccessDenied should short-circuit before retryOnScanNotFound")
-		require.EqualError(t, err, "AccessDeniedException")
+		require.EqualError(t, err, "api error AccessDeniedException: Access denied")
 	})
 }
 
@@ -170,12 +170,12 @@ func TestFastFailOnAccessDenied(t *testing.T) {
 	t.Run("Returns false for AccessDeniedException", func(t *testing.T) {
 		assertCalled, retry := setupRetryTest(false, nil, fastFailOnAccessDenied)
 
-		accessDeniedErr := errors.New("AccessDeniedException")
+		accessDeniedErr := &smithy.GenericAPIError{Code: "AccessDeniedException", Message: "Access denied"}
 
 		shouldRetry, err := retry(t.Context(), nil, nil, accessDeniedErr)
 
 		assert.False(t, shouldRetry, "Should not retry on AccessDeniedException")
-		require.EqualError(t, err, "AccessDeniedException", "Should return the AccessDeniedException error")
+		require.EqualError(t, err, "api error AccessDeniedException: Access denied", "Should return the AccessDeniedException error")
 		assertCalled(t, false)
 	})
 
