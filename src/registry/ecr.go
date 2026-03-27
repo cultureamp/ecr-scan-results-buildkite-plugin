@@ -139,6 +139,7 @@ func (r *RegistryScan) GetLabelDigest(ctx context.Context, imageInfo ImageRefere
 		o.Retryer = retry.AddWithErrorCodes(o.Retryer, "ImageNotFoundException")
 		o.Retryer = retry.AddWithMaxAttempts(o.Retryer, 6)
 		o.Retryer = retry.AddWithMaxBackoffDelay(o.Retryer, 30*time.Second)
+		o.ClientLogMode |= aws.LogRetries
 	})
 	if err != nil {
 		return ImageReference{}, err
