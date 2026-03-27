@@ -126,7 +126,7 @@ runs:
 
     - name: Add Coverage PR Comment
       if: steps.setup.outputs.pr != ''
-      uses: marocchino/sticky-pull-request-comment@v2
+      uses: marocchino/sticky-pull-request-comment@v3
       with:
         recreate: true
         number: "${{ steps.setup.outputs.pr }}"
