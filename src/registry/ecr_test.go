@@ -73,24 +73,24 @@ func TestRegistryInfoFromURLFails(t *testing.T) {
 	assert.Equal(t, ImageReference{}, info)
 }
 
-func setupRetryTest(wrappedReturnValue bool, wrappedError error, retryPolicyFunc func(wrapped RetryPolicyFunc) RetryPolicyFunc) (func(*testing.T, bool), RetryPolicyFunc) {
+func setupRetryTest(wrappedReturnValue bool, wrappedError error, retryPolicyFunc ...func(wrapped RetryPolicyFunc) RetryPolicyFunc) (func(*testing.T, bool), RetryPolicyFunc) {
 	wrappedCalled := false
-	wrapped := func(ctx context.Context, input *ecr.DescribeImageScanFindingsInput, output *ecr.DescribeImageScanFindingsOutput, err error) (bool, error) {
+	opts := ecr.ImageScanCompleteWaiterOptions{}
+	opts.Retryable = func(_ context.Context, _ *ecr.DescribeImageScanFindingsInput, _ *ecr.DescribeImageScanFindingsOutput, _ error) (bool, error) {
 		wrappedCalled = true
 		return wrappedReturnValue, wrappedError
 	}
-
-	retry := retryPolicyFunc(wrapped)
+	withRetryPolicy(retryPolicyFunc...)(&opts)
 
 	return func(t *testing.T, expected bool) {
 		t.Helper()
 		assert.Equal(t, expected, wrappedCalled, "Calling wrapped function: expected %t but was %t", expected, wrappedCalled)
-	}, retry
+	}, opts.Retryable
 }
 
-func TestScanStateRetryableOnNotFound(t *testing.T) {
+func TestRetryOnScanNotFound(t *testing.T) {
 	t.Run("Returns true for ScanNotFoundException", func(t *testing.T) {
-		assertCalled, retry := setupRetryTest(false, nil, scanStateRetryableOnNotFound)
+		assertCalled, retry := setupRetryTest(false, nil, retryOnScanNotFound)
 
 		scanNotFoundErr := &smithy.GenericAPIError{
 			Code:    "ScanNotFoundException",
@@ -105,7 +105,7 @@ func TestScanStateRetryableOnNotFound(t *testing.T) {
 	})
 
 	t.Run("Delegates to wrapped function for other API errors", func(t *testing.T) {
-		assertWrapped, retry := setupRetryTest(true, errors.New("wrapped error"), scanStateRetryableOnNotFound)
+		assertWrapped, retry := setupRetryTest(true, errors.New("wrapped error"), retryOnScanNotFound)
 
 		otherErr := &smithy.GenericAPIError{
 			Code:    "OtherError",
@@ -120,7 +120,7 @@ func TestScanStateRetryableOnNotFound(t *testing.T) {
 	})
 
 	t.Run("Delegates to wrapped function for non-API errors", func(t *testing.T) {
-		assertWrapped, retry := setupRetryTest(false, nil, scanStateRetryableOnNotFound)
+		assertWrapped, retry := setupRetryTest(false, nil, retryOnScanNotFound)
 
 		nonAPIErr := errors.New("non-API error")
 
@@ -130,111 +130,57 @@ func TestScanStateRetryableOnNotFound(t *testing.T) {
 		require.NoError(t, err, "Should return wrapped function's error")
 		assertWrapped(t, true)
 	})
-}
 
-func TestIsRetryableError(t *testing.T) {
-	t.Run("Returns false for nil error", func(t *testing.T) {
-		result := isRetryableError(nil)
-		assert.False(t, result, "Should return false for nil error")
-	})
+	t.Run("Works well with others: ScanNotFoundException retries even when fastFailOnAccessDenied is in the chain", func(t *testing.T) {
+		assertWrapped, retry := setupRetryTest(false, nil, fastFailOnAccessDenied, retryOnScanNotFound)
 
-	t.Run("Returns false for non-retryable API error codes", func(t *testing.T) {
-		nonRetryableCodes := []string{
-			"AccessDeniedException",
-			"ValidationException",
-			"InvalidParameterException",
+		scanNotFoundErr := &smithy.GenericAPIError{
+			Code:    "ScanNotFoundException",
+			Message: "Scan not found",
 		}
 
-		for _, code := range nonRetryableCodes {
-			t.Run(code, func(t *testing.T) {
-				apiErr := &smithy.GenericAPIError{
-					Code:    code,
-					Message: "Non-retryable error",
-				}
-				result := isRetryableError(apiErr)
-				assert.False(t, result, "Should return false for %s", code)
-			})
-		}
-	})
+		shouldRetry, err := retry(t.Context(), nil, nil, scanNotFoundErr)
 
-	t.Run("Returns true for explicitly retryable API error codes", func(t *testing.T) {
-		retryableCodes := []string{
-			"ThrottlingException",
-			"ServiceUnavailableException",
-			"InternalServerError",
-			"RequestTimeout",
-			"RequestThrottled",
-			"TooManyRequestsException",
-			"InternalFailure",
-			"Throttling",
-			"ImageNotFoundException",
-			"ResourceNotFoundException",
-		}
-
-		for _, code := range retryableCodes {
-			t.Run(code, func(t *testing.T) {
-				apiErr := &smithy.GenericAPIError{
-					Code:    code,
-					Message: "Retryable error",
-				}
-				result := isRetryableError(apiErr)
-				assert.True(t, result, "Should return true for %s", code)
-			})
-		}
-	})
-
-	t.Run("Returns true for server fault API errors", func(t *testing.T) {
-		apiErr := &smithy.GenericAPIError{
-			Code:    "SomeServerError",
-			Message: "Some server error",
-			Fault:   smithy.FaultServer,
-		}
-		result := isRetryableError(apiErr)
-		assert.True(t, result, "Should return true for server fault errors")
-	})
-
-	t.Run("Returns false for client fault API errors", func(t *testing.T) {
-		apiErr := &smithy.GenericAPIError{
-			Code:    "SomeClientError",
-			Message: "Some client error",
-			Fault:   smithy.FaultClient,
-		}
-		result := isRetryableError(apiErr)
-		assert.False(t, result, "Should return false for client fault errors")
-	})
-
-	t.Run("Returns false for context deadline exceeded", func(t *testing.T) {
-		result := isRetryableError(context.DeadlineExceeded)
-		assert.False(t, result, "Should return false for context.DeadlineExceeded")
-	})
-
-	t.Run("Returns false for context canceled", func(t *testing.T) {
-		result := isRetryableError(context.Canceled)
-		assert.False(t, result, "Should return false for context.Canceled")
-	})
-
-	t.Run("Returns true for other error types", func(t *testing.T) {
-		otherErr := errors.New("some other error")
-		result := isRetryableError(otherErr)
-		assert.True(t, result, "Should return true for other error types")
+		assert.True(t, shouldRetry, "Should retry on ScanNotFoundException")
+		require.NoError(t, err, "Should not return an error")
+		assertWrapped(t, false) // retryOnScanNotFound short-circuits before reaching wrapped
 	})
 }
 
-func TestWaiterStateRetryable(t *testing.T) {
+func TestWithRetryPolicy(t *testing.T) {
+	t.Run("Policies execute in listed order: first policy sees errors first", func(t *testing.T) {
+		// fastFailOnAccessDenied is listed first, so it must execute first and
+		// short-circuit before retryOnScanNotFound is reached.
+		opts := ecr.ImageScanCompleteWaiterOptions{}
+		opts.Retryable = func(_ context.Context, _ *ecr.DescribeImageScanFindingsInput, _ *ecr.DescribeImageScanFindingsOutput, _ error) (bool, error) {
+			return true, nil
+		}
+
+		withRetryPolicy(fastFailOnAccessDenied, retryOnScanNotFound)(&opts)
+
+		accessDeniedErr := &smithy.GenericAPIError{Code: "AccessDeniedException", Message: "Access denied"}
+		shouldRetry, err := opts.Retryable(t.Context(), nil, nil, accessDeniedErr)
+
+		assert.False(t, shouldRetry, "fastFailOnAccessDenied should short-circuit before retryOnScanNotFound")
+		require.EqualError(t, err, "api error AccessDeniedException: Access denied")
+	})
+}
+
+func TestFastFailOnAccessDenied(t *testing.T) {
 	t.Run("Returns false for AccessDeniedException", func(t *testing.T) {
-		assertCalled, retry := setupRetryTest(false, nil, waiterStateRetryable)
+		assertCalled, retry := setupRetryTest(false, nil, fastFailOnAccessDenied)
 
-		accessDeniedErr := errors.New("AccessDeniedException")
+		accessDeniedErr := &smithy.GenericAPIError{Code: "AccessDeniedException", Message: "Access denied"}
 
 		shouldRetry, err := retry(t.Context(), nil, nil, accessDeniedErr)
 
 		assert.False(t, shouldRetry, "Should not retry on AccessDeniedException")
-		require.EqualError(t, err, "AccessDeniedException", "Should return the AccessDeniedException error")
+		require.EqualError(t, err, "api error AccessDeniedException: Access denied", "Should return the AccessDeniedException error")
 		assertCalled(t, false)
 	})
 
 	t.Run("Delegates to wrapped function for other API errors", func(t *testing.T) {
-		assertWrapped, retry := setupRetryTest(true, errors.New("wrapped error"), waiterStateRetryable)
+		assertWrapped, retry := setupRetryTest(true, errors.New("wrapped error"), fastFailOnAccessDenied)
 
 		otherErr := &smithy.GenericAPIError{
 			Code:    "OtherError",
@@ -249,7 +195,7 @@ func TestWaiterStateRetryable(t *testing.T) {
 	})
 
 	t.Run("Delegates to wrapped function for non-API errors", func(t *testing.T) {
-		assertWrapped, retry := setupRetryTest(false, nil, waiterStateRetryable)
+		assertWrapped, retry := setupRetryTest(false, nil, fastFailOnAccessDenied)
 
 		nonAPIErr := errors.New("non-API error")
 
