@@ -5,3 +5,5 @@
 
 src/ecrscanresults
 src/*.html
+**/.claude/*.local.json
+**/CLAUDE.local.md
