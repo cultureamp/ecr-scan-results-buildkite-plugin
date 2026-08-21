@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/cultureamp/ecrscanresults/buildkite"
@@ -23,13 +24,14 @@ import (
 )
 
 type Config struct {
-	AgentTestMode             bool   `envconfig:"ECR_SCAN_RESULTS_BUILDKITE_AGENT_TEST_MODE" split_words:"true"`
-	JobID                     string `envconfig:"BUILDKITE_JOB_ID" split_words:"true" required:"true"`
-	Repository                string `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME" split_words:"true" required:"true"`
-	ImageLabel                string `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_LABEL" split_words:"true"`
-	CriticalSeverityThreshold int32  `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS" split_words:"true"`
-	HighSeverityThreshold     int32  `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS" split_words:"true"`
-	FailBuildOnPluginFailure  bool   `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_FAIL_BUILD_ON_PLUGIN_FAILURE" default:"false"`
+	AgentTestMode             bool          `envconfig:"ECR_SCAN_RESULTS_BUILDKITE_AGENT_TEST_MODE" split_words:"true"`
+	JobID                     string        `envconfig:"BUILDKITE_JOB_ID" split_words:"true" required:"true"`
+	Repository                string        `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_NAME" split_words:"true" required:"true"`
+	ImageLabel                string        `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_LABEL" split_words:"true"`
+	CriticalSeverityThreshold int32         `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS" split_words:"true"`
+	HighSeverityThreshold     int32         `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS" split_words:"true"`
+	FailBuildOnPluginFailure  bool          `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_FAIL_BUILD_ON_PLUGIN_FAILURE" default:"false"`
+	MaxWaitTime               time.Duration `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_WAIT_TIME" default:"3m"`
 }
 
 func main() {
@@ -46,6 +48,11 @@ func main() {
 
 	if pluginConfig.HighSeverityThreshold < 0 {
 		buildkite.LogFailuref("max-highs must be greater than or equal to 0")
+		os.Exit(1)
+	}
+
+	if pluginConfig.MaxWaitTime <= 0 {
+		buildkite.LogFailuref("max-wait-time must be a positive duration")
 		os.Exit(1)
 	}
 
@@ -151,7 +158,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	buildkite.Logf("Attempting to retrieve scan results for %d image(s)", len(imageDigests))
 
 	summaries, err := iter.MapErr(imageDigests, func(image *registry.PlatformImageReference) (finding.Summary, error) {
-		return getImageScanSummary(ctx, scan, *image, ignoreConfig)
+		return getImageScanSummary(ctx, scan, *image, ignoreConfig, pluginConfig.MaxWaitTime)
 	})
 	if err != nil {
 		return runtimeerrors.NonFatal("could not retrieve scan results", err)
@@ -231,8 +238,8 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 // getImageScanSummary retrieves the scan results for the given image digest and
 // returns the initial summary for the image. This function may be called in
 // parallel for multiple images.
-func getImageScanSummary(ctx context.Context, scan *registry.RegistryScan, imageDigest registry.PlatformImageReference, ignoreConfig []findingconfig.Ignore) (finding.Summary, error) {
-	err := scan.WaitForScanFindings(ctx, imageDigest.ImageReference)
+func getImageScanSummary(ctx context.Context, scan *registry.RegistryScan, imageDigest registry.PlatformImageReference, ignoreConfig []findingconfig.Ignore, maxWaitTime time.Duration) (finding.Summary, error) {
+	err := scan.WaitForScanFindings(ctx, imageDigest.ImageReference, maxWaitTime)
 	if err != nil {
 		return finding.Summary{}, err
 	}

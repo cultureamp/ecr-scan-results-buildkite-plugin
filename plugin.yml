@@ -19,4 +19,6 @@ configuration:
       type: string
     fail-build-on-plugin-failure:
       type: boolean
+    max-wait-time:
+      type: string
   additionalProperties: false
