@@ -173,7 +173,16 @@ func (s Summary) FailureReasons() error {
 // were not matched against any finding in this summary. This can be used to
 // detect ignore entries that are no longer needed, e.g. because the
 // underlying vulnerability has been fixed upstream.
+//
+// If any platform's scan failed, no entries are reported as unmatched: a
+// failed platform may hold the only finding an ignore entry would have
+// matched, and we can't tell an ignore that's genuinely stale apart from one
+// that's just unscanned.
 func (s Summary) UnmatchedIgnores(ignoreConfig []findingconfig.Ignore) []findingconfig.Ignore {
+	if len(s.FailedPlatforms) > 0 {
+		return []findingconfig.Ignore{}
+	}
+
 	matched := make(map[string]bool, len(s.Ignored))
 
 	for _, d := range s.Ignored {

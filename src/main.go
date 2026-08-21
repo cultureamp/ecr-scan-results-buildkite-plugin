@@ -201,12 +201,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 
 	buildkite.Log("done.")
 
-	annotationStyle := "info"
-	if status != finding.StatusOk {
-		annotationStyle = "error"
-	} else if criticalFindings > 0 || highFindings > 0 {
-		annotationStyle = "warning"
-	}
+	annotationStyle := annotationStyleFor(status, criticalFindings, highFindings, pluginConfig.FailOnUnmatchedIgnores, len(unmatchedIgnores))
 
 	err = agent.Annotate(ctx, string(annotation), annotationStyle, "scan_results_"+imageDigest.Digest)
 	if err != nil {
@@ -245,6 +240,27 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 	}
 
 	return resultErr
+}
+
+// annotationStyleFor returns the Buildkite annotation style that should be
+// used to reflect the outcome of the scan, including the case where the build
+// will be failed solely because of unmatched ignore entries.
+func annotationStyleFor(status finding.SummaryStatus, criticalFindings, highFindings int32, failOnUnmatchedIgnores bool, unmatchedIgnoresCount int) string {
+	if status != finding.StatusOk {
+		return "error"
+	}
+
+	if criticalFindings > 0 || highFindings > 0 {
+		return "warning"
+	}
+
+	if failOnUnmatchedIgnores && unmatchedIgnoresCount > 0 {
+		// this is the same condition that makes the build fail below; the
+		// annotation should reflect that visually rather than staying "info".
+		return "error"
+	}
+
+	return "info"
 }
 
 // getImageScanSummary retrieves the scan results for the given image digest and
