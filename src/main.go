@@ -29,7 +29,7 @@ type Config struct {
 	ImageLabel                string `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_IMAGE_LABEL" split_words:"true"`
 	CriticalSeverityThreshold int32  `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS" split_words:"true"`
 	HighSeverityThreshold     int32  `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS" split_words:"true"`
-	FailBuildOnPluginFailure  bool   `envconfig:"FAIL_BUILD_ON_PLUGIN_FAILURE" default:"false"`
+	FailBuildOnPluginFailure  bool   `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_FAIL_BUILD_ON_PLUGIN_FAILURE" default:"false"`
 }
 
 func main() {
