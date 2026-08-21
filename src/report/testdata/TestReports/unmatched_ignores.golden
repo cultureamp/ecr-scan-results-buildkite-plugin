@@ -1,0 +1,41 @@
+`
+
+
+
+
+<h4>Vulnerability summary for "label of image"</h4>
+<p class="h6 regular italic">test-repo@digest-value</p>
+
+
+<p>✅ No vulnerabilities reported.</p>
+
+
+<details class="mb3">
+<summary>:broom: 2 ignore rule(s) did not match any finding</summary>
+<div>
+<p class="italic">These ignore entries were not needed for this scan. Consider removing them if the underlying vulnerability has been fixed.</p>
+<ul>
+
+<li><em>CVE-2019-0000 Fixed upstream, no longer needed</em></li>
+
+<li><em>CVE-2020-0000 (until 2023-12-31) Waiting on base image update</em></li>
+
+</ul>
+</div>
+</details>
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<i>scan completed: <span title="&lt;nil&gt;"></span></i> |
+<i>source updated: <span title="&lt;nil&gt;"></span></i>
+</p>
+`

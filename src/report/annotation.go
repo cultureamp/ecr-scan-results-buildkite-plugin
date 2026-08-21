@@ -30,6 +30,7 @@ type AnnotationContext struct {
 	FindingSummary            finding.Summary
 	CriticalSeverityThreshold int32
 	HighSeverityThreshold     int32
+	UnmatchedIgnores          []findingconfig.Ignore
 }
 
 func (c AnnotationContext) Render() ([]byte, error) {

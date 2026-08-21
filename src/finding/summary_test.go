@@ -204,6 +204,78 @@ func TestMergeSummary(t *testing.T) {
 	autogold.ExpectFile(t, base)
 }
 
+func TestUnmatchedIgnores(t *testing.T) {
+	data := &ecr.DescribeImageScanFindingsOutput{
+		ImageScanFindings: &types.ImageScanFindings{
+			Findings: []types.ImageScanFinding{
+				f("CVE-2019-5188", "HIGH"),
+				f("CVE-2019-5200", "CRITICAL"),
+			},
+		},
+	}
+
+	ignores := []findingconfig.Ignore{
+		i("CVE-2019-5188"), // matches a finding
+		i("CVE-2019-9999"), // does not match any finding
+	}
+
+	summary := finding.Summarize(data, defaultPlatform, ignores)
+
+	unmatched := summary.UnmatchedIgnores(ignores)
+
+	assert.Equal(t, []findingconfig.Ignore{i("CVE-2019-9999")}, unmatched)
+}
+
+func TestUnmatchedIgnoresAcrossMergedSummaries(t *testing.T) {
+	ignores := []findingconfig.Ignore{
+		i("CVE-2019-5188"), // matched on platform "a" only
+		i("CVE-2019-9999"), // never matched
+	}
+
+	a := finding.Summarize(&ecr.DescribeImageScanFindingsOutput{
+		ImageScanFindings: &types.ImageScanFindings{
+			Findings: []types.ImageScanFinding{f("CVE-2019-5188", "HIGH")},
+		},
+	}, v1.Platform{OS: "a"}, ignores)
+
+	b := finding.Summarize(&ecr.DescribeImageScanFindingsOutput{
+		ImageScanFindings: &types.ImageScanFindings{
+			Findings: []types.ImageScanFinding{f("CVE-2019-5200", "CRITICAL")},
+		},
+	}, v1.Platform{OS: "b"}, ignores)
+
+	merged := finding.MergeSummaries([]finding.Summary{a, b})
+
+	unmatched := merged.UnmatchedIgnores(ignores)
+
+	assert.Equal(t, []findingconfig.Ignore{i("CVE-2019-9999")}, unmatched)
+}
+
+func TestUnmatchedIgnoresWithPartialScanFailure(t *testing.T) {
+	ignores := []findingconfig.Ignore{
+		i("CVE-2019-5188"), // would only ever match on the platform that fails to scan
+	}
+
+	a := finding.Summarize(&ecr.DescribeImageScanFindingsOutput{
+		ImageScanStatus: &types.ImageScanStatus{
+			Status:      types.ScanStatusFailed,
+			Description: aws.String("scan failed"),
+		},
+	}, v1.Platform{OS: "a"}, ignores)
+
+	b := finding.Summarize(&ecr.DescribeImageScanFindingsOutput{
+		ImageScanFindings: &types.ImageScanFindings{
+			Findings: []types.ImageScanFinding{f("CVE-2019-5200", "CRITICAL")},
+		},
+	}, v1.Platform{OS: "b"}, ignores)
+
+	merged := finding.MergeSummaries([]finding.Summary{a, b})
+
+	unmatched := merged.UnmatchedIgnores(ignores)
+
+	assert.Equal(t, []findingconfig.Ignore{}, unmatched)
+}
+
 func p(os string) []v1.Platform {
 	return []v1.Platform{{OS: os}}
 }

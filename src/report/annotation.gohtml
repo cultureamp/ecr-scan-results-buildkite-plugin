@@ -51,6 +51,19 @@ be wrapped in <p> tag by the Markdown renderer in Buildkite.
 </div>
 </details>
 {{ end }}
+{{- if .UnmatchedIgnores }}
+<details class="mb3">
+<summary>:broom: {{ len .UnmatchedIgnores }} ignore rule(s) did not match any finding</summary>
+<div>
+<p class="italic">These ignore entries were not needed for this scan. Consider removing them if the underlying vulnerability has been fixed.</p>
+<ul>
+{{ range $ignore := .UnmatchedIgnores }}
+<li><em>{{ $ignore }}</em></li>
+{{ end }}
+</ul>
+</div>
+</details>
+{{ end }}
 {{ define "findingNameLink" }}{{ if .URI }}<a href="{{ .URI }}">{{ .Name }}</a>{{ else }}{{ .Name }}{{ end }}{{ end }}
 {{ define "findingName" }}{{ if .Description }}<details><summary>{{ template "findingNameLink" . }}</summary><div>{{ .Description }}</div></details>{{ else }}{{ template "findingNameLink" . }}{{ end }}{{ end }}
 {{ define "findingIgnoreUntil" }}{{ if .Until | hasUntilValue }}{{ .Until }}{{ else }}<div class="italic">(indefinitely)</div>{{ end }}{{ end }}

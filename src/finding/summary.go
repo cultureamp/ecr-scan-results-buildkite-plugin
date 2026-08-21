@@ -169,6 +169,39 @@ func (s Summary) FailureReasons() error {
 	return errors.Join(reasons...)
 }
 
+// UnmatchedIgnores returns the entries in the given ignore configuration that
+// were not matched against any finding in this summary. This can be used to
+// detect ignore entries that are no longer needed, e.g. because the
+// underlying vulnerability has been fixed upstream.
+//
+// If any platform's scan failed, no entries are reported as unmatched: a
+// failed platform may hold the only finding an ignore entry would have
+// matched, and we can't tell an ignore that's genuinely stale apart from one
+// that's just unscanned.
+func (s Summary) UnmatchedIgnores(ignoreConfig []findingconfig.Ignore) []findingconfig.Ignore {
+	if len(s.FailedPlatforms) > 0 {
+		return []findingconfig.Ignore{}
+	}
+
+	matched := make(map[string]bool, len(s.Ignored))
+
+	for _, d := range s.Ignored {
+		if d.Ignore != nil {
+			matched[d.Ignore.ID] = true
+		}
+	}
+
+	unmatched := make([]findingconfig.Ignore, 0)
+
+	for _, ignore := range ignoreConfig {
+		if !matched[ignore.ID] {
+			unmatched = append(unmatched, ignore)
+		}
+	}
+
+	return unmatched
+}
+
 // includedCountFor returns the number of findings that count towards the
 // threshold for the given severity, returning 0 if there are no counts for the
 // given severity value.

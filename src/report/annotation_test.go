@@ -286,6 +286,29 @@ func TestReports(t *testing.T) {
 				FindingSummary: fromJSON[finding.Summary](t, summaryMultiplePlatforms),
 			},
 		},
+		{
+			name: "unmatched ignores",
+			data: report.AnnotationContext{
+				Image: registry.ImageReference{
+					RegistryID: "0123456789",
+					Region:     "us-west-2",
+					Name:       "test-repo",
+					Digest:     "digest-value",
+				},
+				ImageLabel: "label of image",
+				UnmatchedIgnores: []findingconfig.Ignore{
+					{
+						ID:     "CVE-2019-0000",
+						Reason: "Fixed upstream, no longer needed",
+					},
+					{
+						ID:     "CVE-2020-0000",
+						Until:  findingconfig.MustParseUntil("2023-12-31"),
+						Reason: "Waiting on base image update",
+					},
+				},
+			},
+		},
 	}
 
 	for _, c := range cases {

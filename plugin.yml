@@ -19,4 +19,6 @@ configuration:
       type: string
     fail-build-on-plugin-failure:
       type: boolean
+    fail-on-unmatched-ignores:
+      type: boolean
   additionalProperties: false
