@@ -30,6 +30,7 @@ type Config struct {
 	CriticalSeverityThreshold int32  `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_CRITICALS" split_words:"true"`
 	HighSeverityThreshold     int32  `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_MAX_HIGHS" split_words:"true"`
 	FailBuildOnPluginFailure  bool   `envconfig:"FAIL_BUILD_ON_PLUGIN_FAILURE" default:"false"`
+	FailOnUnmatchedIgnores    bool   `envconfig:"BUILDKITE_PLUGIN_ECR_SCAN_RESULTS_FAIL_ON_UNMATCHED_IGNORES" default:"false"`
 }
 
 func main() {
@@ -173,6 +174,15 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 
 	buildkite.Logf("Severity counts: critical=%d high=%d overThreshold=%v\n", criticalFindings, highFindings, status)
 
+	unmatchedIgnores := findingSummary.UnmatchedIgnores(ignoreConfig)
+	if len(unmatchedIgnores) > 0 {
+		buildkite.Logf("Found %d ignore rule(s) that did not match any finding:\n", len(unmatchedIgnores))
+
+		for _, ignore := range unmatchedIgnores {
+			buildkite.Logf("  - %s\n", ignore)
+		}
+	}
+
 	buildkite.Log("Creating report annotation...")
 
 	annotationCtx := report.AnnotationContext{
@@ -181,6 +191,7 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 		FindingSummary:            findingSummary,
 		CriticalSeverityThreshold: pluginConfig.CriticalSeverityThreshold,
 		HighSeverityThreshold:     pluginConfig.HighSeverityThreshold,
+		UnmatchedIgnores:          unmatchedIgnores,
 	}
 
 	annotation, err := annotationCtx.Render()
@@ -218,14 +229,22 @@ func runCommand(ctx context.Context, pluginConfig Config, agent buildkite.Agent)
 
 	buildkite.Log("done.")
 
+	var resultErr error
+
 	switch status {
 	case finding.StatusOk:
-		return nil
+		resultErr = nil
 	case finding.StatusThresholdsExceeded:
-		return errors.New("vulnerability threshold exceeded")
+		resultErr = errors.New("vulnerability threshold exceeded")
 	default:
 		return fmt.Errorf("unknown finding summary state %d", status)
 	}
+
+	if pluginConfig.FailOnUnmatchedIgnores && len(unmatchedIgnores) > 0 {
+		resultErr = errors.Join(resultErr, fmt.Errorf("%d ignore rule(s) did not match any finding", len(unmatchedIgnores)))
+	}
+
+	return resultErr
 }
 
 // getImageScanSummary retrieves the scan results for the given image digest and

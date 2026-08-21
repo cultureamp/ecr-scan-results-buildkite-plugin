@@ -173,6 +173,16 @@ results. This may results in builds failing even if the images have no
 vulnerabilities at all. Useful if you prefer to pass only with a confirmed good
 result.
 
+### `fail-on-unmatched-ignores` (Optional, boolean. Default: false)
+
+Ignore rules that never match a finding are reported in the annotation but
+otherwise not surfaced anywhere. Over time, these entries build up as the
+underlying vulnerabilities are fixed upstream.
+
+When set to `true`, the build will fail if any configured ignore rule did not
+match a finding in the scan, prompting you to tidy up the ignore list
+incrementally.
+
 ## Requirements
 
 ### ECR Basic scanning only
