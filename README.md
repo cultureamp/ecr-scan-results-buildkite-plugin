@@ -173,6 +173,16 @@ results. This may results in builds failing even if the images have no
 vulnerabilities at all. Useful if you prefer to pass only with a confirmed good
 result.
 
+### `max-wait-time` (Optional, duration string. Default: "3m")
+
+The maximum time to wait for the ECR scan to complete before giving up. Accepts
+a [Go duration string](https://pkg.go.dev/time#ParseDuration) like `"5m"` or
+`"90s"`.
+
+The default of 3 minutes is enough for most repositories, but ECR basic
+scanning can take longer on some registries. If the plugin regularly times out
+waiting for results (`image scan waiter timed out`), increase this value.
+
 ## Requirements
 
 ### ECR Basic scanning only
