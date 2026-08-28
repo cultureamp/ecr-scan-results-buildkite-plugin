@@ -170,17 +170,16 @@ func IsErrWaiterTimeout(w error) bool {
 const ErrWaiterTimeout WaiterError = "image scan waiter timed out"
 
 // WaitForScanFindings blocks until the ECR image scan for digestInfo has
-// completed, or until the maximum wait time is exceeded.
-func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo ImageReference) error {
+// completed, or until maxWaitTime is exceeded.
+func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo ImageReference, maxWaitTime time.Duration) error {
 	waiter := ecr.NewImageScanCompleteWaiter(
 		r.Client,
 		withRetryPolicy(fastFailOnAccessDenied, retryOnScanNotFound),
 	)
 
-	// Poll every 3–15s with exponential backoff, up to 3 minutes total.
+	// Poll every 3–15s with exponential backoff, up to maxWaitTime total.
 	minAttemptDelay := 3 * time.Second
 	maxAttemptDelay := 15 * time.Second
-	maxTotalDelay := 3 * time.Minute
 
 	err := waiter.Wait(ctx,
 		&ecr.DescribeImageScanFindingsInput{
@@ -191,7 +190,7 @@ func (r *RegistryScan) WaitForScanFindings(ctx context.Context, digestInfo Image
 			},
 			MaxResults: aws.Int32(1), // reduce the size of the return payload when waiting for the completion state
 		},
-		maxTotalDelay,
+		maxWaitTime,
 		func(opts *ecr.ImageScanCompleteWaiterOptions) {
 			opts.LogWaitAttempts = true
 			opts.MinDelay = minAttemptDelay
