@@ -11,7 +11,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/sourcegraph/conc v0.3.0
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.1
 )
 
 require (
@@ -36,6 +36,7 @@ require (
 	github.com/sirupsen/logrus v1.9.4 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/mod v0.38.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/tools v0.48.0 // indirect
@@ -53,10 +54,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.45.5 // indirect
 	github.com/aws/smithy-go v1.27.8
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240206212017-5795caca6e8e
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/google/go-containerregistry v0.21.9
 	github.com/justincampbell/bigduration v0.0.0-20160531141349-e45bf03c0666 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/sys v0.47.0
 	golang.org/x/text v0.41.0
 	gopkg.in/yaml.v3 v3.0.1
