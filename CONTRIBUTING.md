@@ -26,7 +26,9 @@ go build
 
 ## Running the plugin locally
 
-Ensure devbox is setup as per [Local Dev Environments (LDEs) - Getting Started](https://cultureamp.atlassian.net/wiki/spaces/DE/pages/3342434338/Devbox+setup).
+This repo uses [devbox](https://www.jetify.com/devbox) to provide pinned local
+tooling versions. Install devbox, then run `devbox shell` (or let `direnv`
+load it automatically, see below) before continuing.
 
 Buildkite plugins [take their input parameters as environment
 variables][plugin-docs]. In local development we use
