@@ -26,6 +26,10 @@ go build
 
 ## Running the plugin locally
 
+This repo uses [devbox](https://www.jetify.com/devbox) to provide pinned local
+tooling versions. Install devbox, then run `devbox shell` (or let `direnv`
+load it automatically, see below) before continuing.
+
 Buildkite plugins [take their input parameters as environment
 variables][plugin-docs]. In local development we use
 [`direnv`](https://direnv.net/) to set these appropriately.
