@@ -3,10 +3,10 @@ module github.com/cultureamp/ecrscanresults
 go 1.27.3
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.47.5
-	github.com/aws/aws-sdk-go-v2/config v1.33.13
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.67.2
-	github.com/aws/smithy-go v1.28.7
+	github.com/aws/aws-sdk-go-v2 v1.47.8
+	github.com/aws/aws-sdk-go-v2/config v1.33.16
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.67.5
+	github.com/aws/smithy-go v1.28.8
 	github.com/awslabs/amazon-ecr-credential-helper/ecr-login v0.0.0-20240206212017-5795caca6e8e
 	github.com/google/go-containerregistry v0.22.1
 	github.com/hexops/autogold/v2 v2.3.1
@@ -21,18 +21,18 @@ require (
 )
 
 require (
-	github.com/aws/aws-sdk-go-v2/credentials v1.20.13 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.5 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.8 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.8 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.8 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.20.16 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.8 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.11 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.11 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.21.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.23 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.12.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.39.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.44.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.51.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.24 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.11 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.12.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.39.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.44.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.51.9 // indirect
 	github.com/docker/cli v29.7.2+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
 	github.com/fatih/color v1.18.0 // indirect
